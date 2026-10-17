@@ -70,7 +70,7 @@ function renderOverview(state) {
   const entries = [['Mission / orchestrator', state], ...workers];
   for (const [id, source] of entries) {
     const health = source.health?.[id], sample = source.telemetry?.[id];
-    const status = health?.status || source.status || 'unknown';
+    const status = health?.status || (source !== state || id === 'Mission / orchestrator' ? source.status : state.vehicles?.[id]?.lifecycle || sample?.lifecycle) || 'unknown';
     const card = text('article', '', 'worker-card');
     card.dataset.attention = String(/blocked|failed|disabled|stale|loop|stalled/.test(status) || !!source.storage?.error);
     const heading = text('h2', id); heading.append(text('span', status.replaceAll('_', ' '))); card.append(heading);
