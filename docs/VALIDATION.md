@@ -21,3 +21,9 @@ Evidence: [structured result](evaluations/arm-56c67b3f-8f7f-48a3-a9f3-7bcb99fcaa
 - Opt-in HTTP/Supabase checks cover local-origin restrictions, private artifacts, persistence fencing and immutable prompt/evaluation records.
 
 See [precision wrist control](WRIST_CONTROL.md) for the active actuator, perception and provider contracts. Saved session outcomes remain independent evidence; passing unit tests alone does not establish live extraction.
+
+## Full-care fleet integration
+
+Local mechanics tests complete ten distinct front-boundary trees with per-tree inspection, metered water/fertilizer, pest contact, articulated extraction, dock unloading and replenishment. Negative tests reject premature clearance, foreign-worker sensor frames, duplicate task ownership and images from another tree. Regression tests cover failed parent start commits and navigation reservation checks across action transitions. These controlled mechanics tests do not constitute live visual-control success.
+
+The first live fleet attempt (`3498561b-e81d-4f40-9bbb-bb407058d2a7`) was stopped after dispatching four workers. Its service camera was obstructed by the arm, and care calls omitted required frame IDs. Its 22 calls and interrupted result are retained in [the attempt record](evaluations/fleet-care-3498561b-e81d-4f40-9bbb-bb407058d2a7.json). The service camera was moved laterally and care schemas now require frame IDs. A corrected fleet run is being evaluated separately.

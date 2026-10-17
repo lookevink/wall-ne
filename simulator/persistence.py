@@ -65,8 +65,14 @@ class Repository:
             texts={}; versions_by_role={}
             for role in world.prompt_versions:
                 override=config.get('prompt_version')
+                if getattr(world,'mission_type',None)=='fleet_care' and role=='orchestrator' and not override:
+                    from .fleet_care import ORCHESTRATION
+                    override=str(uuid.uuid5(uuid.NAMESPACE_URL,role+ORCHESTRATION))
+                    if not self.read('prompt_versions',f'id=eq.{override}&limit=1'):
+                        self.request('POST','/rest/v1/prompt_versions',dict(id=override,role=role,text=ORCHESTRATION,hash=digest(ORCHESTRATION),status='candidate'))
                 if getattr(world,'trial',None)=='precision' and role=='treatment' and not override:
-                    from .precision_profile import PROMPT as precision_prompt
+                    from .precision_profile import PROMPT as precision_prompt, FULL_CARE_PROMPT
+                    if getattr(world,'mission_type',None)=='full_care':precision_prompt=FULL_CARE_PROMPT
                     override=str(uuid.uuid5(uuid.NAMESPACE_URL,role+precision_prompt))
                     if not self.read('prompt_versions',f'id=eq.{override}&limit=1'):
                         self.request('POST','/rest/v1/prompt_versions',dict(id=override,role=role,text=precision_prompt,hash=digest(precision_prompt),status='candidate'))

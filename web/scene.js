@@ -71,7 +71,7 @@ export class FleetScene {
     for(const [id,v] of Object.entries(state.vehicles)) {
       const m=this.robots[id];m.position.set(v.position[0],0,v.position[1]);const next=v.action?.route?.[0];
       if(next)m.rotation.y=Math.atan2(next[0]-v.position[0],next[1]-v.position[1])+Math.PI;
-      if(this.orchardMission&&id==='W1')m.rotation.y=0;
+      if(this.orchardMission&&(id==='W1'||state.mission_type==='fleet_care'))m.rotation.y=0;
       m.traverse(object=>object.layers.set(this.orchardMission?1:0));
       const c=this.feedCameras[id];c.position.set(v.position[0],1.6,v.position[1]-.5);
       const forward=new THREE.Vector3(0,-.15,-1).applyAxisAngle(new THREE.Vector3(0,1,0),m.rotation.y);c.lookAt(c.position.clone().add(forward));m.visible=v.lifecycle!=='spare';

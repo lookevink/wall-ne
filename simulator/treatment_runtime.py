@@ -81,13 +81,18 @@ class TreatmentRuntime(Runtime):
     def step(self,elapsed):
         if self.storage_error: return
         w=self.world
-        if self.active_wall>240 and w.kind=='arm':
-            w.status='blocked'; w.feedback='240 wall-second experiment cap'; w.event('blocked',reason=w.feedback); self.persist(); return
-        if self.inference and sum(r['cost'] or 0 for r in self.inference)>=1:
+        wall_limit=getattr(w,'wall_limit',240);cost_limit=getattr(w,'cost_limit',1)
+        if self.active_wall>wall_limit and w.kind=='arm':
+            w.status='blocked'; w.feedback=f'{wall_limit} wall-second mission cap'; w.event('blocked',reason=w.feedback); self.persist(); return
+        if self.inference and sum(r['cost'] or 0 for r in self.inference)>=cost_limit:
             w.status='blocked'; w.feedback='Reported cost cap'; w.event('blocked',reason=w.feedback); self.persist(); return
         if w.robot['action']:
+            if w.robot['action']['kind']=='navigate' and hasattr(self,'navigation_gate') and not self.navigation_gate.is_set():
+                self.waiting='traffic_reservation';return
             dt=min(elapsed,.5)*4
             while dt>1e-8:
+                if (w.robot['action'] or {}).get('kind')=='navigate' and hasattr(self,'navigation_gate') and not self.navigation_gate.is_set():
+                    self.waiting='traffic_reservation';break
                 part=min(.05,dt); dt-=part; w.tick(part); self.telemetry.sample(w,self.epoch)
             if not w.robot['action']:
                 if w.kind=='arm':w.record_control_progress('motion_completed')
@@ -127,7 +132,7 @@ class TreatmentRuntime(Runtime):
             if session!=w.id: return
             try:
                 result=self.consume(self.world.robot['id'],future); self.inference.append(result); self.failures[self.world.robot['id']]=0
-                if sum(r['cost'] or 0 for r in self.inference)>=1:
+                if sum(r['cost'] or 0 for r in self.inference)>=cost_limit:
                     w.status='blocked';w.feedback='Reported cost cap'
                     w.event('inference_discarded',self.world.robot['id'],result=result,reason=w.feedback);self.persist();return
                 decision=result['decision']; w.event('decision',self.world.robot['id'],result=result,frame_id=w.frame['id'],prompt_version=w.prompt_versions)
@@ -145,7 +150,7 @@ class TreatmentRuntime(Runtime):
         obs=w.observations(); obs['tool_arguments']={k:TOOL_HELP[k] for k in w.allowed_actions() if k in TOOL_HELP}
         if w.trial=='precision':
             obs.pop('tool_arguments',None) # The flat schema and wrist instructions define these fields.
-        obs['budgets'].update(wall_seconds_remaining=max(0,240-self.active_wall),reported_dollars_remaining=max(0,1-sum(r['cost'] or 0 for r in self.inference)),cost_complete=all(r['cost'] is not None for r in self.inference))
+        obs['budgets'].update(wall_seconds_remaining=max(0,wall_limit-self.active_wall),reported_dollars_remaining=max(0,cost_limit-sum(r['cost'] or 0 for r in self.inference)),cost_complete=all(r['cost'] is not None for r in self.inference))
         images=[self.image]
         obs['input_images']=[dict(index=0,meaning='Full current camera image',frame_id=w.frame['id'])]
         if w.trial!='precision' and self.scan_image and w.scan and w.scan['frame_id']==w.frame['id'] and not obs.get('scan_stale'):

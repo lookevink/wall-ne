@@ -102,7 +102,9 @@ class Runtime:
             cls={'fleet':Mission,'irrigation':Treatment,'care':PlantCare,'arm':Manipulation}[rows[0]['kind']]
             if state.get('arena')=='orchard':
                 from .orchard_manipulation import OrchardManipulation
-                cls=OrchardManipulation
+                from .orchard_care import OrchardCare
+                from .fleet_care import FleetCareWorld
+                cls=FleetCareWorld if state.get('mission_type')=='fleet_care' else OrchardCare if state.get('mission_type')=='full_care' else OrchardManipulation
             self.world=cls.restore(state); self.world.status='paused'
             self.config=config
             durable_runtime=state.get('runtime_state',{})

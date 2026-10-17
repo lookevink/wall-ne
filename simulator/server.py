@@ -14,6 +14,8 @@ from .treatment import Treatment
 from .care import PlantCare
 from .manipulation import Manipulation
 from .orchard_manipulation import OrchardManipulation
+from .orchard_care import OrchardCare
+from .fleet_care import FleetCareWorld,FleetCareRuntime
 from .treatment_runtime import TreatmentRuntime
 from .persistence import Repository,StorageError
 from .review import ReviewService
@@ -41,10 +43,10 @@ class App:
                 world=cls(seed,body.get('trial','wrist' if kind=='arm' else 'baseline'))
             else:
                 mission=body.get('mission','weeding')
-                if mission not in ('weeding','watering'):raise ValueError('unknown orchard mission')
-                mode='vision' if mission=='weeding' else body.get('mode','demo')
+                if mission not in ('weeding','watering','full_care'):raise ValueError('unknown orchard mission')
+                mode='vision' if mission in ('weeding','full_care') else body.get('mode','demo')
                 if mission=='watering' and mode not in ('demo','live'): raise ValueError('invalid fleet mode')
-                world=OrchardManipulation(seed) if mission=='weeding' else Mission(seed)
+                world=FleetCareWorld(seed,body.get('tree_count',10)) if mission=='full_care' else OrchardManipulation(seed) if mission=='weeding' else Mission(seed)
             engine=body.get('engine','crusoe')
             if engine not in ('crusoe','nemotron','gemma','gemini'): raise ValueError('invalid inference engine')
             speed=body.get('speed',4 if treatment else 8)
@@ -60,9 +62,9 @@ class App:
             if body.get('model_pins'): config.update(models=body['model_pins'],provider_base=body['provider_base'])
             from .common import implementation_hash,treatment_implementation_hash
             config['code_hash']=implementation_hash()
-            if world.kind!='fleet':config['treatment_code_hash']=treatment_implementation_hash()
+            if world.kind!='fleet' or getattr(world,'arena',None)=='orchard':config['treatment_code_hash']=treatment_implementation_hash()
             if getattr(world,'arena',None)=='orchard':config['arena']='orchard'
-            runtime=(TreatmentRuntime if world.kind!='fleet' else Runtime)(world,self.repository,config)
+            runtime=(FleetCareRuntime if getattr(world,'mission_type',None)=='fleet_care' else TreatmentRuntime if world.kind!='fleet' else Runtime)(world,self.repository,config)
             if treatment: self.treatment=runtime
             else: self.fleet=runtime
             with runtime.lock: runtime.persist()
@@ -214,8 +216,8 @@ class Handler(BaseHTTPRequestHandler):
             elif action in ('pause','abort','stop'): runtime.pause('paused' if action=='pause' else 'aborted')
             elif action=='retry': runtime.retry()
             elif action=='resume': runtime.restore(body['session_id'])
-            elif action=='frame' and isinstance(runtime,TreatmentRuntime): return self.send(runtime.accept_frame(body))
-            elif action=='depth' and isinstance(runtime,TreatmentRuntime): return self.send(runtime.accept_depth(body))
+            elif action=='frame' and isinstance(runtime,(TreatmentRuntime,FleetCareRuntime)): return self.send(runtime.accept_frame(body))
+            elif action=='depth' and isinstance(runtime,(TreatmentRuntime,FleetCareRuntime)): return self.send(runtime.accept_depth(body))
             elif action=='command': return self.send(runtime.command(body.get('robot',runtime.world.robot['id'] if runtime.world.kind!='fleet' else 'orchestrator'),body['action'],body.get('arguments',{}),body.get('command_id')))
             elif action in ('clog','fault') and treatment:
                 with runtime.lock:

@@ -8,6 +8,7 @@ class Treatment(RecordedWorld):
     kind='irrigation'
     frame_limit=12
     decision_limit=65
+    time_limit=300
 
     def __init__(self,seed=7,trial='baseline'):
         self.id,self.seed,self.version=uid(),seed,VERSION
@@ -58,7 +59,7 @@ class Treatment(RecordedWorld):
                     available_actions=self.allowed_actions(),resources={k:self.robot[k] for k in ('battery','water','position')},
                     tool=self.tool,frame=copy.deepcopy(self.frame),camera=self.camera(),feedback=self.feedback,
                     sensors=dict(moisture=self.moisture_reading,flow=self.flow,observed_fault=self.observed_fault),
-                    budgets=dict(frames_remaining=self.frame_limit-len(self.frames),commands_remaining=self.decision_limit-self.decisions,time_remaining=300-self.time),history=[e for e in self.events if e['type'] in ('accepted','rejected','completed','slip','contact','extraction','deposit','dropped','verification','inference_error')][-8:])
+                    budgets=dict(frames_remaining=self.frame_limit-len(self.frames),commands_remaining=self.decision_limit-self.decisions,time_remaining=self.time_limit-self.time),history=[e for e in self.events if e['type'] in ('accepted','rejected','completed','slip','contact','extraction','deposit','dropped','verification','inference_error')][-8:])
 
     def command(self,command_id,robot,action,**args):
         if command_id in self.receipts: return copy.deepcopy(self.receipts[command_id])
@@ -66,7 +67,7 @@ class Treatment(RecordedWorld):
         try:
             if self.status in ('completed','failed','aborted','blocked'): raise ValueError('mission terminal')
             if self.robot['action']: raise ValueError('physical action in progress')
-            if self.decisions>=self.decision_limit or self.time>=300 or self.robot['battery']<=25:
+            if self.decisions>=self.decision_limit or self.time>=self.time_limit or self.robot['battery']<=25:
                 self.status='blocked'; raise ValueError('mission budget exhausted')
             self.decisions+=1
             self._action(action,args)
@@ -116,7 +117,7 @@ class Treatment(RecordedWorld):
         while dt>1e-9 and self.status=='running' and self.robot['action']:
             step=min(.05,dt); dt-=step; self.time+=step; a=self.robot['action']; self.revision+=1
             self.robot['battery']-=step*.08; self.robot['minimum_battery']=min(self.robot['minimum_battery'],self.robot['battery'])
-            if self.time>=300 or self.robot['battery']<=25:
+            if self.time>=self.time_limit or self.robot['battery']<=25:
                 self.status='blocked'; self.feedback='Operating budget reached'; break
             done=False
             if a['kind']=='move_base':

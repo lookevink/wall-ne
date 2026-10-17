@@ -41,7 +41,8 @@ class OrchardManipulation(Manipulation):
 
     def navigate(self,target,purpose):
         start=self.robot['position']
-        route=[[start[0],18],[target[0],18],target[:]]
+        lane=getattr(self,'travel_lane',18)
+        route=[[start[0],lane],[target[0],lane],target[:]]
         length=sum(distance(a,b) for a,b in zip([start]+route,route))
         if self.robot['battery']-length*.13<=25:raise ValueError('navigation reserve guard')
         self.robot.update(lifecycle='working',action=dict(kind='navigate',route=route,purpose=purpose,id=uid()))

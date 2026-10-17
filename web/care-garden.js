@@ -8,7 +8,7 @@ export class Garden {
   update(state) {
     if(this.id!==state.id) {
       disposeSpecimen(this.group);this.group.clear();this.targets={};this.id=state.id;
-      for(const w of state.weeds||(state.weed?[state.weed]:[])){const mesh=state.trial==='precision'?weedPlant(w,state.seed*101):weedMesh(w);if(state.trial==='precision')mesh.position.set(w.position[0],0,w.position[2]);this.targets[w.id]=mesh;this.group.add(mesh);}
+      for(const w of state.weeds||(state.weed?[state.weed]:[])){const mesh=state.trial==='precision'?weedPlant(w,w.render_seed??state.seed*101):weedMesh(w);if(state.trial==='precision')mesh.position.set(w.position[0],0,w.position[2]);this.targets[w.id]=mesh;this.group.add(mesh);}
       for(const p of state.protected||[])this.group.add(cloverMesh(p));
       for(const p of state.pests||[]){const mesh=caterpillarMesh(p);this.targets[p.id]=mesh;this.group.add(mesh);}
       for(const p of state.beneficial||[])this.group.add(ladybirdMesh(p));

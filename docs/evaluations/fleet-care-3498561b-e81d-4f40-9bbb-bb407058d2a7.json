@@ -1,0 +1,313 @@
+{
+  "session_id": "3498561b-e81d-4f40-9bbb-bb407058d2a7",
+  "arena": "orchard",
+  "mission": "fleet_care",
+  "status": "aborted",
+  "checks": {
+    "all_workers_used": false,
+    "care_verified": false,
+    "inventory": true,
+    "reserve": true,
+    "returned": false,
+    "trees_complete": false
+  },
+  "feedback": "Orchestrator assigned tree 4 to W4",
+  "assignments": {
+    "0": {
+      "session_id": "17ba1fce-05fc-49c7-9e83-1122a6e0bf57",
+      "status": "assigned",
+      "vehicle": "W1"
+    },
+    "1": {
+      "session_id": "4645b173-5cd4-4617-bb39-002d9958dbbe",
+      "status": "assigned",
+      "vehicle": "W2"
+    },
+    "2": {
+      "session_id": "fa596067-c48c-4937-be86-672d96bdf337",
+      "status": "assigned",
+      "vehicle": "W3"
+    },
+    "3": {
+      "session_id": "b2f62c53-19a0-4633-9f0a-1c500869e2ab",
+      "status": "assigned",
+      "vehicle": "W4"
+    }
+  },
+  "results": {},
+  "inference": {
+    "calls": 22,
+    "cost": null,
+    "failed_calls": 0,
+    "latency_seconds": 54.94805212600001,
+    "pending_calls": 0,
+    "results": [
+      {
+        "cost": null,
+        "decision": {
+          "action": "assign",
+          "arguments": {
+            "row": 0,
+            "vehicle": "W1"
+          },
+          "rationale": "Assign the first tree (row 0) to worker W1, preferring an idle worker that has not yet participated, to begin mobilizing all workers and cover distinct trees."
+        },
+        "fallback": false,
+        "id": "d015c545-f030-4278-be7e-1131872849a2",
+        "latency": 10.161837584,
+        "provider": "crusoe",
+        "provider_base": "https://api.inference.crusoecloud.com/v1",
+        "request_id": "2da094ab-2c02-41c4-9011-9ce7d00e534a",
+        "requested_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "response_id": "chatcmpl-b7183a0201018d42",
+        "returned_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "usage": {
+          "completion_tokens": 442,
+          "prompt_tokens": 3031,
+          "total_tokens": 3473
+        }
+      },
+      {
+        "cost": null,
+        "decision": {
+          "action": "assign",
+          "arguments": {
+            "row": 1,
+            "vehicle": "W2"
+          },
+          "rationale": "Assign tree index 1 to idle worker W2 to mobilize all workers, preferring idle workers not yet participated."
+        },
+        "fallback": false,
+        "id": "7f92136b-8e22-4e6b-8fa1-73e814c85768",
+        "latency": 8.173585042,
+        "provider": "crusoe",
+        "provider_base": "https://api.inference.crusoecloud.com/v1",
+        "request_id": "8b3be8be-b839-4682-9331-2a34b0215a0b",
+        "requested_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "response_id": "chatcmpl-b6174131587d6fc2",
+        "returned_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "usage": {
+          "completion_tokens": 401,
+          "prompt_tokens": 2963,
+          "total_tokens": 3364
+        }
+      },
+      {
+        "cost": null,
+        "decision": {
+          "action": "assign",
+          "arguments": {
+            "row": 2,
+            "vehicle": "W3"
+          },
+          "rationale": "Assign tree index 2 to idle worker W3, preferring idle workers that have not yet participated."
+        },
+        "fallback": false,
+        "id": "eec49fbb-43d2-4dca-a00b-8ccbe0e9a6f7",
+        "latency": 14.219540916000007,
+        "provider": "crusoe",
+        "provider_base": "https://api.inference.crusoecloud.com/v1",
+        "request_id": "397b3630-67af-4f6c-833e-8875fd88b57a",
+        "requested_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "response_id": "chatcmpl-b9412e4000f3e217",
+        "returned_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "usage": {
+          "completion_tokens": 790,
+          "prompt_tokens": 2867,
+          "total_tokens": 3657
+        }
+      },
+      {
+        "cost": null,
+        "decision": {
+          "action": "assign",
+          "arguments": {
+            "row": 3,
+            "vehicle": "W4"
+          },
+          "rationale": "Assign tree row 3 to idle worker W4, preferring idle workers that have not yet participated."
+        },
+        "fallback": false,
+        "id": "5149667d-b6de-4cb6-a37d-d726dca5f912",
+        "latency": 8.025637083999996,
+        "provider": "crusoe",
+        "provider_base": "https://api.inference.crusoecloud.com/v1",
+        "request_id": "699052f6-cc2e-409e-a5da-54bb48590ad0",
+        "requested_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "response_id": "chatcmpl-9fa044da47eb0889",
+        "returned_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "usage": {
+          "completion_tokens": 390,
+          "prompt_tokens": 2799,
+          "total_tokens": 3189
+        }
+      },
+      {
+        "cost": null,
+        "decision": {
+          "action": "assign",
+          "arguments": {
+            "row": 4,
+            "vehicle": "W5"
+          },
+          "rationale": "Assign W5 to tree index 4 (row 8) to mobilize the idle worker that has not yet participated, following preference for idle workers."
+        },
+        "fallback": false,
+        "id": "cb84cee8-a8f5-44e7-822f-fbdacb8ef506",
+        "latency": 14.367451500000001,
+        "provider": "crusoe",
+        "provider_base": "https://api.inference.crusoecloud.com/v1",
+        "request_id": "c35a99ac-3f9d-4e33-9562-7f929d4269d8",
+        "requested_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "response_id": "chatcmpl-a20259f6682f5771",
+        "returned_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "usage": {
+          "completion_tokens": 579,
+          "prompt_tokens": 2769,
+          "total_tokens": 3348
+        }
+      }
+    ],
+    "tokens": 84007
+  },
+  "config": {
+    "arena": "orchard",
+    "code_hash": "158d3fb221a2522fc1000fcb527334f2be177dfcad9f83aeec0732b2665299dd",
+    "engine": "crusoe",
+    "fallback": {
+      "after_failures": 2,
+      "engine": "gemma",
+      "models": {
+        "orchestrator": "nvidia/nemotron-3-super-120b-a12b",
+        "planner": "nvidia/nemotron-3-super-120b-a12b",
+        "retriever": "nvidia/nemotron-3-nano-30b-a3b",
+        "treatment": "google/gemma-4-31b-it",
+        "verifier": "nvidia/nemotron-3-super-120b-a12b",
+        "worker": "nvidia/nemotron-3-nano-30b-a3b"
+      },
+      "provider_base": "https://ai-gateway.vercel.sh/v1"
+    },
+    "mode": "vision",
+    "models": {
+      "orchestrator": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "planner": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "retriever": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "treatment": "google/gemma-4-31b-it",
+      "verifier": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "worker": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
+    },
+    "provider_base": "https://api.inference.crusoecloud.com/v1",
+    "speed": 8,
+    "treatment_code_hash": "76847726299b0c92e03f74dbf8da9aaab56694c39c1a0796b0435001feb75dc7",
+    "trial": null
+  },
+  "provider_routes": {
+    "orchestrator": {
+      "failures": 0,
+      "fallback": false
+    }
+  },
+  "workers": {
+    "W1": {
+      "session_id": "17ba1fce-05fc-49c7-9e83-1122a6e0bf57",
+      "phase": "irrigation",
+      "status": "paused",
+      "checks": {
+        "battery": true,
+        "evidence": false,
+        "fertilized": false,
+        "inspected": false,
+        "inventory": true,
+        "pests_removed": false,
+        "preserved": true,
+        "returned": false,
+        "trees_complete": false,
+        "watered": false,
+        "weeds_collected": false
+      },
+      "feedback": "missing or invalid argument: frame_id",
+      "provider_routes": {
+        "treatment": {
+          "failures": 0,
+          "fallback": false
+        }
+      }
+    },
+    "W2": {
+      "session_id": "4645b173-5cd4-4617-bb39-002d9958dbbe",
+      "phase": "irrigation",
+      "status": "paused",
+      "checks": {
+        "battery": true,
+        "evidence": false,
+        "fertilized": false,
+        "inspected": false,
+        "inventory": true,
+        "pests_removed": false,
+        "preserved": true,
+        "returned": false,
+        "trees_complete": false,
+        "watered": false,
+        "weeds_collected": false
+      },
+      "feedback": "missing or invalid argument: frame_id",
+      "provider_routes": {
+        "treatment": {
+          "failures": 0,
+          "fallback": false
+        }
+      }
+    },
+    "W3": {
+      "session_id": "fa596067-c48c-4937-be86-672d96bdf337",
+      "phase": "irrigation",
+      "status": "paused",
+      "checks": {
+        "battery": true,
+        "evidence": false,
+        "fertilized": false,
+        "inspected": false,
+        "inventory": true,
+        "pests_removed": false,
+        "preserved": true,
+        "returned": false,
+        "trees_complete": false,
+        "watered": false,
+        "weeds_collected": false
+      },
+      "feedback": "Nozzle aimed using camera ray; delivery meter will confirm effective application",
+      "provider_routes": {
+        "treatment": {
+          "failures": 0,
+          "fallback": false
+        }
+      }
+    },
+    "W4": {
+      "session_id": "b2f62c53-19a0-4633-9f0a-1c500869e2ab",
+      "phase": "inspection",
+      "status": "paused",
+      "checks": {
+        "battery": true,
+        "evidence": false,
+        "fertilized": false,
+        "inspected": false,
+        "inventory": true,
+        "pests_removed": false,
+        "preserved": true,
+        "returned": false,
+        "trees_complete": false,
+        "watered": false,
+        "weeds_collected": false
+      },
+      "feedback": "missing or invalid argument: frame_id",
+      "provider_routes": {
+        "treatment": {
+          "failures": 0,
+          "fallback": false
+        }
+      }
+    }
+  },
+  "wall_seconds": 63.51004891699999
+}
