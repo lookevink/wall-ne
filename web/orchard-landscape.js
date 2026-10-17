@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import {box, cylinder, material} from './static-geometry.js';
 import {random} from './almond-geometry.js';
 import {batchStatic} from './batch-geometry.js';
+import {groundcover} from './orchard-grass.js';
+import {scenery} from './orchard-scenery.js';
 import {AISLE_COUNT,ORCHARD,aisleX,rowX,planting} from './orchard-layout.js';
 
 function soilTexture() {
@@ -40,10 +42,10 @@ export function landscape(scene) {
   const ground=box(scene,[360,.16,360],[0,-.12,0],soil);ground.castShadow=false;
   const sand=material(0xc1b08b),dark=material(0x394940),metal=material(0x7f8b7b,.55),cream=material(0xdcd0af),wood=material(0x82745a);
   const wear=material(0xc0b18d);wear.map=soil.map;
-  const cover=material(0x92906b);cover.map=soil.map;
+  const cover=material(0x808762);cover.map=soil.map;
   for(let aisle=0;aisle<AISLE_COUNT;aisle++) {
     const x=aisleX(aisle);
-    ribbon(structures,x,.68,30,cover,rng);
+    ribbon(structures,x,.92,30,cover,rng);
     for(const side of [-1,1])ribbon(structures,x+side*.61,.32,30,wear,rng,.014);
     cylinder(structures,[x,0,14],[x,.9,14],.035,.035,wood);
     const plaque=box(structures,[.6,.32,.06],[x,.85,14],lettering(String(aisle+1).padStart(2,'0'),128));plaque.rotation.y=.1;
@@ -80,22 +82,8 @@ export function landscape(scene) {
   }
   for(let x=-34;x<=34;x+=3.4)cylinder(structures,[x,0,-19],[x,1.2,-19],.045,.04,wood);
   for(const y of [.45,.9])cylinder(structures,[-34,y,-19],[34,y,-19],.012,.012,metal,4);
-  // Rolling, dry hills beyond the cultivated block, never on rover routes.
-  for(let i=0;i<11;i++) {
-    const geo=new THREE.SphereGeometry(1,20,10),hill=new THREE.Mesh(geo,material(i%2?0xb7ad8b:0xa8a58a));
-    hill.position.set(-145+i*29,-4,-95-rng()*35);hill.scale.set(30+rng()*25,8+rng()*12,26+rng()*20);scene.add(hill);
-  }
   batchStatic(structures); scene.add(structures);
-  const count=8500,blades=new THREE.InstancedMesh(new THREE.PlaneGeometry(.045,.22),new THREE.MeshStandardMaterial({color:0x929761,side:THREE.DoubleSide,roughness:1}),count),dummy=new THREE.Object3D();
-  for(let i=0;i<count;i++) {
-    const margin=i>=7000,x=margin?(i%2?1:-1)*(23+rng()*1.3):aisleX(i%AISLE_COUNT)+(rng()-.5)*.6;
-    dummy.position.set(x,.08,-15.8+rng()*29.5);dummy.rotation.set((rng()-.5)*.4,rng()*Math.PI,(rng()-.5)*.5);dummy.scale.setScalar(.45+rng()*.85);dummy.updateMatrix();blades.setMatrixAt(i,dummy.matrix);
-  }
-  scene.add(blades);
-  // Sparse flowers along the margins leave the cultivated lanes unobstructed.
-  const flowers=new THREE.InstancedMesh(new THREE.SphereGeometry(.035,5,3),material(0xe6d7a4),180);
-  for(let i=0;i<180;i++) {
-    dummy.position.set((i%2?1:-1)*(23+rng()*1.3),.17+rng()*.08,-15.8+rng()*29.5);dummy.scale.set(1,.45,1);dummy.updateMatrix();flowers.setMatrixAt(i,dummy.matrix);
-  }
-  scene.add(flowers);return ground;
+  scenery(scene);
+  const meadow=groundcover(scene);
+  return {ground,wind:meadow.wind};
 }

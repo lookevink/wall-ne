@@ -1,0 +1,27 @@
+/* The transparent master includes breathing room above and below the artwork. */
+.brand-logo {
+  display: block;
+  width: 210px;
+  height: 44px;
+  object-fit: cover;
+  object-position: center;
+  flex-shrink: 0;
+}
+.brand-header .brand {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.identity .brand-logo {
+  width: 180px;
+  height: 38px;
+}
+@media (max-width: 760px) {
+  .brand-header .brand-logo { width: 160px; height: 34px; }
+}
+@media (max-width: 650px) {
+  .brand-header { height: auto; min-height: 76px; flex-wrap: wrap; gap: 4px 16px; padding-top: 10px; padding-bottom: 10px; }
+  .brand-header nav { flex-wrap: wrap; gap: 8px 16px; }
+  .brand-header nav a { padding: 8px 0; }
+  .identity .brand-logo { width: 150px; height: 32px; }
+}

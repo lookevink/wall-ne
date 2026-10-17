@@ -140,7 +140,7 @@ class Handler(BaseHTTPRequestHandler):
             else: base=ROOT/'web'; relative=path.lstrip('/') or 'index.html'
             file=(base/relative).resolve()
             if base.resolve() not in file.parents or not file.is_file(): return self.send({'error':'not found'},404)
-            if file.suffix not in ('.js','.mjs','.html','.css','.png','.svg','.json'): return self.send({'error':'not found'},404)
+            if file.suffix not in ('.js','.mjs','.html','.css','.png','.svg','.ico','.json'): return self.send({'error':'not found'},404)
             return self.send(file.read_bytes(),content_type=mimetypes.guess_type(str(file))[0] or 'application/octet-stream')
         except ValueError as exc: self.send({'error':str(exc)},400)
         except StorageError as exc: self.send({'error':str(exc)},503)
