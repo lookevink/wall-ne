@@ -94,6 +94,16 @@ class Season:
         """Morning state of each care tree, in care-mission task order."""
         return [dict(index=t['index'],tree=t['tree'],moisture=t['moisture'],weed=copy.deepcopy(t['weed']),pests=t['pests'],prescription=prescription(t['deficit'])) for t in self.trees]
 
+    def view_trees(self,live=None):
+        """Each care tree's morning conditions with the day's measured state so far, for operator views."""
+        live=live or {};trees=[]
+        for c in self.conditions():
+            o=live.get(c['index'],{})
+            trees.append(dict(index=c['index'],row=c['tree']['row'],position=c['tree']['position'],morning_moisture=c['moisture'],moisture=o.get('moisture',c['moisture']),
+                              weed_age=c['weed']['age'],weed_size=c['weed']['size'],weed_removed=bool(o.get('weed_removed')),pests=c['pests'],
+                              pests_remaining=o.get('pests_remaining',c['pests']),prescription=c['prescription'],cared=bool(o.get('cared'))))
+        return trees
+
     def next_day(self,outcomes=None):
         """Apply today's physical end state, then tonight's weather, to tomorrow morning.
 

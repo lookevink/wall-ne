@@ -7,8 +7,8 @@ const smooth=(a,b,x)=>THREE.MathUtils.smoothstep(x,a,b), lerp=THREE.MathUtils.le
 const linear=(r,g,b)=>new THREE.Color(r,g,b);
 // Keyframes by solar elevation (degrees). Sky colors are linear shader values.
 const KEYS=[
-  {el:-18,zenith:linear(.006,.011,.03),horizon:linear(.018,.028,.06),hemiSky:0x1e2b48,hemiGround:0x0d0c0a,hemi:.45},
-  {el:-9,zenith:linear(.03,.045,.11),horizon:linear(.09,.09,.16),hemiSky:0x34405e,hemiGround:0x15120e,hemi:.55},
+  {el:-18,zenith:linear(.006,.011,.03),horizon:linear(.018,.028,.06),hemiSky:0x24345a,hemiGround:0x110f0c,hemi:.75},
+  {el:-9,zenith:linear(.03,.045,.11),horizon:linear(.09,.09,.16),hemiSky:0x3a4766,hemiGround:0x17140f,hemi:.8},
   {el:-3,zenith:linear(.10,.14,.29),horizon:linear(.55,.36,.31),hemiSky:0x7a7690,hemiGround:0x3b2f22,hemi:.9},
   {el:3,zenith:linear(.20,.33,.53),horizon:linear(.95,.66,.45),hemiSky:0xc9b9a4,hemiGround:0x6a5638,hemi:1.35},
   {el:12,zenith:linear(.27,.47,.62),horizon:linear(.86,.78,.62),hemiSky:0xdbe2da,hemiGround:0x84704e,hemi:1.75},
@@ -66,6 +66,8 @@ export class Atmosphere {
     this.view.scene.traverse(o=>{const m=o.material;if(o.isMesh&&m?.isMeshBasicMaterial&&!this.own.has(m))seen.set(m,this.unlit.get(m)||m.color.clone());});
     this.unlit=seen;
   }
+  // Applies one epoch exactly, without easing; offline film frames depend only on their state.
+  set(epoch){this.update(epoch);this.previous=null;this.tick(this.receivedAt);}
   // Ease between the last two server samples so the sun never steps.
   sample(now){
     const c=this.current;if(!c)return null;const p=this.previous;
@@ -92,7 +94,7 @@ export class Atmosphere {
     const zenith=k.zenith.clone().lerp(gray,cloud*.5),horizon=k.horizon.clone().lerp(gray.clone().multiplyScalar(1.6),cloud*.4);
     return {
       sun:light,sunColor:new THREE.Color(0xffe6c1).lerp(new THREE.Color(0xff9a52),golden*daylight).lerp(new THREE.Color(0xa7bde8),useSun?0:1),
-      sunIntensity:useSun?3.3*daylight*overcast:.55*moonlight*(1-cloud*.6),
+      sunIntensity:useSun?3.3*daylight*overcast:.85*moonlight*(1-cloud*.6),
       hemiSky:k.hemiSky,hemiGround:k.hemiGround,hemi:k.hemi*(1+.15*cloud),unlit:THREE.MathUtils.clamp(k.hemi/2*(.35+.65*daylight),.06,1),
       fog:horizon.clone(),fogLinear:true,near:lerp(95,8,fogAmount),far:lerp(330,70,fogAmount),
       sky:{sunDirection:sun,moonDirection:moon,zenith,horizon,glow:new THREE.Color(.28,.19,.08).lerp(new THREE.Color(.55,.24,.06),golden).multiplyScalar(daylight*overcast+.15*(1-smooth(-8,-1,el))*smooth(-14,-6,el)),
