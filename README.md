@@ -32,7 +32,7 @@ Use a dedicated test project when running persistence integration tests; they cr
 - **Irrigation / complete care:** “Offline PNG heuristic” finds stylized color components in actual browser PNGs. Live multimodal mode receives the same camera image and permitted sensor readings. Keep the treatment page open to supply observations.
 - **Manipulation:** select a live provider and one of six sensor conditions. `known` is explicitly a supplied-coordinate diagnostic. It is not evidence of visual localization. Wrist and alignment modes enforce visual assessment plus independently measured contact/load before lifting.
 
-Crusoe is preferred. Gemini, Nemotron VL and Gemma are configurable Gateway conditions. `AI_GATEWAY_KEY` is accepted as an alias for `AI_GATEWAY_API_KEY`. Missing credentials, failed inference and exhausted budgets produce blocked results; there is no silent offline fallback.
+Crusoe is primary; live treatment defaults to Gemma 4. Two consecutive provider/protocol failures switch the affected role to its pinned AI Gateway fallback for the rest of the session. Physical misses and rejected actions do not trigger fallback. Gemini, Nemotron VL and Gemma remain explicit Gateway comparison conditions. See [the FieldCrew transfer and routing notes](docs/FIELDCREW.md). `AI_GATEWAY_KEY` is accepted as an alias for `AI_GATEWAY_API_KEY`. Missing credentials, failed inference and exhausted budgets produce blocked results; there is no silent offline fallback.
 
 ## Recovery and evidence
 

@@ -1,0 +1,13 @@
+{
+  "source": "/Users/kevinloo/Documents/ChatGPT/nvidia-hackathon",
+  "sha256": {
+    "fieldcrew/manipulation.py": "f0a935e86a7e784f2d235a586d6a4e3a4209bfe6379ec275940df0dd44a63729",
+    "fieldcrew/inference.py": "9e02c3fce3d5b5ecda230748a8ff03667a40f29fb5d0cb3f52d4144f770497ca",
+    "fieldcrew/arm.py": "6e759b037879f77b48333b5a1a314d23c802afecd6eeb810223316034fe83aea",
+    "fieldcrew/treatment_runtime.py": "a46215da139ad97febe82a88188952ae1957461e29429d94d862131b36917b5b",
+    "web/manipulator.js": "57939a3fa7cf5c2d70a250859d991e817142759408929ce0f767e979687161f5",
+    "web/weed-geometry.js": "125c475dbe23b13958fa5a9734a1fe982f4cc3d40fe92009ba5399a4727968cc",
+    "web/treatment-scene.js": "affbb379ec6850ecf264bfa0da4b183284d701b8dca1f0c9e89f9a3c4f4dabac",
+    "docs/arm-wrist-results.json": "67832e320fa967388ec9c16f89ed2f4be925446dc8a7d1707f7a923855b8e689"
+  }
+}

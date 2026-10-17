@@ -28,13 +28,20 @@ class InferenceError(RuntimeError):
         super().__init__(message);self.metrics=metrics
 
 
-def parse_response(response):
+def parse_response(response,tool_name='choose_action',allowed_actions=None):
     try:
         choices=response['choices']
         if len(choices)!=1: raise ValueError()
         calls=choices[0]['message']['tool_calls']
-        if len(calls)!=1 or calls[0]['type']!='function' or calls[0]['function']['name']!='choose_action': raise ValueError()
+        if len(calls)!=1 or calls[0]['type']!='function' or calls[0]['function']['name']!=tool_name: raise ValueError()
         parsed=json.loads(calls[0]['function']['arguments'],parse_constant=lambda _: (_ for _ in ()).throw(ValueError()))
+        if tool_name=='treatment_action':
+            if not isinstance(parsed,dict) or set(parsed)-set(ARGUMENT_FIELDS)-{'action','reason','x','y','z','rx','ry','rz'}:raise ValueError()
+            action=parsed.pop('action',None);reason=parsed.pop('reason',None)
+            if not isinstance(reason,str) or len(reason)>1200 or action not in allowed_actions:raise ValueError()
+            if action=='move_arm' and 'joints' not in parsed:
+                parsed['pose']=[parsed.pop(k) for k in ('x','y','z','rx','ry','rz')]
+            parsed=dict(action=action,arguments=parsed,rationale=reason)
         if not isinstance(parsed,dict) or set(parsed)-{'action','arguments','rationale'} or not isinstance(parsed.get('action'),str) or not isinstance(parsed.get('arguments'),dict): raise ValueError()
         if 'rationale' in parsed and (not isinstance(parsed['rationale'],str) or len(parsed['rationale'])>1200): raise ValueError()
         return parsed
@@ -47,7 +54,7 @@ class Adapter:
         if self.provider=='crusoe':
             self.base=os.getenv('CRUSOE_API_BASE_URL','https://api.inference.crusoecloud.com/v1')
             self.key=os.getenv('CRUSOE_API_KEY',''); self.timeout=25
-            default='nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B' if role=='treatment' else 'nvidia/Nemotron-3-Super-120B-A12B' if role in ('orchestrator','verifier','planner','reviewer') else 'nvidia/Nemotron-3-Nano-30B-A3B'
+            default='google/gemma-4-31b-it' if role=='treatment' else 'nvidia/Nemotron-3-Super-120B-A12B' if role in ('orchestrator','verifier','planner','reviewer') else 'nvidia/Nemotron-3-Nano-30B-A3B'
             env='CRUSOE_VISION_MODEL' if role=='treatment' else 'CRUSOE_ORCHESTRATOR_MODEL' if role in ('orchestrator','verifier','planner','reviewer') else 'CRUSOE_WORKER_MODEL'
             self.model=os.getenv(env,os.getenv(env.lower(),default))
             # Canonical IDs returned by this provider's /models inventory (2026-10-17).
@@ -64,7 +71,15 @@ class Adapter:
         content=[dict(type='text',text=canonical(observation))]
         if image:
             for png in (image if isinstance(image,list) else [image])[:3]: content.append(dict(type='image_url',image_url={'url':png}))
-        body=dict(model=self.model,messages=[dict(role='system',content=prompt),dict(role='user',content=content)],tools=TOOLS,tool_choice={'type':'function','function':{'name':'choose_action'}},temperature=.1,max_tokens=4096)
+        flat=observation.get('trial')=='fieldcrew'
+        tool_name='treatment_action' if flat else 'choose_action'
+        schema=TOOLS
+        if flat:
+            fields={k:v for k,v in ARGUMENT_FIELDS.items() if k!='pose'}
+            fields.update({k:dict(type='number') for k in ('x','y','z','rx','ry','rz')})
+            fields.update(action=dict(type='string',enum=observation['available_actions']),reason=dict(type='string'))
+            schema=[dict(type='function',function=dict(name=tool_name,description='Execute one available action. move_arm requires x,y,z,rx,ry,rz. set_gripper requires opening and force. Assess/confirm require current frame_id and evidence.',parameters=dict(type='object',properties=fields,required=['action','reason'],additionalProperties=False)))]
+        body=dict(model=self.model,messages=[dict(role='system',content=prompt),dict(role='user',content=content)],tools=schema,tool_choice='required' if flat else {'type':'function','function':{'name':tool_name}},temperature=.1,max_tokens=4096)
         request=urllib.request.Request(self.base.rstrip('/')+'/chat/completions',data=canonical(body).encode(),headers={'Authorization':'Bearer '+self.key,'Content-Type':'application/json'},method='POST')
         started=time.monotonic(); response=None
         try:
@@ -73,14 +88,21 @@ class Adapter:
             raise InferenceError(f'{self.provider} HTTP {exc.code}; no fallback performed',self.failed_metrics(started)) from None
         except (OSError,ValueError):
             raise InferenceError(f'{self.provider} unavailable or timed out',self.failed_metrics(started)) from None
-        usage=response.get('usage') or {}
+        envelope_valid=isinstance(response,dict)
+        response=response if envelope_valid else {}
+        raw_usage=response.get('usage')
+        envelope_valid=envelope_valid and (raw_usage is None or isinstance(raw_usage,dict))
+        usage=raw_usage if isinstance(raw_usage,dict) else {}
+        envelope_valid=envelope_valid and all(type(usage[k]) is int and usage[k]>=0 for k in ('prompt_tokens','completion_tokens','total_tokens') if k in usage)
         cost=reported_cost(usage)
-        try: decision=parse_response(response)
+        try:
+            if not envelope_valid:raise InferenceError('Provider returned an invalid response envelope')
+            decision=parse_response(response,tool_name,observation.get('available_actions'))
         except InferenceError as exc:
-            exc.metrics=self.failed_metrics(started);exc.metrics['usage']={k:v for k,v in (response.get('usage') or {}).items() if k in ('prompt_tokens','completion_tokens','total_tokens')}
+            exc.metrics=self.failed_metrics(started);exc.metrics['usage']={k:v for k,v in usage.items() if k in ('prompt_tokens','completion_tokens','total_tokens') and type(v) is int and v>=0}
             exc.metrics.update(cost=cost,response_id=response.get('id'),returned_model=response.get('model'))
-            choices=response.get('choices') or []
-            exc.metrics['response_summary']=[dict(finish_reason=c.get('finish_reason'),tool_names=[t.get('function',{}).get('name') for t in (c.get('message',{}).get('tool_calls') or [])]) for c in choices[:2]]
+            choices=response.get('choices')
+            exc.metrics['response_summary']=[dict(finish_reason=c.get('finish_reason')) for c in choices[:2] if isinstance(c,dict)] if isinstance(choices,list) else []
             raise
 
         return dict(id=uid(),decision=decision,requested_model=self.model,returned_model=response.get('model'),provider=self.provider,response_id=response.get('id'),usage={k:usage[k] for k in ('prompt_tokens','completion_tokens','total_tokens') if k in usage},cost=cost,latency=time.monotonic()-started)
@@ -89,7 +111,8 @@ class Adapter:
         return dict(id=uid(),status='failed',requested_model=self.model,returned_model=None,provider=self.provider,response_id=None,usage={},cost=None,latency=time.monotonic()-started)
 
 def reported_cost(usage):
-    values=[usage.get('cost'),(usage.get('cost_details') or {}).get('upstream_inference_cost')]
+    details=usage.get('cost_details');details=details if isinstance(details,dict) else {}
+    values=[usage.get('cost'),details.get('upstream_inference_cost')]
     if values[0] is None: return None
     try:
         numbers=[float(v) for v in values if v is not None]

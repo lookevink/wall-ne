@@ -61,3 +61,15 @@ class RuntimeEvidenceTests(unittest.TestCase):
     def test_restore_waits_for_original_session_accounting(self):
         runtime=self.runtime();runtime.futures['planner']=(runtime.world.id,concurrent.futures.Future())
         with self.assertRaisesRegex(ValueError,'outstanding'):runtime.restore('another')
+
+    def test_superseded_scan_cannot_claim_new_frame_as_crop_source(self):
+        from simulator import lidar
+        w=Manipulation();w.status='running';first=frame(w)
+        w.depth_request=lidar.request(first,.5,.5)
+        request=w.depth_request.copy();frame(w) # Same revision, different captured frame.
+        runtime=self.runtime(w,TreatmentRuntime)
+        with patch.object(runtime.repository,'artifact') as upload:
+            with self.assertRaisesRegex(ValueError,'superseded'):
+                runtime.accept_depth(dict(mission_id=w.id,request_id=request['id'],frame_id=first['id'],revision=w.revision,points=[None]*169))
+            upload.assert_not_called()
+        self.assertEqual(w.depth_request,request);self.assertIsNone(w.scan)

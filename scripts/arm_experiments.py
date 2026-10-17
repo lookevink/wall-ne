@@ -38,7 +38,7 @@ def trial(engine,condition,seed=7,expected=None):
         export_error=None
         try: (path/f'{session}.json').write_text(json.dumps(api(f'/api/sessions/{session}/export'),indent=2))
         except Exception: export_error='Export unavailable; authoritative session retained in Supabase'
-        return dict(export_error=export_error,session_id=session,engine=engine,trial=condition,seed=seed,status=state['status'],feedback=state.get('feedback'),checks=state['checks'],calls=state['inference']['calls'],failed_calls=state['inference'].get('failed_calls'),pending_calls=state['inference'].get('pending_calls'),inference_seconds=state['inference'].get('latency_seconds'),cost=state['inference']['cost'],model=state['config']['models']['treatment'],treatment_code_hash=state['config']['treatment_code_hash'],wall_seconds=time.monotonic()-started,controller_progress=state.get('control_progress'),physical_milestones={name:state.get(name) for name in ('holding','extracted','deposited')})
+        return dict(export_error=export_error,session_id=session,engine=engine,trial=condition,seed=seed,status=state['status'],feedback=state.get('feedback'),checks=state['checks'],calls=state['inference']['calls'],failed_calls=state['inference'].get('failed_calls'),pending_calls=state['inference'].get('pending_calls'),inference_seconds=state['inference'].get('latency_seconds'),cost=state['inference']['cost'],model=state['config']['models']['treatment'],provider_routes=state.get('provider_routes',{}),provider_policy=state['config'].get('fallback'),treatment_code_hash=state['config']['treatment_code_hash'],wall_seconds=time.monotonic()-started,controller_progress=state.get('control_progress'),physical_milestones={name:state.get(name) for name in ('holding','extracted','deposited')})
     finally:
         if session:
             try:
@@ -49,7 +49,7 @@ def trial(engine,condition,seed=7,expected=None):
 def main():
     p=argparse.ArgumentParser();g=p.add_mutually_exclusive_group()
     for flag in ('lidar','alignment','wrist'):g.add_argument('--'+flag,action='store_true')
-    p.add_argument('--engine',choices=['crusoe','nemotron','gemma','gemini']);p.add_argument('--condition',choices=['baseline','known','depth','lidar','alignment','wrist']);p.add_argument('--seed',type=int,default=7)
+    p.add_argument('--engine',choices=['crusoe','nemotron','gemma','gemini']);p.add_argument('--condition',choices=['baseline','known','depth','lidar','alignment','wrist','fieldcrew']);p.add_argument('--seed',type=int,default=7)
     args=p.parse_args()
     condition=args.condition or next((x for x in ('lidar','alignment','wrist') if getattr(args,x)),None)
     runs=[(args.engine,condition or 'baseline')] if args.engine else [(engine,condition) for engine in ('nemotron','gemma')] if condition else [('gemini','baseline')]+[(engine,'known') for engine in ('gemini','nemotron','gemma')]+[(engine,'depth') for engine in ('nemotron','gemma')]

@@ -16,7 +16,17 @@ class Runtime:
         self.config=copy.deepcopy(config or dict(mode='demo',engine='crusoe',speed=8))
         self.config.setdefault('models',{role:Adapter(self.config['engine'],role).model for role in ('planner','orchestrator','worker','retriever','verifier','treatment')})
         self.config.setdefault('provider_base',Adapter(self.config['engine']).base)
+        # New Crusoe sessions pin their fallback before the first paid call.
+        # Restores use saved configuration, never newly introduced defaults.
+        if self.config['engine']=='crusoe' and 'fallback' not in self.config:
+            aliases={'nvidia/NVIDIA-Nemotron-3.5-Super-VL':'nvidia/nemotron-3.5-super-vl',
+                     'nvidia/NVIDIA-Nemotron-3-Super-120B-A12B':'nvidia/nemotron-3-super-120b-a12b',
+                     'nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B':'nvidia/nemotron-3-nano-30b-a3b',
+                     'nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B':'nvidia/nemotron-3.5-super-vl'}
+            self.config['fallback']=dict(after_failures=2,engine='gemma',provider_base=Adapter('gemma').base,
+                models={role:aliases.get(model,model) for role,model in self.config['models'].items()})
         self.config.setdefault('trial',getattr(self.world,'trial',None))
+        self.provider_routes={}
         self.committed=0; self.epoch=0; self.persisted=False; self.storage_error=None; self.pending=None
         self.telemetry=Telemetry(); self.controller=DemoController(); self.executor=concurrent.futures.ThreadPoolExecutor(max_workers=7)
         self.futures={}; self.requests={}; self.inference=[]; self.failures={}; self.retry_after={}; self.waiting=None; self.closed=False; self.last_commit=0; self.active_wall=0
@@ -24,7 +34,7 @@ class Runtime:
 
     def persist(self):
         try:
-            self.world.runtime_state=dict(config=self.config,inference=self.inference,failures=self.failures,active_wall=self.active_wall,pending_requests=self.requests)
+            self.world.runtime_state=dict(config=self.config,inference=self.inference,failures=self.failures,provider_routes=self.provider_routes,active_wall=self.active_wall,pending_requests=self.requests)
             if not self.persisted:
                 lease=self.repository.create(self.world,self.config); self.epoch=lease['resume_epoch']; self.persisted=True
             if self.persisted and self.last_commit and time.monotonic()-self.last_commit>15:
@@ -80,6 +90,9 @@ class Runtime:
             if not rows or (rows[0]['kind']=='fleet')!=(self.world.kind=='fleet'): raise ValueError('session belongs to a different runtime family')
             if rows[0].get('status') in TERMINAL: raise ValueError('terminal sessions are read-only; create a new session')
             config=copy.deepcopy(rows[0]['metadata']['configuration'])
+            if config.get('treatment_code_hash'):
+                from .common import treatment_implementation_hash
+                if config['treatment_code_hash']!=treatment_implementation_hash():raise ValueError('saved treatment implementation changed; create a new session')
             if config.get('mode') in ('live','vision') and ('models' not in config or 'provider_base' not in config): raise ValueError('saved live session lacks exact model pins; create a new session')
             state=self.repository.restore(session); lease=self.repository.lease(session)
             from .treatment import Treatment
@@ -90,6 +103,7 @@ class Runtime:
             self.config=config
             durable_runtime=state.get('runtime_state',{})
             self.inference=durable_runtime.get('inference',[]);self.failures=durable_runtime.get('failures',{})
+            self.provider_routes=durable_runtime.get('provider_routes',{})
             self.active_wall=durable_runtime.get('active_wall',0)
             self.requests={}
             for robot,request in durable_runtime.get('pending_requests',{}).items():
@@ -107,14 +121,17 @@ class Runtime:
             self.world.event('restored',resume_epoch=self.epoch); self.persist()
 
     def adapter(self,role):
-        adapter=Adapter(self.config['engine'],role)
-        adapter.model=self.config['models'][role];adapter.base=self.config['provider_base']
+        config=self.config['fallback'] if self.provider_routes.get(role,{}).get('fallback') else self.config
+        adapter=Adapter(config['engine'],role)
+        adapter.model=config['models'][role];adapter.base=config['provider_base']
         return adapter
 
     def dispatch(self,robot,role,observation,image=None):
         if self.storage_error or self.world.status!='running': return False
         adapter=self.adapter(role)
         request=dict(id=uid(),session_id=self.world.id,role=role,model=adapter.model,
+                     provider=getattr(adapter,'provider',self.config['engine']),provider_base=adapter.base,
+                     fallback=bool(self.provider_routes.get(role,{}).get('fallback')),
                      prompt_version=self.world.prompt_versions.get(role),observation_hash=digest(observation),
                      input_event_sequence=self.world.seq,frame=copy.deepcopy(observation.get('frame')),
                      input_images=copy.deepcopy(observation.get('input_images',[])),scan_artifact_id=(observation.get('scan') or {}).get('artifact_id'),
@@ -134,8 +151,36 @@ class Runtime:
         return True
 
     def consume(self,robot,future):
-        self.requests.pop(robot,None)
-        return future.result()
+        request=self.requests.pop(robot,None)
+        try:
+            result=future.result()
+        except InferenceError as exc:
+            if request and exc.metrics:
+                exc.metrics.update(provider_base=request['provider_base'],fallback=request['fallback'])
+            # Only transport/auth/protocol failures count. Rejected physical
+            # actions and missed grasps are handled after this boundary.
+            if request and exc.metrics and self.world.status=='running':
+                role=request['role'];route=self.provider_routes.setdefault(role,dict(fallback=False,failures=0))
+                if request['fallback']!=route['fallback']:
+                    # An older Crusoe request can finish after another worker
+                    # switched their shared role. It is still accounted, but
+                    # cannot consume the new provider's failure budget.
+                    exc.provider_failure_count=0
+                    raise
+                route['failures']+=1
+                fallback=self.config.get('fallback')
+                if fallback and not route['fallback'] and route['failures']>=fallback['after_failures']:
+                    route.update(fallback=True,failures=0,reason=str(exc))
+                    exc.fallback_activated=True
+                    self.world.event('provider_fallback',robot,role=role,reason=str(exc),after_failures=fallback['after_failures'],
+                        from_provider=request['provider'],from_model=request['model'],to_provider='gateway',to_model=fallback['models'][role])
+                exc.provider_failure_count=route['failures']
+            raise
+        if request:
+            role=request['role'];route=self.provider_routes.setdefault(role,dict(fallback=False,failures=0))
+            if request['fallback']==route['fallback']:route['failures']=0
+            result.update(provider_base=request['provider_base'],fallback=request['fallback'])
+        return result
 
     def _demo(self):
         decisions=self.controller.decisions(self.world.observations())
@@ -169,7 +214,8 @@ class Runtime:
                 if not self.persist(): return
             except InferenceError as exc:
                 if exc.metrics: self.inference.append(exc.metrics)
-                self.failures[robot]=self.failures.get(robot,0)+1; self.world.event('inference_error',robot,error=str(exc))
+                self.failures[robot]=getattr(exc,'provider_failure_count',self.failures.get(robot,0)+1)
+                self.world.event('inference_error',robot,error=str(exc))
                 self.retry_after[robot]=time.monotonic()+min(8,2**self.failures[robot])
                 if self.failures[robot]>=3: self.world.status='blocked'
                 if not self.persist(): return
@@ -230,7 +276,7 @@ class Runtime:
     def snapshot(self):
         with self.lock:
             state=self.world.snapshot(); state['events']=state['events'][-100:]
-            state.update(config=self.config,storage=dict(healthy=not self.storage_error,error=self.storage_error,committed_sequence=self.committed),telemetry=self.telemetry.latest,
+            state.update(config=self.config,provider_routes=copy.deepcopy(self.provider_routes),storage=dict(healthy=not self.storage_error,error=self.storage_error,committed_sequence=self.committed),telemetry=self.telemetry.latest,
                          inference=dict(calls=len(self.inference),pending_calls=len(self.futures),latency_seconds=sum(r.get('latency',0) for r in self.inference),failed_calls=sum(r.get('status') in ('failed','interrupted_unknown') for r in self.inference),tokens=sum(r['usage'].get('total_tokens',0) for r in self.inference),cost=sum(r['cost'] for r in self.inference) if self.inference and all(r['cost'] is not None for r in self.inference) else None,results=self.inference[-30:]),waiting=self.waiting)
             if self.storage_error: state['status']='storage_blocked'
             return state

@@ -21,8 +21,15 @@ def segment_distance(p,a,b):
 def box_contains(p,center,half):
     return all(abs(a-b)<=h+.006 for a,b,h in zip(p,center,half))
 
-def robot_surface(p,pose,opening,base_position):
+def robot_surface(p,pose,opening,base_position,profile=None):
     points=pose['points'];r=pose['rotation']
+    if profile=='fieldcrew':
+        if any(segment_distance(p,a,b)<=.061 for a,b in zip(points,points[1:])):return True
+        joints=[(points[0],.075),(add(points[0],[0,.08,0]),.075),(points[1],.075)]
+        joints += [(add(points[2],scale(sub(points[3],points[2]),i*.27)),.075*(1-i*.15)) for i in range(3)]
+        if any(norm(sub(p,center))<=radius+.006 for center,radius in joints):return True
+        local=matvec(transpose(r),sub(p,pose['position']))
+        return box_contains(local,[0,.09,0],[.085,.0375,.0425]) or any(box_contains(local,[sign*(opening/2+.009),0,0],[.009,.065,.02]) for sign in (-1,1))
     for i,(a,b) in enumerate(zip(points,points[1:])):
         if i==2:b=add(b,scale([r[0][1],r[1][1],r[2][1]],.13))
         if segment_distance(p,a,b)<=(.09 if i<2 else .04):return True
@@ -37,12 +44,12 @@ def robot_surface(p,pose,opening,base_position):
             box_contains(rover,[0,1.06,.45],[.275,.2,.325]) or
             any(box_contains(rover,[x,.38,z],[.11,.32,.32]) for x in (-.7,.7) for z in (-.58,.58)))
 
-def interpret_scan(points,camera,pose,opening,base_position):
+def interpret_scan(points,camera,pose,opening,base_position,profile=None):
     classes=[];ranges=[]
     for row in points:
         if row is None:classes.append('no_return');ranges.append(None);continue
         p=row[2:];ranges.append(round(norm(sub(p,camera['position'])),5))
-        classes.append('robot_geometry' if robot_surface(p,pose,opening,base_position) else 'ground_plane' if p[1]<=.025 else 'unclassified_surface')
+        classes.append('robot_geometry' if robot_surface(p,pose,opening,base_position,profile) else 'ground_plane' if p[1]<=.025 else 'unclassified_surface')
     return dict(columns=['u','v','world_x','world_y','world_z'],units=['normalized_image','normalized_image','meters','meters','meters'],
                 image_origin='top-left; u increases right, v increases down',world_up_axis='y',
                 return_semantics='First visible surface along each ordered camera ray. Returns can hit foliage, stem, protected plants, arm or ground. They are NOT target coordinates; null means no return.',

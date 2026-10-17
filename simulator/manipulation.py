@@ -8,8 +8,8 @@ from .arm import fk,ik,trajectory,LIMITS
 from . import lidar
 from .arm_observation import GRASP_GUIDE,interpret_scan,progress_state
 
-STAGED={'alignment','wrist'}
-TRIALS={'baseline','known','depth','lidar','alignment','wrist'}
+STAGED={'alignment','wrist','fieldcrew'}
+TRIALS={'baseline','known','depth','lidar','alignment','wrist','fieldcrew'}
 
 class Manipulation(Treatment):
     kind='arm'; frame_limit=50; decision_limit=50
@@ -19,6 +19,9 @@ class Manipulation(Treatment):
         super().__init__(seed,trial); self.phase='extraction'; self.tool='articulated gripper'; self.robot['position']=[0,3.8]
         rng=random.Random(seed+510)
         self.weed=dict(id='weed0',position=[rng.uniform(-.55,.5),.08,rng.uniform(1.15,1.65)],form=rng.choice(['grass','rosette','thistle']),size=rng.uniform(.9,1.2),leaves=rng.randint(9,15),rotation=rng.random()*math.tau,removed=False)
+        if trial=='fieldcrew':
+            self.weed['form']={'grass':'rosette','rosette':'grass','thistle':'thistle'}[self.weed['form']]
+        self.stage_verified=False
         self.protected=[dict(id='clover0',position=[-.85,.08,1.4]),dict(id='clover1',position=[.85,.08,1.4])]
         self.inventory_hash=digest(dict(weed=self.weed,protected=self.protected))
         self.joints=ik([0,.8,2.2,0,0,0],self.base())
@@ -35,7 +38,7 @@ class Manipulation(Treatment):
 
     def camera(self):
         x,z=self.robot['position']
-        if self.trial=='wrist' and hasattr(self,'joints'):
+        if self.trial in ('wrist','fieldcrew') and hasattr(self,'joints'):
             pose=self.tool_pose(); r=pose['rotation']; p=pose['position']
             return dict(width=640,height=360,fov=70,near=.05,position=add(p,matvec(r,[0,.04,.22])),direction=matvec(r,[0,-.12,-.28]),up=matvec(r,[0,1,0]))
         if self.trial in ('depth','lidar','alignment'):
@@ -49,6 +52,17 @@ class Manipulation(Treatment):
         return frame
 
     def allowed_actions(self):
+        if self.trial=='fieldcrew' and hasattr(self,'joints'):
+            if self.stage_verified:return ['verify'] if self.return_verified else ['return','stop']
+            actions=['scan_lidar','capture_image','stop']
+            if not self.nonempty_scan:return actions
+            actions+=['open_gripper']
+            if self.deposited:return actions+['verify']
+            if self.holding:return actions+['set_gripper','move_arm' if self.contact_ack else 'confirm_contact']
+            if self.opening>=.06 and not self.must_reopen:
+                actions+=['move_arm','assess_alignment']
+                if self.alignment and self.alignment['aligned'] and self.alignment['revision']==self.revision:actions+=['set_gripper']
+            return actions
         actions=['capture_image','move_arm','set_gripper','open_gripper','verify','return','stop']
         if self.trial in ('baseline','known'): actions+=['project_ground']
         if self.trial=='depth': actions+=['measure_depth']
@@ -64,22 +78,29 @@ class Manipulation(Treatment):
                    protocol=dict(nonempty_scan=self.nonempty_scan,alignment=self.alignment,contact_acknowledged=self.contact_ack is not None),scan=self.scan,
                    scan_stale=self.scan is not None and (self.scan['revision']!=self.revision or not self.frame or self.scan['frame_id']!=self.frame['id']))
         if self.trial=='known': obs['diagnostic_known_grasp']=[self.weed['position'][0],.15,self.weed['position'][2]]
+        if self.trial=='fieldcrew':
+            from .fieldcrew_profile import INSTRUCTIONS
+            obs.pop('grasp_geometry',None)
+            obs.update(instructions=INSTRUCTIONS,grasp_stage=('return' if self.stage_verified else 'scan' if not self.nonempty_scan else 'lift_or_carry' if self.holding and self.contact_ack else 'confirm_contact' if self.holding else 'reopen_after_missed_grasp' if self.must_reopen or self.opening<.06 else 'close_jaws' if 'set_gripper' in self.allowed_actions() else 'approach_and_visually_align'))
         return obs
 
     def record_control_progress(self,action):
         return progress_state(self,action)
 
     def _action(self,action,args):
+        if self.trial=='fieldcrew' and action not in self.allowed_actions():raise ValueError('action unavailable at current grasp stage')
         progress=getattr(self,'control_progress',None)
         if progress and progress['recovery_required']:
             recovery=action=='confirm_contact' and self.holding and self.load>0 or action=='stop' or action=='open_gripper' and (self.must_reopen or self.opening<.119) or action=='scan_lidar' and not self.nonempty_scan and (not self.scan or abs(args.get('u',0)-sum(self.scan['bounds'][::2])/2)>.05 or abs(args.get('v',0)-sum(self.scan['bounds'][1::2])/2)>.05) or action in ('return','verify') and self.deposited
+            if action=='set_gripper' and self.holding:
+                recovery=finite(args['opening'],0,.12)<=.025 and finite(args['force'],0,45)>self.force
             if action=='move_arm':
                 q=ik(args['pose'],self.base(),self.joints) if 'pose' in args else args['joints']
                 target=fk(q,self.base());current=self.tool_pose()
                 recovery=norm(sub(target['position'],current['position']))>=.02 or max(abs(a-b) for a,b in zip(target['euler'],current['euler']))>=3
             if not recovery:raise ValueError('No meaningful progress: choose a different viewpoint/grasp pose (at least 2 cm or 3 degrees), reopen after a miss, or stop. Repeated images and identical poses are not recovery.')
         if action=='move_arm':
-            if self.trial in ('lidar','alignment','wrist') and not self.nonempty_scan: raise ValueError('initial nonempty LiDAR scan required')
+            if self.trial in ('lidar','alignment','wrist','fieldcrew') and not self.nonempty_scan: raise ValueError('initial nonempty LiDAR scan required')
             if self.must_reopen: raise ValueError('reopen after miss or slip before repositioning')
             if self.holding and self.trial in STAGED and self.contact_ack is None: raise ValueError('confirm actual contact with fresh image before carrying')
             end=ik(args['pose'],self.base(),self.joints) if 'pose' in args else args['joints']
@@ -134,6 +155,11 @@ class Manipulation(Treatment):
             if action not in self.allowed_actions(): raise ValueError('sensor unavailable in this trial')
             self.depth_request=lidar.request(frame,args['u'],args['v'],args.get('span',.24))
             if action=='measure_depth': self.depth_request['rays']=[[finite(args['u'],0,1),finite(args['v'],0,1)]]
+        elif action=='verify' and self.trial=='fieldcrew':
+            checks=self.verify();self.stage_verified=all(value for name,value in checks.items() if name!='returned')
+            self.event('verification','T1',checks=checks)
+            self.feedback='Physical stage verified; return home' if self.stage_verified else 'Independent physical checks incomplete'
+            if all(checks.values()):self.status='completed'
         elif action=='return':
             if self.holding: raise ValueError('collect the plant before returning')
             super()._action(action,args)
@@ -146,7 +172,7 @@ class Manipulation(Treatment):
         if not self.depth_request or revision!=self.revision: raise ValueError('stale depth request')
         accepted=lidar.validate(self.depth_request,request_id,frame_id,revision,points)
         if not artifact.get('ready'): raise ValueError('depth artifact not durable')
-        self.scan=dict(frame_id=frame_id,revision=revision,points=accepted,bounds=self.depth_request['bounds'],artifact_id=artifact['id'],**interpret_scan(accepted,self.depth_request['camera'],self.tool_pose(),self.opening,self.robot['position']))
+        self.scan=dict(frame_id=frame_id,revision=revision,points=accepted,bounds=self.depth_request['bounds'],artifact_id=artifact['id'],rays=len(accepted),misses=sum(p is None for p in accepted),**interpret_scan(accepted,self.depth_request['camera'],self.tool_pose(),self.opening,self.robot['position'],self.trial))
         self.nonempty_scan=self.nonempty_scan or any(p is not None for p in accepted)
         self.depth_request=None; self.event('depth','T1',scan=self.scan)
 

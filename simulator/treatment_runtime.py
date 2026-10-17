@@ -133,15 +133,18 @@ class TreatmentRuntime(Runtime):
                 if self.consecutive_invalid>=3: w.status='blocked'; w.feedback='Three rejected actions without new progress'
             except InferenceError as exc:
                 if exc.metrics: self.inference.append(exc.metrics)
-                self.failures['T1']=self.failures.get('T1',0)+1; w.event('inference_error','T1',error=str(exc))
+                self.failures['T1']=getattr(exc,'provider_failure_count',self.failures.get('T1',0)+1)
+                w.event('inference_error','T1',error=str(exc))
                 self.retry_after['T1']=time.monotonic()+min(8,2**self.failures['T1'])
                 if self.failures['T1']>=3: w.status='blocked'; w.feedback=str(exc)
             self.persist(); return
         obs=w.observations(); obs['tool_arguments']={k:TOOL_HELP[k] for k in w.allowed_actions() if k in TOOL_HELP}
+        if w.trial=='fieldcrew':
+            obs.pop('tool_arguments',None) # The flat schema and original instructions define these fields.
         obs['budgets'].update(wall_seconds_remaining=max(0,240-self.active_wall),reported_dollars_remaining=max(0,1-sum(r['cost'] or 0 for r in self.inference)),cost_complete=all(r['cost'] is not None for r in self.inference))
         images=[self.image]
         obs['input_images']=[dict(index=0,meaning='Full current camera image',frame_id=w.frame['id'])]
-        if self.scan_image and w.scan and w.scan['frame_id']==w.frame['id'] and not obs.get('scan_stale'):
+        if w.trial!='fieldcrew' and self.scan_image and w.scan and w.scan['frame_id']==w.frame['id'] and not obs.get('scan_stale'):
             images.append(self.scan_image);obs['input_images'].append(dict(index=1,meaning='Magnified RGB crop of current scan bounds; use full-image u,v for actions',**w.scan['rgb_crop']))
         self.dispatch('T1','treatment',obs,images)
         self.waiting='inference_wait'
