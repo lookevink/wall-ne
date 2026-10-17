@@ -1,10 +1,77 @@
 # Wall-ne
 
-A local 3D orchard laboratory with authoritative Python simulation, Three.js views, camera-guided plant care, a six-axis gripper, and durable Supabase evidence.
+**An AI orchard fleet that coordinates work, responds to failures, and turns every run into training data.**
 
-![Wall-ne season film: overview, care row, W3 camera and orchard almanac on days 1, 8 and 14](docs/media/season-film.gif)
+Wall-ne connects fleet-level reasoning with camera-guided robot control in a persistent 3D orchard. An orchestrator allocates work, individual robots inspect and treat trees, and an evidence pipeline captures decisions alongside measured outcomes. Python owns the simulation and validates every action; Three.js provides the orchard, onboard cameras, and operator views.
 
-*Days 1, 8 and 14 of a deterministic 14-day season film (seed 7). See [Season film](#season-film).*
+![Scripted season film: fleet overview, tree care, onboard camera, and orchard conditions](docs/media/season-film.gif)
+
+## Orchestration
+
+The orchestration layer turns orchard demand into coordinated robot assignments. The intended model architecture pairs **Nemotron Super VL** for fleet reasoning with **Nemotron Nano Omni 30B** for local perception and manipulation. Model routes are configurable and pinned per session; current defaults and implementation status are listed below.
+
+### Dispatch and event monitoring
+
+The orchestrator selects from feasible assignments using outstanding work, worker availability, resource reserves, and fleet health. Each full-care assignment starts a linked worker session with its own observations, model calls, and completion checks. Workers can treat different trees concurrently, while a shared navigation reservation controls access through the orchard apron.
+
+Telemetry runs independently of inference: robots emit health samples at each 0.05-second physics substep and a 1 Hz heartbeat. Position, battery, water, task progress, and faults establish operational health; arm workers additionally report joint angles, tool pose, grip force, load, and contact. The runtime distinguishes legitimate waiting from stale heartbeats, stalled actions, and repeated attempts without progress.
+
+### Self-healing through event response
+
+In the fleet recovery mission, a new incident brings the orchestrator back into the decision loop. It can query recent telemetry and record a response to continue, retrieve, reassign, stop, or escalate to an operator.
+
+If a worker breaks down, recovery combines physical retrieval with redistribution of unfinished work:
+
+1. The failed action stops, preserving work already completed and releasing unfinished work for reassignment.
+2. The towing robot, **R1**, travels to the disabled worker, attaches, tows it back, and parks it at its dock.
+3. The fleet can activate spare worker **W5** and redistribute assignments across available robots to meet the original demand.
+4. Independent checks evaluate coverage, resource reserves, recovery, and return-to-dock requirements before accepting completion.
+
+Retrieved robots remain disabled for the run. In the full-care mission, healthy workers continue when another worker fails, and the orchestrator can assign outstanding tasks to available workers. Physical towing is implemented in the fleet recovery mission.
+
+### Decisions grounded in telemetry
+
+Recent heartbeat history gives the orchestrator evidence for its next decision: whether a robot is advancing, waiting for an image, running low on resources, or repeating an ineffective action. Incident responses retain a reason alongside the event that triggered them. This makes dispatch and recovery decisions inspectable and creates examples for improving later policies.
+
+## Individual robot actions
+
+Each robot follows an **observe → act → measure → verify** loop. The intended local model is **Nemotron Nano Omni 30B**, receiving camera images and permitted sensor readings and returning structured tool calls. The simulator validates those calls against task ownership, resource limits, observation freshness, and physical constraints.
+
+| Action | Perception and control | Measured outcome |
+| --- | --- | --- |
+| **Water** | Inspect the tree, read moisture, and aim metered delivery into the root basin. | Delivered water and the remaining moisture target. |
+| **Fertilize** | Read the nutrient prescription and dispense within stock and basin constraints. | Recorded fertilizer delivery against the tree's requirement. |
+| **Remove pests** | Locate pests in the current image and direct a bounded vacuum action. | Contact and removal checks, including protected-organism checks. |
+| **Remove weeds** | Use wrist RGB and LiDAR to align a six-axis arm, close the gripper, extract, carry, and release the weed into a collection bin. | Independent contact, load, extraction, and collection checks. |
+
+Robot observations exclude hidden weed and insect coordinates. Image and scan submissions are tied to the correct worker, session, frame, and revision. For manipulation, inverse kinematics and swept-link collision checks constrain motion; grip force, load, and root resistance determine whether an extraction succeeds. A model's completion claim must pass the simulator's checks.
+
+The intended escalation path sends difficult observations to a more capable model, preserving the same inputs and action constraints. Automatic escalation based on task difficulty is a next step. The current runtime supports explicit model selection and an opt-in provider/protocol fallback; physical misses remain recorded failures for review.
+
+## Self-improvement
+
+Every new live session captures model inputs, decisions, execution events, and measured outcomes. Before inference, the runtime saves the filtered observation, pinned prompt, tool schema, and camera inputs. Decisions are then linked to command receipts, telemetry, and independent checks in Supabase, with images and compressed traces in private artifact storage.
+
+That record supports a repeatable improvement cycle:
+
+1. **Build evidence sets.** Export committed sessions and linked worker runs, verifying artifact hashes and retaining model, prompt, and scenario provenance.
+2. **Ask a stronger teacher.** Replay the exact inputs available at decision time to a selected larger model for alternative tool calls. Later outcomes remain evaluation evidence and do not leak into earlier observations.
+3. **Prepare training data.** Validate labels against the action schema, separate text and multimodal examples, and group related sessions and scenario seeds into the same split to prevent train/validation leakage.
+4. **Fine-tune on rented Crusoe GPUs.** Provision a GPU VM with the included Terraform configuration and train a versioned LoRA adapter from the selected dataset.
+5. **Evaluate robot behavior.** Compare the candidate against a baseline on frozen and held-out orchard scenarios, measuring completion, rejected actions, organism damage, resource reserves, latency, and reported cost.
+
+The goal is to fine-tune **Nano Omni for better robot-arm control**, turning successful grasps, failed alignments, and recovery attempts into a reusable training corpus. The repository already exports multimodal evidence sets; its current training recipe targets **Nemotron Nano 8B text tool calls**. Nano Omni vision training requires a compatible model-loading and adapter recipe. Teacher labels alone do not establish physical success, and adapters are not automatically deployed.
+
+See the [distillation and Crusoe training runbook](docs/DISTILLATION.md) for the complete pipeline.
+
+## Implementation and validation
+
+- **Current model defaults:** Crusoe-hosted Nemotron 3 Super for planning, orchestration, and verification; Nemotron 3 Nano for fleet workers and retrieval; Gemma 4 for camera-guided treatment. Super VL is an explicit Gateway option. The Super VL / Nano Omni pairing above describes the intended model architecture.
+- **Live manipulation evidence:** The documented Gemma-on-Crusoe wrist-control series completed five of six orchard trials. The failed trial exposed a localization error retained for review. See [wrist-control results](docs/WRIST_CONTROL.md).
+- **Training status:** Evidence export, teacher labeling, dataset construction, the Nano 8B LoRA recipe, and Crusoe provisioning are implemented. A GPU fine-tune and subsequent robot-policy evaluation remain unrun.
+- **Demo footage:** The GIF is a deterministic, scripted season film using the simulator's care commands and physical checks. It illustrates the environment; live-model results are recorded separately.
+
+See [architecture](docs/ARCHITECTURE.md) for system boundaries and [validation](docs/VALIDATION.md) for measured results and remaining gates. Robot mechanics and orchard quantities are simulation parameters.
 
 ## Run
 
@@ -29,52 +96,3 @@ WALLNE_HTTP=1 python3 -m unittest tests.test_http_integration -v
 ```
 
 Use a dedicated test project when running persistence integration tests; they create retained, labeled test sessions. The HTTP checks require the local app running.
-
-## Modes
-
-- **Fleet:** “Rule-based demo” is deterministic and makes no model calls. “Live Crusoe roles” uses separate bounded planner, orchestrator, worker/retriever and verifier calls. Python decides whether any command or completion claim is valid.
-- **Irrigation / complete care:** “Offline PNG heuristic” finds stylized color components in actual browser PNGs. Live multimodal mode receives the same camera image and permitted sensor readings. Keep the treatment page open to supply observations.
-- **Orchard weeding (default at `/`):** W1 drives to a tree, uses Crusoe wrist RGB/LiDAR control to grasp and collect one weed, and returns to its dock. Select fleet watering in the orchard menu for the fleet mission. All new live arm trials and evaluation campaigns run in this orchard; `/treatment.html` retains calibration fixtures and other tool diagnostics. Independent contact/load and completion checks remain mandatory.
-
-Crusoe is primary; live treatment defaults to Gemma 4. The AI Gateway fallback is opt-in (`WALLNE_GATEWAY_FALLBACK=1`, off by default); when enabled, two consecutive provider/protocol failures switch the affected role to its pinned Gateway route for the rest of the session, and physical misses or rejected actions never trigger it. Gemini, Nemotron VL and Gemma remain explicit Gateway comparison conditions. See [the wrist control and routing notes](docs/WRIST_CONTROL.md). `AI_GATEWAY_KEY` is accepted as an alias for `AI_GATEWAY_API_KEY`. Missing credentials, failed inference and exhausted budgets produce blocked results; there is no silent offline fallback.
-
-Runs are allowed to think. The only inference budgets are `WALLNE_MAX_TOKENS` (16384 output tokens), `WALLNE_INFERENCE_TIMEOUT` (300 s per call), `WALLNE_WALL_CAP` (3600 s per arm trial and campaign child) and `WALLNE_COST_CAP` ($1 reported), each overridable in `.env`. Frame, decision and simulated-time limits are mission rules and stay fixed.
-
-## Days, seasons and timelapses
-
-The main orchard runs on a season calendar. **Next day** ends today's mission and starts the next day's mission at dawn; there is no start button, because agents are always on. **Pause** holds the mission and the orchard clock; **Resume** continues both. The orchard menu's **Start new season** restarts at day 1 with the chosen seed; mission, controller and speed apply from the next day.
-
-Each morning is computed from the previous day's measured end state and the night's weather. Watered soil dries according to temperature and humidity, pulled weeds re-sprout as seedlings while missed ones keep growing, and caterpillars breed, arrive or are eaten by the resident ladybird. Fertilizer comes due as nutrient deficit accrues. The day's conditions are saved with that mission's checkpoint, and after a restart the server continues the latest saved season.
-
-The clock runs at the chosen daylight length while the mission runs, then sweeps through sunset to night once the mission settles. Optional auto-advance begins the next day after nightfall. It starts a new paid live mission every day and stops itself after two blocked days. Sun, sky, mist, headlights and wet-soil decals are operator-view effects; decision cameras always render under the calibrated lighting.
-
-**Record timelapse** (orchard menu) saves the main view as captioned 1080p JPEG frames in `.runtime/timelapse/<reel>/`, across as many days as you record. Keep the tab visible while recording, since hidden tabs do not render. **Render video** stitches the reel with ffmpeg. You can also render from the command line:
-
-```sh
-python3 -m scripts.timelapse            # latest reel
-python3 -m scripts.timelapse --list
-```
-
-### Season film
-
-`/film.html` renders a deterministic multi-day film as a 2×2 grid: overview, care-row close-up, W3's onboard camera and an almanac panel. Frames come from `simulator/film.py`, which steps the season in fixed simulated-time increments. A scripted controller reads simulator truth and issues the ordinary care commands, so arm kinematics, collision checks and per-tree checks still decide every outcome. The same seed always produces the same frames. Rendering is promise-driven, so it also runs in headless Chrome. Add `&reel=<id>&from=<n>` to resume an interrupted reel. The reel's `manifest.json` records the seed, day count and controller.
-
-## Recovery and evidence
-
-A storage failure freezes dispatch and physical time. “Retry storage” retries the retained batch; successful retry leaves the mission paused. Restarts restore the entire committed checkpoint, configuration, pinned prompt versions and accounting. Resume through `POST /api/treatment/resume` or `POST /api/resume` with `{"session_id":"..."}`. An old writer's lease must expire before a new process can take ownership. Treatment recovery requires a new image before decisions resume.
-
-Session playback reads recorded samples; it never reissues actions. Sequence gaps are displayed without fabricated motion. PNGs, scans and compressed traces live in private Storage, and the local server mediates reads. JSON exports are operator evidence, not model observations.
-
-A terminal/paused-session review can propose one immutable prompt candidate. A frozen four-case baseline/candidate campaign retains every child session. Activation requires a saved passing evaluation; inconclusive results leave the baseline in place. Rollback changes only future defaults.
-
-## Validation
-
-See `docs/VALIDATION.md` for milestone status, exact evidence paths and incomplete gates. `docs/BUILD_PLAN.md` is the supplied contract. Successful synthetic or scripted tests do not establish live model performance. All quantities are simulation parameters, not agricultural or robot safety recommendations.
-
-## Telemetry, incidents and the orchestrator
-
-Every robot emits telemetry independently of inference: a health sample at each 0.05 s physics substep and a 1 Hz heartbeat, carrying position, battery, water, lifecycle, waiting reason, fault, progress markers and, for arm workers, six joint angles, tool pose, jaw opening, force, load and contact. Samples are chunked into ≤2-simulated-second gzip artifacts and committed with the session's events; heartbeats are also kept in memory for queries.
-
-Health is computed by code from those heartbeats (`healthy`, `healthy_wait`, `stale_heartbeat`, `stalled`, `possible_loop`, `disabled`) and incidents are opened once per robot and kind while a condition holds (breakdown, stale heartbeat, stall, loop, storage), then closed when it clears. In live fleet mode a new incident engages the orchestrator at once with two non-physical tools: `query_telemetry(robot, since_sim_time)` returns a bounded heartbeat history in its next observation, and `respond_incident(incident_id, decision, reason)` records `continue`, `retrieve`, `reassign`, `stop` or `escalate`; escalate pauses the mission for a human. Neither tool can change physical state, and three queries in a row without a physical decision count as a failure.
-
-On the orchard page, selecting a machine opens its telemetry panel: health, state, task, battery, water, heartbeat age, time since progress, fault, arm joints and load, the robot's last model decision in its own words, and its recent events. Open incidents and escalations show in the strip beside the status badge.

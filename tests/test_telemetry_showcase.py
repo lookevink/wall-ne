@@ -54,7 +54,7 @@ class TelemetryShowcaseTests(unittest.TestCase):
             def submit(self,fn,*args):f=concurrent.futures.Future();f.set_result(fn(*args));return f
             def shutdown(self,**kwargs):pass
         r.executor.shutdown(wait=False);r.executor=Immediate()
-        with patch('simulator.runtime.Adapter',FakeAdapter),patch.object(Runtime,'persist',return_value=True):
+        with patch('simulator.runtime.Adapter',FakeAdapter),patch.object(Runtime,'persist',return_value=True),patch('simulator.persistence.Repository.artifact',return_value={'id':'policy-input'}):
             r._live();r._live();r._live()   # planner accepts, first assignment is dispatched and applied
             self.assertTrue(w.planned);self.assertTrue(w.assignments)
             w.vehicles['W1']['position']=[0,0];w.breakdown('W1');r.telemetry.sample(w,0,True);r.monitor(time.monotonic())

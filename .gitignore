@@ -7,3 +7,8 @@ __pycache__/
 *.pyc
 .DS_Store
 supabase/.temp/
+.venv-training/
+infra/crusoe/.terraform/
+infra/crusoe/*.tfstate*
+infra/crusoe/*.tfvars
+infra/crusoe/*.tfplan

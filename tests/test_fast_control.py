@@ -114,6 +114,12 @@ class FastControlTests(unittest.TestCase):
         self.assertEqual([t['function']['name'] for t in payload['tools']],['scan_lidar','stop'])
         self.assertEqual(payload['max_tokens'],512)
         self.assertEqual(result['decision']['arguments'],dict(frame_id='fresh',span=.16,u=.4,v=.7))
+        from simulator.inference import build_request,PROMPT
+        from training.pipeline import completion_for
+        self.assertEqual(payload,build_request(obs,'data:image/png;base64,test',PROMPT,a.model,max_tokens=512,provider=a.provider))
+        completion=completion_for(dict(observation=obs,body=payload),result['decision'])
+        self.assertEqual(completion['tool_calls'][0]['function']['name'],'scan_lidar')
+        self.assertEqual(completion['tool_calls'][0]['function']['arguments']['candidate_id'],'c1')
         reply.body['choices'][0]['message']['tool_calls'][0]['function']['arguments']=json.dumps(dict(frame_id='fresh',candidate_id='unknown',span=.16,reason='Visible root'))
         with patch('urllib.request.urlopen',return_value=reply):
             with self.assertRaises(InferenceError):a.call(obs)

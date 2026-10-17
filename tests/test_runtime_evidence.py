@@ -11,7 +11,7 @@ from tests.test_recovery import SavedRepository
 class RuntimeEvidenceTests(unittest.TestCase):
     def runtime(self,world=None,cls=Runtime):
         with patch('threading.Thread.start'):
-            runtime=cls(world=world or Mission(),config=dict(mode='vision' if cls==TreatmentRuntime else 'live',engine='gemini'))
+            runtime=cls(world=world or Mission(),config=dict(mode='vision' if cls==TreatmentRuntime else 'live',engine='gemini',capture_training_inputs=False))
         self.addCleanup(runtime.close)
         return runtime
 
