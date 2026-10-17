@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Wall-ne · Activity</title>
+  <link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/brand.css"><link rel="stylesheet" href="/activity.css">
+  <link rel="icon" href="/favicon.ico">
+</head>
+<body>
+  <header class="brand-header">
+    <a class="brand" href="/" aria-label="WALL-NE home"><img class="brand-logo" src="/assets/brand/wall-ne-logo.png" alt="WALL-NE"></a>
+    <nav aria-label="Main"><a href="/">Orchard</a><a class="active" href="/activity.html" aria-current="page">Activity</a><a href="/sessions.html">Sessions</a></nav>
+    <span class="connection">READ-ONLY OBSERVER</span>
+  </header>
+  <main class="activity-page">
+    <div class="activity-heading"><div><div class="eyebrow">OPERATIONS / ACTIVITY</div><h1>See what’s happening.</h1><p>Decisions, failures and recovery across the fleet. Keep the orchard tab open for camera observations.</p></div><a class="orchard-link" href="/" target="_blank" rel="noopener">Open orchard ↗</a></div>
+    <div class="mode-bar"><div class="toolbar" role="group" aria-label="Activity source"><button id="live" class="primary" aria-pressed="true">Live activity</button><button id="history" aria-pressed="false">Past sessions</button></div><button id="watch" aria-pressed="false">Pause feed</button></div>
+    <p id="connection" class="connection-line" role="status">Connecting to the live feed…</p>
+    <section id="history-panel" class="panel history-panel" hidden aria-label="Past sessions">
+      <div class="toolbar"><label>Saved session<select id="session"><option value="">Choose a session</option></select></label><button id="refresh-sessions">Refresh sessions</button><button id="older-sessions">Load older sessions</button></div>
+      <p id="history-status" role="status">Choose a saved session to read its events and linked worker sessions.</p>
+    </section>
+    <section id="live-overview" aria-label="Live health">
+      <div class="metrics"><div><span>Mission</span><strong id="mission-status">—</strong></div><div><span>Open incidents</span><strong id="incident-count">—</strong></div><div><span>Calls in flight</span><strong id="pending-count">—</strong></div><div><span>Failed calls · this mission</span><strong id="failed-count">—</strong></div></div>
+      <div id="incidents" class="incidents" aria-label="Open incidents and escalation"></div>
+      <div id="workers" class="workers" aria-label="Worker and orchestrator status"></div>
+    </section>
+    <section class="panel feed-panel" aria-labelledby="feed-heading">
+      <div class="panel-head"><span id="feed-heading">Incoming activity</span><span id="event-count">0 events</span></div>
+      <div class="filters"><label>Robot / role<select id="robot"><option value="">All robots and roles</option></select></label><label>Show<select id="category"><option value="">All activity</option><option value="attention">Needs attention</option><option value="recovery">Recovery & fallback</option><option value="activity">Decisions & actions</option></select></label><label class="search">Search<input id="search" type="search" placeholder="Timeout, gripper, model…"></label></div>
+      <p id="coverage" class="coverage">Recent snapshot events appear as available. Live viewing does not guarantee a complete history.</p>
+      <div class="feed-layout"><div><div id="events" class="activity-events"></div><button id="show-more" hidden>Show more received events</button></div><aside id="event-detail" class="event-detail" aria-label="Event details"><h2>Follow the evidence</h2><p>Select an event to see its full recorded payload, source session and sequence.</p></aside></div>
+      <div id="history-actions" class="history-actions" hidden><button id="next-events">Load next saved events</button><p id="page-status" role="status"></p></div>
+    </section>
+    <p class="observer-note">Pausing this feed only pauses the viewer. Robot execution and persistence continue independently. Saved history is available when storage is reachable.</p>
+  </main>
+  <script type="module" src="/activity.js"></script>
+</body>
+</html>
