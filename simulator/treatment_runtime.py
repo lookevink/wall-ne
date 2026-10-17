@@ -6,12 +6,12 @@ from .engine import TERMINAL
 from .treatment import Treatment,PixelController
 from .common import uid
 from .inference import Adapter,InferenceError,TOOL_HELP,PROMPT
-from .png import decode_url
+from .png import decode_url,crop_url
 from . import lidar
 
 class TreatmentRuntime(Runtime):
     def __init__(self,world=None,repository=None,config=None):
-        self.pixels=None; self.image=None; self.capture_started=None; self.depth_started=None; self.started_wall=None
+        self.scan_image=None;self.pixels=None; self.image=None; self.capture_started=None; self.depth_started=None; self.started_wall=None
         self.consecutive_invalid=0; self.last_miss=None; self.miss_count=0; self.frame_bytes={}; self.pending_artifacts=[]
         super().__init__(world or Treatment(),repository,config or dict(mode='pixels',engine='crusoe',speed=4))
         self.pixel_controller=PixelController()
@@ -23,7 +23,7 @@ class TreatmentRuntime(Runtime):
     def restore(self,session):
         super().restore(session)
         with self.lock:
-            self.pixels=None; self.image=None; self.frame_bytes={}
+            self.pixels=None; self.image=None; self.scan_image=None;self.frame_bytes={}
             self.capture_started=None;self.depth_started=None
             self.world.frame=None;self.world.frame_request=None;self.world.depth_request=None
             self.world.event('observation_required_after_restore','T1')
@@ -53,11 +53,25 @@ class TreatmentRuntime(Runtime):
             if self.world.status in TERMINAL: raise ValueError('terminal sessions are read-only')
             if body.get('mission_id')!=self.world.id or not self.world.depth_request: raise ValueError('cross-mission/unsolicited depth')
             req=self.world.depth_request
-            if self.world.revision!=req['revision']: raise ValueError('stale scan')
+            if self.world.revision!=req['revision'] or not self.world.frame or self.world.frame['id']!=req['frame_id']: raise ValueError('stale or superseded scan frame')
             points=lidar.validate(req,body['request_id'],body['frame_id'],body['revision'],body['points'])
-            artifact=self.repository.artifact(self.world.id,'T1','depth',points,dict(request_id=req['id'],frame_id=req['frame_id'],revision=req['revision'],camera=req['camera'],units='world meters'))
+            artifacts=[];crop_data=None;crop_meta=None
+            try:
+                artifact=self.repository.artifact(self.world.id,'T1','depth',points,dict(request_id=req['id'],frame_id=req['frame_id'],revision=req['revision'],camera=req['camera'],units='world meters'))
+                artifacts.append(artifact)
+                source=self.frame_bytes.get(req['frame_id'])
+                if source:
+                    crop,mapping=crop_url(source,req['bounds'])
+                    crop_artifact=self.repository.artifact(self.world.id,'T1','frame',crop,dict(subtype='scan_crop',source_frame_id=req['frame_id'],source_artifact_id=self.world.frame['artifact_id'],**mapping))
+                    artifacts.append(crop_artifact)
+                    crop_meta=dict(artifact_id=crop_artifact['id'],source_frame_id=req['frame_id'],**mapping)
+                    crop_data='data:image/png;base64,'+base64.b64encode(crop).decode()
+            except Exception:
+                self.storage_error='Scan/crop artifact upload failed';raise ValueError('storage_blocked') from None
             self.world.accept_depth(req['id'],req['frame_id'],req['revision'],points,artifact)
-            self.pending_artifacts.append(artifact); self.depth_started=None; self.persist()
+            if crop_meta:self.world.scan['rgb_crop']=crop_meta
+            self.scan_image=crop_data;self.pending_artifacts.extend(artifacts)
+            self.depth_started=None; self.persist()
             return {'accepted':True}
 
     def step(self,elapsed):
@@ -71,7 +85,9 @@ class TreatmentRuntime(Runtime):
             dt=min(elapsed,.5)*4
             while dt>1e-8:
                 part=min(.05,dt); dt-=part; w.tick(part); self.telemetry.sample(w,self.epoch)
-            if not w.robot['action']: self.persist()
+            if not w.robot['action']:
+                if w.kind=='arm':w.record_control_progress('motion_completed')
+                self.persist()
             return
         if w.depth_request:
             if self.depth_started is None: self.depth_started=time.monotonic()
@@ -112,6 +128,7 @@ class TreatmentRuntime(Runtime):
                     w.event('inference_discarded','T1',result=result,reason=w.feedback);self.persist();return
                 decision=result['decision']; w.event('decision','T1',result=result,frame_id=w.frame['id'],prompt_version=w.prompt_versions)
                 receipt=w.command(uid(),'T1',decision['action'],**decision['arguments'])
+                if receipt['accepted'] and w.kind=='arm' and not w.robot['action']:w.record_control_progress(decision['action'])
                 self.consecutive_invalid=0 if receipt['accepted'] else self.consecutive_invalid+1
                 if self.consecutive_invalid>=3: w.status='blocked'; w.feedback='Three rejected actions without new progress'
             except InferenceError as exc:
@@ -121,5 +138,10 @@ class TreatmentRuntime(Runtime):
                 if self.failures['T1']>=3: w.status='blocked'; w.feedback=str(exc)
             self.persist(); return
         obs=w.observations(); obs['tool_arguments']={k:TOOL_HELP[k] for k in w.allowed_actions() if k in TOOL_HELP}
-        self.dispatch('T1','treatment',obs,self.image)
+        obs['budgets'].update(wall_seconds_remaining=max(0,240-self.active_wall),reported_dollars_remaining=max(0,1-sum(r['cost'] or 0 for r in self.inference)),cost_complete=all(r['cost'] is not None for r in self.inference))
+        images=[self.image]
+        obs['input_images']=[dict(index=0,meaning='Full current camera image',frame_id=w.frame['id'])]
+        if self.scan_image and w.scan and w.scan['frame_id']==w.frame['id'] and not obs.get('scan_stale'):
+            images.append(self.scan_image);obs['input_images'].append(dict(index=1,meaning='Magnified RGB crop of current scan bounds; use full-image u,v for actions',**w.scan['rgb_crop']))
+        self.dispatch('T1','treatment',obs,images)
         self.waiting='inference_wait'

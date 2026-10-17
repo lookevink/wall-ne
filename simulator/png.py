@@ -82,3 +82,21 @@ def components(pixels,kind):
         points=[p for p in group if p[1]>=low-2] if kind=='weed' else group
         groups.append(dict(u=sum(x*2+1 for x,y in points)/len(points)/640,v=sum(y*2+1 for x,y in points)/len(points)/360,area=len(group)))
     return sorted(groups,key=lambda g:-g['area'])
+
+
+def crop_url(raw,bounds):
+    """Nearest-neighbor magnification of the measured scan ROI; no invented pixels."""
+    import math
+    w,h,pixels=decode(raw)
+    x0,y0=max(0,math.floor(bounds[0]*w)),max(0,math.floor(bounds[1]*h))
+    x1,y1=min(w,math.ceil(bounds[2]*w)),min(h,math.ceil(bounds[3]*h))
+    if x1<=x0 or y1<=y0:raise ValueError('empty RGB crop')
+    rows=bytearray()
+    for y in range(h):
+        source_y=y0+min(y1-y0-1,y*(y1-y0)//h);rows.append(0)
+        for x in range(w):
+            source_x=x0+min(x1-x0-1,x*(x1-x0)//w);i=(source_y*w+source_x)*4
+            rows.extend(pixels[i:i+4])
+    def chunk(kind,data):return struct.pack('>I',len(data))+kind+data+struct.pack('>I',zlib.crc32(kind+data)&0xffffffff)
+    result=b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR',struct.pack('>IIBBBBB',w,h,8,6,0,0,0))+chunk(b'IDAT',zlib.compress(rows))+chunk(b'IEND',b'')
+    return result,dict(source_pixel_bounds=[x0,y0,x1,y1],source_uv_bounds=[x0/w,y0/h,x1/w,y1/h],output_size=[w,h],mapping='crop u,v map linearly into source_uv_bounds; scan point u,v always refer to FULL source image',resampling='nearest-neighbor')

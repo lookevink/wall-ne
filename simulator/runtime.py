@@ -117,6 +117,7 @@ class Runtime:
         request=dict(id=uid(),session_id=self.world.id,role=role,model=adapter.model,
                      prompt_version=self.world.prompt_versions.get(role),observation_hash=digest(observation),
                      input_event_sequence=self.world.seq,frame=copy.deepcopy(observation.get('frame')),
+                     input_images=copy.deepcopy(observation.get('input_images',[])),scan_artifact_id=(observation.get('scan') or {}).get('artifact_id'),
                      telemetry_sequences={key:value.get('sequence') for key,value in self.telemetry.latest.items()},
                      image_hash=digest(image) if image else None)
         self.requests[robot]=request
@@ -230,7 +231,7 @@ class Runtime:
         with self.lock:
             state=self.world.snapshot(); state['events']=state['events'][-100:]
             state.update(config=self.config,storage=dict(healthy=not self.storage_error,error=self.storage_error,committed_sequence=self.committed),telemetry=self.telemetry.latest,
-                         inference=dict(calls=len(self.inference),pending_calls=len(self.futures),tokens=sum(r['usage'].get('total_tokens',0) for r in self.inference),cost=sum(r['cost'] for r in self.inference) if self.inference and all(r['cost'] is not None for r in self.inference) else None,results=self.inference[-30:]),waiting=self.waiting)
+                         inference=dict(calls=len(self.inference),pending_calls=len(self.futures),latency_seconds=sum(r.get('latency',0) for r in self.inference),failed_calls=sum(r.get('status') in ('failed','interrupted_unknown') for r in self.inference),tokens=sum(r['usage'].get('total_tokens',0) for r in self.inference),cost=sum(r['cost'] for r in self.inference) if self.inference and all(r['cost'] is not None for r in self.inference) else None,results=self.inference[-30:]),waiting=self.waiting)
             if self.storage_error: state['status']='storage_blocked'
             return state
 

@@ -1,0 +1,1160 @@
+[
+  {
+    "seed": 7,
+    "pose": "initial",
+    "counts": {
+      "ground_plane": 139,
+      "unclassified_surface": 30
+    },
+    "visibility": {
+      "central_stem": {
+        "visible_samples": 0,
+        "total_samples": 1,
+        "first_surface_distances_m": [
+          0.11961882281615827
+        ],
+        "visible": false
+      },
+      "finger_-1": {
+        "visible_samples": 9,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.694007620757027e-9,
+          1.6078224039486228e-9,
+          1.5229204668155976e-9,
+          1.5872691686802942e-9,
+          1.4949429679085677e-9,
+          1.4032278319227637e-9,
+          1.5714286352545243e-9,
+          1.4781137983792967e-9,
+          1.3852849044748816e-9
+        ],
+        "visible": true
+      },
+      "finger_1": {
+        "visible_samples": 9,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.6940076191700584e-9,
+          1.6078224039486228e-9,
+          1.5229204668155976e-9,
+          1.5872691686802942e-9,
+          1.4949429679085677e-9,
+          1.4032278319227637e-9,
+          1.5714286352545243e-9,
+          1.4781137983792967e-9,
+          1.3852849044748816e-9
+        ],
+        "visible": true
+      }
+    },
+    "target_uv": [
+      0.6218688944125208,
+      0.7311882507369408
+    ],
+    "center_surface_class": "unclassified_surface",
+    "center_distance_from_grasp_region_m": 0.11961882281615827,
+    "grasp_region_occluded": true
+  },
+  {
+    "seed": 7,
+    "pose": "approach",
+    "counts": {
+      "ground_plane": 42,
+      "robot_geometry": 14,
+      "unclassified_surface": 113
+    },
+    "visibility": {
+      "central_stem": {
+        "visible_samples": 0,
+        "total_samples": 1,
+        "first_surface_distances_m": [
+          0.11573629193288518
+        ],
+        "visible": false
+      },
+      "finger_-1": {
+        "visible_samples": 9,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.6940076027713815e-9,
+          1.6078224072926948e-9,
+          1.5229202302719546e-9,
+          1.5872689524529128e-9,
+          1.4949431843024866e-9,
+          1.4032278255366846e-9,
+          1.5714288684880654e-9,
+          1.4781138068668518e-9,
+          1.3852851257076486e-9
+        ],
+        "visible": true
+      },
+      "finger_1": {
+        "visible_samples": 9,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.6940076027713815e-9,
+          1.6078224072926948e-9,
+          1.5229204703461e-9,
+          1.5872689524529128e-9,
+          1.4949429637125634e-9,
+          1.4032280452177892e-9,
+          1.5714290829032572e-9,
+          1.4781138068668518e-9,
+          1.3852851257076486e-9
+        ],
+        "visible": true
+      }
+    },
+    "target_uv": [
+      0.5,
+      0.6520286587822258
+    ],
+    "center_surface_class": "unclassified_surface",
+    "center_distance_from_grasp_region_m": 0.11573629193288518,
+    "grasp_region_occluded": true
+  },
+  {
+    "seed": 7,
+    "pose": "aligned",
+    "counts": {
+      "no_return": 2,
+      "ground_plane": 32,
+      "robot_geometry": 19,
+      "unclassified_surface": 116
+    },
+    "visibility": {
+      "central_stem": {
+        "visible_samples": 1,
+        "total_samples": 1,
+        "first_surface_distances_m": [
+          0.016206443527311393
+        ],
+        "visible": true
+      },
+      "finger_-1": {
+        "visible_samples": 0,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          0.17389891323873422,
+          0.1604550173843811,
+          0.1476873325337401,
+          0.15215379077469252,
+          0.13763807990647375,
+          0.12314614337250472,
+          0.13369663112023034,
+          0.11785458393807333,
+          0.10181752537719146
+        ],
+        "visible": false
+      },
+      "finger_1": {
+        "visible_samples": 6,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.69400741974098e-9,
+          1.607822401719241e-9,
+          1.5229204350410775e-9,
+          1.5872689569694118e-9,
+          1.4949429685079963e-9,
+          1.4032278204278223e-9,
+          0.14560070460399896,
+          0.1295386695033759,
+          0.11323382019738569
+        ],
+        "visible": true
+      }
+    },
+    "target_uv": [
+      0.4999999999999999,
+      0.33653727633674557
+    ],
+    "center_surface_class": "unclassified_surface",
+    "center_distance_from_grasp_region_m": 0.016206443527311393,
+    "grasp_region_occluded": false
+  },
+  {
+    "seed": 7,
+    "pose": "recovery",
+    "counts": {
+      "ground_plane": 47,
+      "robot_geometry": 34,
+      "unclassified_surface": 88
+    },
+    "visibility": {
+      "central_stem": {
+        "visible_samples": 0,
+        "total_samples": 1,
+        "first_surface_distances_m": [
+          0.16210699183052577
+        ],
+        "visible": false
+      },
+      "finger_-1": {
+        "visible_samples": 9,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.6940074250308766e-9,
+          1.6078223849988803e-9,
+          1.5229204232727376e-9,
+          1.5872691647283575e-9,
+          1.494942757508942e-9,
+          1.4032278306455476e-9,
+          1.5714288684880654e-9,
+          1.4781138068668518e-9,
+          1.3852851257076486e-9
+        ],
+        "visible": true
+      },
+      "finger_1": {
+        "visible_samples": 9,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.6940074250308766e-9,
+          1.6078223849988803e-9,
+          1.5229206633468848e-9,
+          1.5872691647283575e-9,
+          1.494942757508942e-9,
+          1.4032278306455476e-9,
+          1.5714290829032572e-9,
+          1.4781138068668518e-9,
+          1.3852851257076486e-9
+        ],
+        "visible": true
+      }
+    },
+    "target_uv": [
+      0.3688999188011727,
+      0.48979894280898517
+    ],
+    "center_surface_class": "robot_geometry",
+    "center_distance_from_grasp_region_m": 0.16210699183052577,
+    "grasp_region_occluded": true
+  },
+  {
+    "seed": 7,
+    "pose": "offset",
+    "counts": {
+      "ground_plane": 49,
+      "robot_geometry": 28,
+      "unclassified_surface": 92
+    },
+    "visibility": {
+      "central_stem": {
+        "visible_samples": 1,
+        "total_samples": 1,
+        "first_surface_distances_m": [
+          0.01501968275007693
+        ],
+        "visible": true
+      },
+      "finger_-1": {
+        "visible_samples": 9,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.6940075869016954e-9,
+          1.607822378310736e-9,
+          1.522920449163086e-9,
+          1.5872689490655385e-9,
+          1.4949431711150474e-9,
+          1.4032278178733903e-9,
+          1.5714290794817385e-9,
+          1.4781138032293282e-9,
+          1.3852851257076486e-9
+        ],
+        "visible": true
+      },
+      "finger_1": {
+        "visible_samples": 5,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.6940073657840408e-9,
+          1.607822361590376e-9,
+          1.5229204456325839e-9,
+          0.08581110184278634,
+          1.4949429517239818e-9,
+          1.4032276033011502e-9,
+          0.0637614485894842,
+          0.04818166424875229,
+          0.03326652820316214
+        ],
+        "visible": true
+      }
+    },
+    "target_uv": [
+      0.7211326670823592,
+      0.3365372763367462
+    ],
+    "center_surface_class": "unclassified_surface",
+    "center_distance_from_grasp_region_m": 0.01501968275007693,
+    "grasp_region_occluded": false
+  },
+  {
+    "seed": 11,
+    "pose": "initial",
+    "counts": {
+      "ground_plane": 131,
+      "robot_geometry": 2,
+      "unclassified_surface": 36
+    },
+    "visibility": {
+      "central_stem": {
+        "visible_samples": 0,
+        "total_samples": 1,
+        "first_surface_distances_m": [
+          0.10805865490355779
+        ],
+        "visible": false
+      },
+      "finger_-1": {
+        "visible_samples": 9,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.694007620757027e-9,
+          1.6078224039486228e-9,
+          1.5229204668155976e-9,
+          1.5872691686802942e-9,
+          1.4949429679085677e-9,
+          1.4032278319227637e-9,
+          1.5714286352545243e-9,
+          1.4781137983792967e-9,
+          1.3852849044748816e-9
+        ],
+        "visible": true
+      },
+      "finger_1": {
+        "visible_samples": 9,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.6940076191700584e-9,
+          1.6078224039486228e-9,
+          1.5229204668155976e-9,
+          1.5872691686802942e-9,
+          1.4949429679085677e-9,
+          1.4032278319227637e-9,
+          1.5714286352545243e-9,
+          1.4781137983792967e-9,
+          1.3852849044748816e-9
+        ],
+        "visible": true
+      }
+    },
+    "target_uv": [
+      0.32883396564405476,
+      0.7071156654619647
+    ],
+    "center_surface_class": "unclassified_surface",
+    "center_distance_from_grasp_region_m": 0.10805865490355779,
+    "grasp_region_occluded": true
+  },
+  {
+    "seed": 11,
+    "pose": "approach",
+    "counts": {
+      "ground_plane": 25,
+      "robot_geometry": 14,
+      "unclassified_surface": 130
+    },
+    "visibility": {
+      "central_stem": {
+        "visible_samples": 0,
+        "total_samples": 1,
+        "first_surface_distances_m": [
+          0.08575460434483674
+        ],
+        "visible": false
+      },
+      "finger_-1": {
+        "visible_samples": 9,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.6940074250308766e-9,
+          1.6078224072926948e-9,
+          1.5229206633468848e-9,
+          1.5872691647283575e-9,
+          1.4949429733034297e-9,
+          1.4032278255366846e-9,
+          1.571429292756427e-9,
+          1.4781138068668518e-9,
+          1.3852849135311937e-9
+        ],
+        "visible": true
+      },
+      "finger_1": {
+        "visible_samples": 9,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.6940074250308766e-9,
+          1.6078224072926948e-9,
+          1.5229206633468848e-9,
+          1.5872691647283575e-9,
+          1.4949429733034297e-9,
+          1.4032278255366846e-9,
+          1.5714290783412324e-9,
+          1.4781138068668518e-9,
+          1.3852851257076486e-9
+        ],
+        "visible": true
+      }
+    },
+    "target_uv": [
+      0.49999999999999983,
+      0.6520286587822244
+    ],
+    "center_surface_class": "unclassified_surface",
+    "center_distance_from_grasp_region_m": 0.08575460434483674,
+    "grasp_region_occluded": true
+  },
+  {
+    "seed": 11,
+    "pose": "aligned",
+    "counts": {
+      "ground_plane": 7,
+      "robot_geometry": 11,
+      "unclassified_surface": 151
+    },
+    "visibility": {
+      "central_stem": {
+        "visible_samples": 0,
+        "total_samples": 1,
+        "first_surface_distances_m": [
+          0.12119984346659508
+        ],
+        "visible": false
+      },
+      "finger_-1": {
+        "visible_samples": 3,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.6940076133511727e-9,
+          1.6078223961457874e-9,
+          1.5229202302719546e-9,
+          0.13014106379788432,
+          0.11547330028598446,
+          0.101089593535842,
+          0.11350737245381674,
+          0.09863480958666695,
+          0.08387430277839426
+        ],
+        "visible": true
+      },
+      "finger_1": {
+        "visible_samples": 5,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          0.15589118088916493,
+          1.6078223961457874e-9,
+          1.5229204703461e-9,
+          1.5872689524529128e-9,
+          1.4949431795070538e-9,
+          1.4032278204278223e-9,
+          0.04829184265185604,
+          0.03396940669704249,
+          0.08994376156760617
+        ],
+        "visible": true
+      }
+    },
+    "target_uv": [
+      0.4999999999999999,
+      0.3365372763367461
+    ],
+    "center_surface_class": "unclassified_surface",
+    "center_distance_from_grasp_region_m": 0.12119984346659508,
+    "grasp_region_occluded": true
+  },
+  {
+    "seed": 11,
+    "pose": "recovery",
+    "counts": {
+      "ground_plane": 31,
+      "robot_geometry": 31,
+      "unclassified_surface": 107
+    },
+    "visibility": {
+      "central_stem": {
+        "visible_samples": 0,
+        "total_samples": 1,
+        "first_surface_distances_m": [
+          0.16210699183052618
+        ],
+        "visible": false
+      },
+      "finger_-1": {
+        "visible_samples": 9,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.6940074144510838e-9,
+          1.6078223738519735e-9,
+          1.522920411504398e-9,
+          1.5872691602118596e-9,
+          1.4949427527135084e-9,
+          1.4032278255366846e-9,
+          1.5714290829032572e-9,
+          1.4781138068668518e-9,
+          1.3852851257076486e-9
+        ],
+        "visible": true
+      },
+      "finger_1": {
+        "visible_samples": 9,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.6940074144510838e-9,
+          1.6078223738519735e-9,
+          1.5229206515785451e-9,
+          1.5872691602118596e-9,
+          1.4949427527135084e-9,
+          1.4032278255366846e-9,
+          1.5714290829032572e-9,
+          1.4781138068668518e-9,
+          1.3852851257076486e-9
+        ],
+        "visible": true
+      }
+    },
+    "target_uv": [
+      0.3688999188011728,
+      0.48979894280898456
+    ],
+    "center_surface_class": "robot_geometry",
+    "center_distance_from_grasp_region_m": 0.16210699183052618,
+    "grasp_region_occluded": true
+  },
+  {
+    "seed": 11,
+    "pose": "offset",
+    "counts": {
+      "ground_plane": 8,
+      "unclassified_surface": 161
+    },
+    "visibility": {
+      "central_stem": {
+        "visible_samples": 0,
+        "total_samples": 1,
+        "first_surface_distances_m": [
+          0.12841412712985276
+        ],
+        "visible": false
+      },
+      "finger_-1": {
+        "visible_samples": 9,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.6940071584201185e-9,
+          1.6078221341934642e-9,
+          1.522919739532157e-9,
+          1.5872684962865335e-9,
+          1.4949427191454773e-9,
+          1.4032273657390258e-9,
+          1.57142883655389e-9,
+          1.4781133461138306e-9,
+          1.3852844503655189e-9
+        ],
+        "visible": true
+      },
+      "finger_1": {
+        "visible_samples": 0,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          0.12508290292107932,
+          0.11183325900146364,
+          0.0986776532242362,
+          0.10425297406825178,
+          0.09065345662676332,
+          0.0770978906721725,
+          0.07996061061881177,
+          0.06553899469799442,
+          0.051139336002064426
+        ],
+        "visible": false
+      }
+    },
+    "target_uv": [
+      0.7211326670823598,
+      0.33653727633674657
+    ],
+    "center_surface_class": "unclassified_surface",
+    "center_distance_from_grasp_region_m": 0.12841412712985276,
+    "grasp_region_occluded": true
+  },
+  {
+    "seed": 23,
+    "pose": "initial",
+    "counts": {
+      "ground_plane": 131,
+      "robot_geometry": 7,
+      "unclassified_surface": 31
+    },
+    "visibility": {
+      "central_stem": {
+        "visible_samples": 0,
+        "total_samples": 1,
+        "first_surface_distances_m": [
+          0.1012187086446572
+        ],
+        "visible": false
+      },
+      "finger_-1": {
+        "visible_samples": 9,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.694007620757027e-9,
+          1.6078224039486228e-9,
+          1.5229204668155976e-9,
+          1.5872691686802942e-9,
+          1.4949429679085677e-9,
+          1.4032278319227637e-9,
+          1.5714286352545243e-9,
+          1.4781137983792967e-9,
+          1.3852849044748816e-9
+        ],
+        "visible": true
+      },
+      "finger_1": {
+        "visible_samples": 9,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.6940076191700584e-9,
+          1.6078224039486228e-9,
+          1.5229204668155976e-9,
+          1.5872691686802942e-9,
+          1.4949429679085677e-9,
+          1.4032278319227637e-9,
+          1.5714286352545243e-9,
+          1.4781137983792967e-9,
+          1.3852849044748816e-9
+        ],
+        "visible": true
+      }
+    },
+    "target_uv": [
+      0.4450245668132288,
+      0.6718864342486119
+    ],
+    "center_surface_class": "unclassified_surface",
+    "center_distance_from_grasp_region_m": 0.1012187086446572,
+    "grasp_region_occluded": true
+  },
+  {
+    "seed": 23,
+    "pose": "approach",
+    "counts": {
+      "ground_plane": 20,
+      "robot_geometry": 14,
+      "unclassified_surface": 135
+    },
+    "visibility": {
+      "central_stem": {
+        "visible_samples": 0,
+        "total_samples": 1,
+        "first_surface_distances_m": [
+          0.11831254946396574
+        ],
+        "visible": false
+      },
+      "finger_-1": {
+        "visible_samples": 9,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.6940076027713815e-9,
+          1.6078224072926948e-9,
+          1.5229204468094179e-9,
+          1.5872689524529128e-9,
+          1.4949431843024866e-9,
+          1.4032278255366846e-9,
+          1.5714290829032572e-9,
+          1.4781138068668518e-9,
+          1.3852851205326142e-9
+        ],
+        "visible": true
+      },
+      "finger_1": {
+        "visible_samples": 9,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.6940075752639255e-9,
+          1.607822378310736e-9,
+          1.5229204668155976e-9,
+          1.5872689456781644e-9,
+          1.494942969706855e-9,
+          1.4032278178733903e-9,
+          1.5714290794817385e-9,
+          1.4781138032293282e-9,
+          1.3852849044748816e-9
+        ],
+        "visible": true
+      }
+    },
+    "target_uv": [
+      0.5,
+      0.6520286587822249
+    ],
+    "center_surface_class": "unclassified_surface",
+    "center_distance_from_grasp_region_m": 0.11831254946396574,
+    "grasp_region_occluded": true
+  },
+  {
+    "seed": 23,
+    "pose": "aligned",
+    "counts": {
+      "ground_plane": 6,
+      "unclassified_surface": 163
+    },
+    "visibility": {
+      "central_stem": {
+        "visible_samples": 0,
+        "total_samples": 1,
+        "first_surface_distances_m": [
+          0.13309240754723448
+        ],
+        "visible": false
+      },
+      "finger_-1": {
+        "visible_samples": 0,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          0.17752355122484115,
+          0.16420918851538255,
+          0.15102577648957377,
+          0.15753192155264684,
+          0.14366797198284223,
+          0.1295512283727101,
+          0.14205324152993948,
+          0.12666957367893356,
+          0.11117829845546653
+        ],
+        "visible": false
+      },
+      "finger_1": {
+        "visible_samples": 1,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          0.16608990335203883,
+          0.15194787876792,
+          0.13781636245933293,
+          0.1380917781452848,
+          0.12211971616810505,
+          0.10623866605993197,
+          0.03424329670023023,
+          0.017837303807258488,
+          0.0018938281596111342
+        ],
+        "visible": false
+      }
+    },
+    "target_uv": [
+      0.5,
+      0.3365372763367469
+    ],
+    "center_surface_class": "unclassified_surface",
+    "center_distance_from_grasp_region_m": 0.13309240754723448,
+    "grasp_region_occluded": true
+  },
+  {
+    "seed": 23,
+    "pose": "recovery",
+    "counts": {
+      "ground_plane": 30,
+      "robot_geometry": 30,
+      "unclassified_surface": 109
+    },
+    "visibility": {
+      "central_stem": {
+        "visible_samples": 0,
+        "total_samples": 1,
+        "first_surface_distances_m": [
+          0.16210699183052596
+        ],
+        "visible": false
+      },
+      "finger_-1": {
+        "visible_samples": 9,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.6940073869436239e-9,
+          1.6078221821251663e-9,
+          1.5229204279800733e-9,
+          1.5872689501946634e-9,
+          1.4949427407249252e-9,
+          1.4032278191506062e-9,
+          1.5714288616450272e-9,
+          1.4781135813403732e-9,
+          1.3852848967123286e-9
+        ],
+        "visible": true
+      },
+      "finger_1": {
+        "visible_samples": 9,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.6940071880435374e-9,
+          1.6078219859396031e-9,
+          1.5229202467476328e-9,
+          1.5872687317090343e-9,
+          1.4949425345213054e-9,
+          1.4032276116030533e-9,
+          1.5714286472298367e-9,
+          1.4781133679389758e-9,
+          1.3852846864765125e-9
+        ],
+        "visible": true
+      }
+    },
+    "target_uv": [
+      0.3688999188011728,
+      0.48979894280898506
+    ],
+    "center_surface_class": "robot_geometry",
+    "center_distance_from_grasp_region_m": 0.16210699183052596,
+    "grasp_region_occluded": true
+  },
+  {
+    "seed": 23,
+    "pose": "offset",
+    "counts": {
+      "ground_plane": 29,
+      "unclassified_surface": 140
+    },
+    "visibility": {
+      "central_stem": {
+        "visible_samples": 0,
+        "total_samples": 1,
+        "first_surface_distances_m": [
+          0.14860053738963214
+        ],
+        "visible": false
+      },
+      "finger_-1": {
+        "visible_samples": 9,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.6940076027713815e-9,
+          1.6078223849988803e-9,
+          1.5229204762302706e-9,
+          1.5872689524529128e-9,
+          1.494942958917131e-9,
+          1.4032280350000643e-9,
+          1.5714290806222446e-9,
+          1.4781138068668518e-9,
+          1.3852851231201311e-9
+        ],
+        "visible": true
+      },
+      "finger_1": {
+        "visible_samples": 0,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          0.16502688997425913,
+          0.1519577491119265,
+          0.13903540061855782,
+          0.14499251269975097,
+          0.13118117110086908,
+          0.11747944545287596,
+          0.12890811091309592,
+          0.11425480468434246,
+          0.09963050615741213
+        ],
+        "visible": false
+      }
+    },
+    "target_uv": [
+      0.721132667082359,
+      0.33653727633674596
+    ],
+    "center_surface_class": "unclassified_surface",
+    "center_distance_from_grasp_region_m": 0.14860053738963214,
+    "grasp_region_occluded": true
+  },
+  {
+    "seed": 8,
+    "pose": "initial",
+    "counts": {
+      "ground_plane": 130,
+      "robot_geometry": 4,
+      "unclassified_surface": 35
+    },
+    "visibility": {
+      "central_stem": {
+        "visible_samples": 0,
+        "total_samples": 1,
+        "first_surface_distances_m": [
+          0.12228532817042691
+        ],
+        "visible": false
+      },
+      "finger_-1": {
+        "visible_samples": 9,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.694007620757027e-9,
+          1.6078224039486228e-9,
+          1.5229204668155976e-9,
+          1.5872691686802942e-9,
+          1.4949429679085677e-9,
+          1.4032278319227637e-9,
+          1.5714286352545243e-9,
+          1.4781137983792967e-9,
+          1.3852849044748816e-9
+        ],
+        "visible": true
+      },
+      "finger_1": {
+        "visible_samples": 9,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.6940076191700584e-9,
+          1.6078224039486228e-9,
+          1.5229204668155976e-9,
+          1.5872691686802942e-9,
+          1.4949429679085677e-9,
+          1.4032278319227637e-9,
+          1.5714286352545243e-9,
+          1.4781137983792967e-9,
+          1.3852849044748816e-9
+        ],
+        "visible": true
+      }
+    },
+    "target_uv": [
+      0.6652346272685632,
+      0.6996741531285003
+    ],
+    "center_surface_class": "unclassified_surface",
+    "center_distance_from_grasp_region_m": 0.12228532817042691,
+    "grasp_region_occluded": true
+  },
+  {
+    "seed": 8,
+    "pose": "approach",
+    "counts": {
+      "ground_plane": 49,
+      "robot_geometry": 14,
+      "unclassified_surface": 106
+    },
+    "visibility": {
+      "central_stem": {
+        "visible_samples": 0,
+        "total_samples": 1,
+        "first_surface_distances_m": [
+          0.12212016396922545
+        ],
+        "visible": false
+      },
+      "finger_-1": {
+        "visible_samples": 9,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.6940074250308766e-9,
+          1.6078224072926948e-9,
+          1.5229204232727376e-9,
+          1.5872691647283575e-9,
+          1.4949427527135084e-9,
+          1.4032278357544112e-9,
+          1.5714290829032572e-9,
+          1.4781138068668518e-9,
+          1.3852851257076486e-9
+        ],
+        "visible": true
+      },
+      "finger_1": {
+        "visible_samples": 9,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.6940071711158687e-9,
+          1.6078221754370219e-9,
+          1.5229204326874097e-9,
+          1.5872689298704197e-9,
+          1.4949425273281546e-9,
+          1.4032278102100965e-9,
+          1.5714288548019895e-9,
+          1.4781135740653255e-9,
+          1.3852848980060877e-9
+        ],
+        "visible": true
+      }
+    },
+    "target_uv": [
+      0.5,
+      0.6520286587822258
+    ],
+    "center_surface_class": "unclassified_surface",
+    "center_distance_from_grasp_region_m": 0.12212016396922545,
+    "grasp_region_occluded": true
+  },
+  {
+    "seed": 8,
+    "pose": "aligned",
+    "counts": {
+      "no_return": 1,
+      "ground_plane": 21,
+      "robot_geometry": 14,
+      "unclassified_surface": 133
+    },
+    "visibility": {
+      "central_stem": {
+        "visible_samples": 0,
+        "total_samples": 1,
+        "first_surface_distances_m": [
+          0.12207551355346999
+        ],
+        "visible": false
+      },
+      "finger_-1": {
+        "visible_samples": 1,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          0.16285305704190675,
+          0.14907308297845134,
+          0.13536086168280823,
+          0.14449230913576985,
+          0.13036755172182257,
+          1.4032278306455476e-9,
+          0.1324231040633719,
+          0.11719165881804076,
+          0.08967790709942569
+        ],
+        "visible": false
+      },
+      "finger_1": {
+        "visible_samples": 3,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.694007176405765e-9,
+          1.607822147569752e-9,
+          1.522920239686628e-9,
+          0.1346762882622642,
+          0.11924417125991216,
+          0.10367969747278474,
+          0.11417270955119797,
+          0.09600758282447211,
+          0.07594722241063974
+        ],
+        "visible": true
+      }
+    },
+    "target_uv": [
+      0.4999999999999998,
+      0.33653727633674635
+    ],
+    "center_surface_class": "unclassified_surface",
+    "center_distance_from_grasp_region_m": 0.12207551355346999,
+    "grasp_region_occluded": true
+  },
+  {
+    "seed": 8,
+    "pose": "recovery",
+    "counts": {
+      "ground_plane": 61,
+      "robot_geometry": 30,
+      "unclassified_surface": 78
+    },
+    "visibility": {
+      "central_stem": {
+        "visible_samples": 0,
+        "total_samples": 1,
+        "first_surface_distances_m": [
+          0.16210699183052624
+        ],
+        "visible": false
+      },
+      "finger_-1": {
+        "visible_samples": 9,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.6940076027713815e-9,
+          1.6078223849988803e-9,
+          1.5229204703461e-9,
+          1.587268731144473e-9,
+          1.4949429685079963e-9,
+          1.4032280401089265e-9,
+          1.5714290783412324e-9,
+          1.4781138068668518e-9,
+          1.3852851257076486e-9
+        ],
+        "visible": true
+      },
+      "finger_1": {
+        "visible_samples": 9,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.6940068537221122e-9,
+          1.607822139766918e-9,
+          1.5229197218796448e-9,
+          1.5872684872535353e-9,
+          1.4949427191454773e-9,
+          1.4032273606301629e-9,
+          1.57142883655389e-9,
+          1.4781133461138306e-9,
+          1.3852844529530366e-9
+        ],
+        "visible": true
+      }
+    },
+    "target_uv": [
+      0.3688999188011729,
+      0.48979894280898484
+    ],
+    "center_surface_class": "robot_geometry",
+    "center_distance_from_grasp_region_m": 0.16210699183052624,
+    "grasp_region_occluded": true
+  },
+  {
+    "seed": 8,
+    "pose": "offset",
+    "counts": {
+      "ground_plane": 19,
+      "robot_geometry": 38,
+      "unclassified_surface": 112
+    },
+    "visibility": {
+      "central_stem": {
+        "visible_samples": 1,
+        "total_samples": 1,
+        "first_surface_distances_m": [
+          0.014779741290119016
+        ],
+        "visible": true
+      },
+      "finger_-1": {
+        "visible_samples": 9,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.6940076027713815e-9,
+          1.6078223849988803e-9,
+          1.5229204762302706e-9,
+          1.5872689524529128e-9,
+          1.4949431795070538e-9,
+          1.4032278204278223e-9,
+          1.5714290829032572e-9,
+          1.478113804441836e-9,
+          1.3852851257076486e-9
+        ],
+        "visible": true
+      },
+      "finger_1": {
+        "visible_samples": 9,
+        "total_samples": 9,
+        "first_surface_distances_m": [
+          1.6940076027713815e-9,
+          1.6078223849988803e-9,
+          1.5229202302719546e-9,
+          1.5872689524529128e-9,
+          1.4949431795070538e-9,
+          1.4032278204278223e-9,
+          1.5714290829032572e-9,
+          1.478113804441836e-9,
+          1.3852851257076486e-9
+        ],
+        "visible": true
+      }
+    },
+    "target_uv": [
+      0.7211326670823591,
+      0.3365372763367446
+    ],
+    "center_surface_class": "unclassified_surface",
+    "center_distance_from_grasp_region_m": 0.014779741290119016,
+    "grasp_region_occluded": false
+  }
+]

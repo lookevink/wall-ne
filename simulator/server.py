@@ -96,11 +96,11 @@ class Handler(BaseHTTPRequestHandler):
             app=self.server.app
             if path=='/api/fixtures/arm':
                 pose=query.get('pose',['initial'])[0]
-                if pose not in ('initial','aligned'): raise ValueError('unknown fixture')
+                if pose not in ('initial','aligned','approach','recovery','offset'): raise ValueError('unknown fixture')
                 world=Manipulation(7,'wrist')
-                if pose=='aligned':
+                if pose!='initial':
                     from .arm import ik
-                    x,_,z=world.weed['position'];world.joints=ik([x,.15,z,0,0,0],world.base())
+                    x,_,z=world.weed['position'];offset,height,back={'aligned':(0,.15,0),'approach':(0,.35,.12),'recovery':(.12,.25,.12),'offset':(-.12,.15,0)}[pose];world.joints=ik([x+offset,height,z+back,0,0,0],world.base())
                 result=world.snapshot();result['diagnostic_fixture']=pose
                 return self.send(result)
             if path in ('/api/state','/api/export'): return self.send(app.fleet.snapshot())

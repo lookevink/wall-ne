@@ -6,6 +6,7 @@ from .common import digest,finite
 from .camera import add,sub,norm,matvec,project_ground
 from .arm import fk,ik,trajectory,LIMITS
 from . import lidar
+from .arm_observation import GRASP_GUIDE,interpret_scan,progress_state
 
 STAGED={'alignment','wrist'}
 TRIALS={'baseline','known','depth','lidar','alignment','wrist'}
@@ -23,9 +24,11 @@ class Manipulation(Treatment):
         self.joints=ik([0,.8,2.2,0,0,0],self.base())
         self.opening=.12; self.force=0; self.load=0; self.holding=False; self.extracted=False; self.deposited=False; self.grip_origin=None
         self.damage=[]; self.collision=None; self.alignment=None; self.contact_ack=None; self.must_reopen=False; self.nonempty_scan=False
+        self.control_progress=None
         self.bin=[.95,.48,2.5]; self.initial_inventory=dict(weed=dict(self.weed),protected=self.protected)
         self.contract.update(goal='Extract the weed, collect in the bin, preserve protected plants and return',reserve=20)
         self.contract_hash=digest(self.contract)
+        self.record_control_progress('initial')
 
     def base(self): return [self.robot['position'][0],.8,self.robot['position'][1]-.5]
     def tool_pose(self): return fk(self.joints,self.base())
@@ -56,14 +59,25 @@ class Manipulation(Treatment):
     def observations(self):
         obs=super().observations()
         if not hasattr(self,'joints'): return obs
-        obs.update(joints=self.joints,joint_limits=LIMITS,base=self.base(),tool_pose=self.tool_pose(),bin=self.bin,
+        obs.update(grasp_geometry=GRASP_GUIDE,controller_progress=self.control_progress,joints=self.joints,joint_limits=LIMITS,base=self.base(),tool_pose=self.tool_pose(),bin=self.bin,
                    gripper=dict(opening=self.opening,force=self.force,holding=self.holding,load=self.load,must_reopen=self.must_reopen,extracted=self.extracted,deposited=self.deposited),
                    protocol=dict(nonempty_scan=self.nonempty_scan,alignment=self.alignment,contact_acknowledged=self.contact_ack is not None),scan=self.scan,
-                   scan_stale=self.scan is not None and self.scan['revision']!=self.revision)
+                   scan_stale=self.scan is not None and (self.scan['revision']!=self.revision or not self.frame or self.scan['frame_id']!=self.frame['id']))
         if self.trial=='known': obs['diagnostic_known_grasp']=[self.weed['position'][0],.15,self.weed['position'][2]]
         return obs
 
+    def record_control_progress(self,action):
+        return progress_state(self,action)
+
     def _action(self,action,args):
+        progress=getattr(self,'control_progress',None)
+        if progress and progress['recovery_required']:
+            recovery=action=='confirm_contact' and self.holding and self.load>0 or action=='stop' or action=='open_gripper' and (self.must_reopen or self.opening<.119) or action=='scan_lidar' and not self.nonempty_scan and (not self.scan or abs(args.get('u',0)-sum(self.scan['bounds'][::2])/2)>.05 or abs(args.get('v',0)-sum(self.scan['bounds'][1::2])/2)>.05) or action in ('return','verify') and self.deposited
+            if action=='move_arm':
+                q=ik(args['pose'],self.base(),self.joints) if 'pose' in args else args['joints']
+                target=fk(q,self.base());current=self.tool_pose()
+                recovery=norm(sub(target['position'],current['position']))>=.02 or max(abs(a-b) for a,b in zip(target['euler'],current['euler']))>=3
+            if not recovery:raise ValueError('No meaningful progress: choose a different viewpoint/grasp pose (at least 2 cm or 3 degrees), reopen after a miss, or stop. Repeated images and identical poses are not recovery.')
         if action=='move_arm':
             if self.trial in ('lidar','alignment','wrist') and not self.nonempty_scan: raise ValueError('initial nonempty LiDAR scan required')
             if self.must_reopen: raise ValueError('reopen after miss or slip before repositioning')
@@ -105,7 +119,9 @@ class Manipulation(Treatment):
                 self.holding=horizontal<.055 and .09<=p[1]<=.22 and tilt<25 and not self.extracted
                 if self.holding:
                     self.grip_origin=p[:]; self.load=2.0; self.event('contact','T1',force=force,load=self.load)
-                else: self.must_reopen=True; self.feedback='No stem contact. Reopen, inspect and reposition.'
+                else:
+                    self.must_reopen=True
+                    self.feedback=f'No stem contact. Tool center y={p[1]:.3f} m; required 0.09..0.22 m (suggested 0.15 m), upright tilt <25 degrees. Surface-return y is not the grasp height. Reopen, inspect stem x,z and both fingers, then reposition; hidden target position is not supplied.'
                 for plant in self.protected:
                     if math.hypot(p[0]-plant['position'][0],p[2]-plant['position'][2])<.12 and p[1]<.3: self.damage.append(plant['id'])
                 if math.hypot(p[0],p[2])<.25: self.damage.append('crop')
@@ -130,7 +146,7 @@ class Manipulation(Treatment):
         if not self.depth_request or revision!=self.revision: raise ValueError('stale depth request')
         accepted=lidar.validate(self.depth_request,request_id,frame_id,revision,points)
         if not artifact.get('ready'): raise ValueError('depth artifact not durable')
-        self.scan=dict(frame_id=frame_id,revision=revision,points=accepted,bounds=self.depth_request['bounds'],artifact_id=artifact['id'])
+        self.scan=dict(frame_id=frame_id,revision=revision,points=accepted,bounds=self.depth_request['bounds'],artifact_id=artifact['id'],**interpret_scan(accepted,self.depth_request['camera'],self.tool_pose(),self.opening,self.robot['position']))
         self.nonempty_scan=self.nonempty_scan or any(p is not None for p in accepted)
         self.depth_request=None; self.event('depth','T1',scan=self.scan)
 

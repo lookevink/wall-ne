@@ -7,7 +7,7 @@ from scripts.arm_experiments import trial
 class ExperimentTests(unittest.TestCase):
     def test_caps_stop_running_trial_and_export_failure_keeps_identity(self):
         import os
-        state=dict(id='test-session',status='running',inference={'cost':1.1,'calls':2},checks={'extracted':False})
+        state=dict(id='test-session',status='running',inference={'cost':1.1,'calls':2},checks={'extracted':False},config={'models':{'treatment':'test-model'},'treatment_code_hash':'test-hash'})
         calls=[]
         def api(path,body=None):
             calls.append(path)

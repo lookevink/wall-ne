@@ -16,7 +16,7 @@ TOOL_HELP={
  'dispense':{'liters':'.01..5','frame_id':'current frame id'},'select_tool':{'tool':'nozzle/gripper/fertilizer/vacuum'},
  'remove_weed':{'u':'0..1','v':'0..1','frame_id':'current frame id'},'remove_pest':{'u':'0..1','v':'0..1','frame_id':'current frame id'},
  'read_prescription':{},'read_application':{},'fertilize':{'grams':'.01..5, no greater than remaining prescription','frame_id':'current frame id'},
- 'next_stage':{},'service_tool':{},'move_arm':{'pose':'[x,y,z,rx,ry,rz] world meters / XYZ Euler degrees; alternatively joints:[six joint degrees]'},
+ 'next_stage':{},'service_tool':{},'move_arm':{'pose':'[x,y,z,rx,ry,rz] world meters (y UP), XYZ Euler degrees. Position is jaw CONTACT CENTER, not surface or fingertip. Upright stem grasp center y=0.15 m, valid 0.09..0.22 m. Infer x,z from RGB and consistent non-ground/non-robot surfaces; never copy a ground/leaf y. Alternatively joints:[six joint degrees]'},
  'set_gripper':{'opening':'0..0.12 meters','force':'0..45 newtons'},'open_gripper':{},
  'scan_lidar':{'u':'0..1','v':'0..1','span':'.04..0.5','frame_id':'current frame id'},'measure_depth':{'u':'0..1','v':'0..1','frame_id':'current frame id'},
  'project_ground':{'u':'0..1','v':'0..1','frame_id':'current frame id'},'assess_alignment':{'frame_id':'current frame id','stem_between_fingers':'boolean','depth_consistent':'boolean','evidence':'8..600 characters'},

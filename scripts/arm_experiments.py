@@ -13,10 +13,13 @@ def api(route,body=None):
     req=urllib.request.Request(BASE+route,data=json.dumps(body).encode() if body is not None else None,headers={'Content-Type':'application/json'})
     with urllib.request.urlopen(req,timeout=60) as response:return json.load(response)
 
-def trial(engine,condition,seed=7):
+def trial(engine,condition,seed=7,expected=None):
     started=time.monotonic();session=None
     try:
         state=api('/api/treatment/reset',dict(kind='arm',seed=seed,mode='vision',engine=engine,trial=condition));session=state['id']
+        if expected:
+            actual=dict(model=state['config']['models']['treatment'],provider_base=state['config']['provider_base'],treatment_code_hash=state['config']['treatment_code_hash'],prompt_version=state['prompt_versions']['treatment'])
+            if actual!=expected:raise RuntimeError('frozen repeatability conditions changed before inference')
         api('/api/treatment/start',{})
         while True:
             state=api('/api/treatment/state')
@@ -35,7 +38,7 @@ def trial(engine,condition,seed=7):
         export_error=None
         try: (path/f'{session}.json').write_text(json.dumps(api(f'/api/sessions/{session}/export'),indent=2))
         except Exception: export_error='Export unavailable; authoritative session retained in Supabase'
-        return dict(export_error=export_error,session_id=session,engine=engine,trial=condition,seed=seed,status=state['status'],checks=state['checks'],calls=state['inference']['calls'],cost=state['inference']['cost'],wall_seconds=time.monotonic()-started)
+        return dict(export_error=export_error,session_id=session,engine=engine,trial=condition,seed=seed,status=state['status'],feedback=state.get('feedback'),checks=state['checks'],calls=state['inference']['calls'],failed_calls=state['inference'].get('failed_calls'),pending_calls=state['inference'].get('pending_calls'),inference_seconds=state['inference'].get('latency_seconds'),cost=state['inference']['cost'],model=state['config']['models']['treatment'],treatment_code_hash=state['config']['treatment_code_hash'],wall_seconds=time.monotonic()-started,controller_progress=state.get('control_progress'),physical_milestones={name:state.get(name) for name in ('holding','extracted','deposited')})
     finally:
         if session:
             try:
