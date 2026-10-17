@@ -55,8 +55,9 @@ class App:
             config=dict(mode=mode,engine=engine,speed=speed,**({'prompt_version':body['prompt_version']} if body.get('prompt_version') else {}))
             if body.get('campaign_id'): config['campaign_id']=body['campaign_id']
             if body.get('model_pins'): config.update(models=body['model_pins'],provider_base=body['provider_base'])
-            from .common import implementation_hash
+            from .common import implementation_hash,treatment_implementation_hash
             config['code_hash']=implementation_hash()
+            if treatment:config['treatment_code_hash']=treatment_implementation_hash()
             runtime=(TreatmentRuntime if treatment else Runtime)(world,self.repository,config)
             if treatment: self.treatment=runtime
             else: self.fleet=runtime

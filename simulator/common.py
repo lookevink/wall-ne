@@ -32,6 +32,22 @@ def implementation_hash():
     root=Path(__file__).resolve().parent.parent
     return digest({str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for folder in ('simulator','web') for p in sorted((root/folder).glob('*')) if p.suffix in ('.py','.js','.html','.css')})
 
+def treatment_implementation_hash():
+    # Pin the complete backend and the treatment sensor's local dependency graph.
+    import re
+    root=Path(__file__).resolve().parent.parent
+    paths=set((root/'simulator').glob('*.py'))|{root/'package-lock.json',root/'web/treatment.html'}
+    pending=[root/'web/treatment.js']
+    while pending:
+        path=pending.pop().resolve()
+        if path in paths: continue
+        paths.add(path)
+        for relative in re.findall(r'''(?:from\s*|import\s*)['"](\./[^'"]+)['"]''',path.read_text()):
+            dependency=(path.parent/relative).resolve()
+            if root/'web' not in dependency.parents: raise ValueError('sensor dependency outside web root')
+            pending.append(dependency)
+    return digest({str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(paths)})
+
 def finite(value, low=-math.inf, high=math.inf):
     if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or not low <= value <= high:
         raise ValueError('number outside permitted range')

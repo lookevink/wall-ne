@@ -3,7 +3,7 @@ import threading
 import time
 import json
 from pathlib import Path
-from .common import uid,canonical,digest,implementation_hash
+from .common import uid,canonical,digest,implementation_hash,treatment_implementation_hash
 from .review import evaluate_pairs
 
 class Campaigns:
@@ -51,6 +51,7 @@ class Campaigns:
             seeds=[source['seed']]+[s for s in (11,23,8,31) if s!=source['seed']][:3]
             cases=[f'seed{s}' for s in seeds]
             manifest=dict(scenarios=cases,seeds=seeds,source_session=source['id'],withheld_case=cases[-1],engine=engine,trial=trial,kind='arm',wall_cap=240,cost_cap=1,command_cap=50,physical_rules='wall-ne/1',models=source_config.get('models'),provider_base=source_config.get('provider_base'),source_code_hash=source_config.get('code_hash'),code_hash=implementation_hash(),checks=7,withheld_condition='protected clover preservation')
+            manifest['treatment_code_hash']=treatment_implementation_hash()
             campaign=dict(id=uid(),baseline_id=candidate['parent_id'],candidate_id=candidate_id,manifest=manifest,status='running',results=[],reason='Campaign in progress')
             # Persist the frozen manifest before either prompt runs, separately from final immutable evaluations.
             repo.request('POST','/rest/v1/evaluation_campaigns',campaign)
@@ -67,7 +68,7 @@ class Campaigns:
                     current=app.treatment
                     result=dict(scenario=scenario,variant=variant,session_id=s['id'],passed=False,commands=0,cost=None,hard_violations=0,regressions_passed=False,status='created')
                     campaign['results'].append(result)
-                    if current.config.get('code_hash')!=manifest['code_hash']:
+                    if current.config.get('treatment_code_hash',current.config.get('code_hash'))!=manifest.get('treatment_code_hash',manifest['code_hash']):
                         current.pause('blocked')
                         result.update(status='blocked',reason='Implementation changed since frozen campaign manifest')
                         raise ValueError('implementation changed since frozen campaign manifest')
