@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from .common import uid,canonical,digest,implementation_hash,treatment_implementation_hash
 from .review import evaluate_pairs
+from .common import budget
 
 class Campaigns:
     def __init__(self,app): self.app=app; self.active=None; self.lock=threading.Lock()
@@ -53,7 +54,7 @@ class Campaigns:
             if source_state['trial']!=trial: raise ValueError('campaign must preserve reviewed sensor condition')
             seeds=[source['seed']]+[s for s in (11,23,8,31) if s!=source['seed']][:3]
             cases=[f'seed{s}' for s in seeds]
-            manifest=dict(scenarios=cases,seeds=seeds,source_session=source['id'],withheld_case=cases[-1],engine=engine,trial=trial,kind='arm',arena='orchard',wall_cap=240,cost_cap=1,command_cap=50,physical_rules='wall-ne/1',models=source_config.get('models'),provider_base=source_config.get('provider_base'),source_code_hash=source_config.get('code_hash'),code_hash=implementation_hash(),checks=7,withheld_condition='protected clover preservation')
+            manifest=dict(scenarios=cases,seeds=seeds,source_session=source['id'],withheld_case=cases[-1],engine=engine,trial=trial,kind='arm',arena='orchard',wall_cap=budget('WALL_CAP'),cost_cap=budget('COST_CAP'),command_cap=50,physical_rules='wall-ne/1',models=source_config.get('models'),provider_base=source_config.get('provider_base'),source_code_hash=source_config.get('code_hash'),code_hash=implementation_hash(),checks=7,withheld_condition='protected clover preservation')
             manifest['treatment_code_hash']=treatment_implementation_hash()
             campaign=dict(id=uid(),baseline_id=candidate['parent_id'],candidate_id=candidate_id,manifest=manifest,status='running',results=[],reason='Campaign in progress')
             # Persist the frozen manifest before either prompt runs, separately from final immutable evaluations.
@@ -78,7 +79,7 @@ class Campaigns:
                     current.start();start=time.monotonic()
                     while current.world.status=='running' and not current.storage_error:
                         if app.fleet is not current: raise ValueError('campaign interrupted by session replacement')
-                        if time.monotonic()-start>=240:current.pause('blocked');break
+                        if time.monotonic()-start>=manifest.get('wall_cap',budget('WALL_CAP')):current.pause('blocked');break
                         time.sleep(.5)
                     accounting_deadline=time.monotonic()+60
                     while current.futures and not current.storage_error and time.monotonic()<accounting_deadline: time.sleep(.5)

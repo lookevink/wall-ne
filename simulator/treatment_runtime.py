@@ -2,6 +2,7 @@
 import base64
 import time
 from .runtime import Runtime
+from .common import budget
 from .engine import TERMINAL
 from .treatment import Treatment,PixelController
 from .common import uid
@@ -81,9 +82,9 @@ class TreatmentRuntime(Runtime):
     def step(self,elapsed):
         if self.storage_error: return
         w=self.world
-        wall_limit=getattr(w,'wall_limit',240);cost_limit=getattr(w,'cost_limit',1)
+        wall_limit=getattr(w,'wall_limit',None) or budget('WALL_CAP');cost_limit=getattr(w,'cost_limit',None) or budget('COST_CAP')
         if self.active_wall>wall_limit and w.kind=='arm':
-            w.status='blocked'; w.feedback=f'{wall_limit} wall-second mission cap'; w.event('blocked',reason=w.feedback); self.persist(); return
+            w.status='blocked'; w.feedback=f'{wall_limit:g} wall-second mission cap'; w.event('blocked',reason=w.feedback); self.persist(); return
         if self.inference and sum(r['cost'] or 0 for r in self.inference)>=cost_limit:
             w.status='blocked'; w.feedback='Reported cost cap'; w.event('blocked',reason=w.feedback); self.persist(); return
         if w.robot['action']:
