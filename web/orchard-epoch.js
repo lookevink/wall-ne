@@ -38,9 +38,9 @@ export class Atmosphere {
     this.view=view;this.sky=view.landscape.sky.uniforms;this.previous=null;this.current=null;this.receivedAt=0;this.interval=650;this.night=false;
     this.lamps=[];this.unlit=new Map();this.own=new Set();
     for(const robot of Object.values(view.robots)){
-      // Forward is -z on the rover body; lamps ride with its heading.
-      const lamp=new THREE.SpotLight(0xfff0d2,0,22,.62,.55,1.4);lamp.position.set(0,.95,-1.05);lamp.target.position.set(0,0,-8);
-      const lens=new THREE.Mesh(new THREE.BoxGeometry(.5,.07,.03),new THREE.MeshBasicMaterial({color:0x2b2a26}));lens.position.set(0,.84,-1.02);
+      // Forward is -z on the rover body; a lamp bar sits under the chest's top edge.
+      const lamp=new THREE.SpotLight(0xfff0d2,0,22,.62,.55,1.4);lamp.position.set(0,1.08,-.5);lamp.target.position.set(0,0,-8);
+      const lens=new THREE.Mesh(new THREE.BoxGeometry(.56,.05,.03),new THREE.MeshBasicMaterial({color:0x2b2a26}));lens.position.set(0,1.08,-.455);
       robot.add(lamp,lamp.target,lens);this.lamps.push({light:lamp,lens,peak:14});this.own.add(lens.material);
     }
     for(const [x,y,z,peak] of [[-6,2.9,21.5,9],[6,2.9,21.5,9],[-27,2.7,23.1,6]]){
