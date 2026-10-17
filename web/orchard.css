@@ -161,3 +161,32 @@
   .bottom-hud {bottom:12px;gap:8px}.mission-hud {padding:10px}.mission-actions {margin-top:8px;padding-top:8px}
   .top-hud {top:12px}.fleet-page .metric-strip {grid-template-columns:repeat(4,minmax(0,1fr))}
 }
+/* Selected-machine telemetry: code-computed health, the robot's last model decision and its own event ticker. */
+.worker-hud {position:absolute;right:24px;top:116px;width:min(340px,calc(100% - 48px));max-height:calc(100% - 330px);overflow:auto;padding:14px 16px;display:grid;gap:10px;font:11px ui-monospace,monospace;z-index:3;scrollbar-width:thin}
+.hud-head {display:flex;align-items:center;gap:10px}
+.hud-head b {font:700 18px 'Helvetica Neue',Arial,sans-serif;letter-spacing:-.4px;color:#fff4d8}
+.hud-head #hud-role {color:#c3bba8;flex:1}
+.fleet-page .hud-head .icon-button {font-size:13px;min-width:30px;min-height:30px;padding:3px 7px;background:#151919;border:1px solid #625e53;color:#eee4cf;border-radius:50%}
+.health-pill {font:9px ui-monospace,monospace;letter-spacing:1px;text-transform:uppercase;padding:5px 8px;border-radius:999px;border:1px solid #6f6a5c;background:#1a1f1f;color:#d9e3c5;white-space:nowrap}
+.health-pill[data-status=healthy_wait] {color:#f1dd9e;border-color:#8a7c4a}
+.health-pill[data-status=stale_heartbeat],.health-pill[data-status=stalled],.health-pill[data-status=possible_loop] {color:#ffc09a;border-color:#b86a3c}
+.health-pill[data-status=disabled] {color:#ffb6a8;border-color:#cb5340;background:#3a1b18}
+.hud-grid {display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;margin:0}
+.hud-grid .wide {grid-column:1/-1}
+.hud-grid dt {font-size:9px;color:#c3bba8;letter-spacing:.5px;text-transform:uppercase;margin-bottom:3px}
+.hud-grid dd {margin:0;color:#fff4d8;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.hud-label {font-size:9px;color:#c3bba8;letter-spacing:1px}
+.hud-mono {margin:0;color:#eee4cf;line-height:1.5;overflow-wrap:anywhere}
+.joint-bars {display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:6px 0}
+.joint-bars span {display:grid;gap:3px;font-size:9px;color:#d9d0b8;text-align:center}
+.joint-bars i {display:block;height:5px;background:#2b3030;border-radius:3px;overflow:hidden}
+.joint-bars i b {display:block;height:100%;background:#c1dc83}
+.hud-events {list-style:none;margin:0;padding:0;display:grid;gap:4px;max-height:170px;overflow:auto}
+.hud-events li {color:#d9d0b8;line-height:1.4;border-top:1px solid #d6c7a61f;padding-top:4px}
+.hud-events li b {color:#fff4d8;margin-right:6px;white-space:nowrap}
+.hud-events li.alert b {color:#ffb6a8}
+.incident-strip {display:grid;gap:4px;padding:10px 14px;border-radius:14px;background:#3a1b18f0;border:1px solid #cb5340;color:#ffe3d8;font:11px ui-monospace,monospace;max-width:520px;line-height:1.5}
+.incident-strip b {color:#ffb6a8}
+.feed-indicator[data-health=disabled],.feed-indicator[data-health=stale_heartbeat],.feed-indicator[data-health=possible_loop],.feed-indicator[data-health=stalled] {background:#ff5340;box-shadow:0 0 7px #ff534099}
+.feed-indicator[data-health=healthy_wait] {background:#f1dd9e}
+@media(max-width:600px) {.worker-hud {right:10px;left:10px;width:auto;top:74px;max-height:42%;padding:10px 12px}}

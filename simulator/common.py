@@ -61,6 +61,12 @@ def load_env(path='.env'):
             key, value = line.split('=', 1)
             os.environ.setdefault(key.strip(), value.strip().strip('\"\''))
 
+BUDGETS = dict(MAX_TOKENS=16384, INFERENCE_TIMEOUT=300, WALL_CAP=3600, COST_CAP=1)
+
+def budget(name):
+    # Learning runs are not rushed: each inference cap is a generous default overridable as WALLNE_<NAME>.
+    return finite(float(os.getenv('WALLNE_'+name, BUDGETS[name])), 0)
+
 def distance(a, b):
     return math.hypot(a[0]-b[0], a[1]-b[1])
 

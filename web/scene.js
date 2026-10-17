@@ -77,7 +77,7 @@ export class FleetScene {
       const c=this.feedCameras[id];c.position.set(v.position[0],1.6,v.position[1]-.5);
       const forward=new THREE.Vector3(0,-.15,-1).applyAxisAngle(new THREE.Vector3(0,1,0),m.rotation.y);c.lookAt(c.position.clone().add(forward));m.visible=v.lifecycle!=='spare';
     }
-    this.armControl.update(state);this.atmosphere.update(state.epoch);
+    this.armControl.update(state);this.atmosphere?.update(state.epoch);
     if(!this.orchardMission&&this.expanded==='WRIST')this.expanded=null;
   }
 
