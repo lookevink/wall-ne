@@ -2,6 +2,10 @@
 
 A local 3D orchard laboratory with authoritative Python simulation, Three.js views, camera-guided plant care, a six-axis gripper, and durable Supabase evidence.
 
+![Wall-ne season film: overview, care row, W3 camera and orchard almanac on days 1, 8 and 14](docs/media/season-film.gif)
+
+*Days 1, 8 and 14 of a deterministic 14-day season film (seed 7). See [Season film](#season-film).*
+
 ## Run
 
 Python 3.9+ and Node 22+ are required. The selected validation runtimes are recorded in `docs/DEPENDENCIES.md`.
