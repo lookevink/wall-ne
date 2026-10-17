@@ -52,3 +52,16 @@ class ContinuationTests(unittest.TestCase):
         with patch('threading.Thread.start'),patch.object(FleetCareRuntime,'make_child',track),patch.object(TreatmentRuntime,'persist',return_value=False):
             with self.assertRaisesRegex(ValueError,'checkpoint'):continue_fleet(repo,parent.id,'test')
         self.assertEqual(len(created),1);self.assertTrue(created[0].closed)
+
+    def test_miss_requires_new_view_but_slip_regrasp_remains_available(self):
+        from simulator.manipulation import Manipulation
+        from simulator.arm import ik
+        w=Manipulation(7,'precision');w.nonempty_scan=True
+        w.joints=ik([0,.13,1.6,0,0,0],w.base())
+        w.missed_grasp=dict(position=[0,.13,1.6],revision=0,force=30)
+        self.assertEqual(w.allowed_actions(),['move_arm','stop'])
+        self.assertIn('wide_view_pose',w.observations()['current_grasp_step'])
+        w.joints=ik([0,.8,2.2,0,0,0],w.base())
+        self.assertIn('scan_lidar',w.allowed_actions());self.assertNotIn('assess_alignment',w.allowed_actions())
+        w.missed_grasp=None;w.joints=ik([0,.13,1.6,0,0,0],w.base())
+        self.assertIn('assess_alignment',w.allowed_actions())

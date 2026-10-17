@@ -17,7 +17,7 @@ def clone_world(saved,cls,source_id,reason):
         world.__dict__.pop(name,None)
     world.prompt_versions={'orchestrator':'fleet-care-v1'} if isinstance(world,FleetCareWorld) else {'treatment':'treatment-v1'}
     if isinstance(world,OrchardCare):
-        world.frame=None;world.frame_request=None;world.depth_request=None;world.alignment=None;world.contact_ack=None
+        world.frame=None;world.frame_request=None;world.depth_request=None;world.alignment=None;world.contact_ack=None;world.crown_projection=None
         world.feedback='Controller updated with saved physical state. Inspect the fresh image and current_grasp_step before acting.'
     world.event('continued',source=world.continuation_source)
     return world

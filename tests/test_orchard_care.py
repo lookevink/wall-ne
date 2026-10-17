@@ -34,6 +34,7 @@ class OrchardCareTests(unittest.TestCase):
             self.act(w,'next_stage');self.assertEqual(w.phase,'extraction')
             w.nonempty_scan=True;x,_,z=w.weed['position']
             self.act(w,'move_arm',pose=[x,.4,z,0,0,0]);self.act(w,'move_arm',pose=[x,.13,z,0,0,0])
+            u,v=project(w.camera(),[x,.08,z]);self.act(w,'project_ground',u=u,v=v)
             self.act(w,'assess_alignment',stem_between_fingers=True,depth_consistent=True,evidence='Test fixture aligns central stem between finger faces')
             self.act(w,'set_gripper',opening=0,force=30)
             self.act(w,'confirm_contact',evidence='Measured contact and positive load')
@@ -80,8 +81,19 @@ class OrchardCareTests(unittest.TestCase):
         w=OrchardCare();w.status='running';w.begin();self.settle(w);w.phase='extraction';w.nonempty_scan=True
         x,_,z=w.weed['position'];self.act(w,'move_arm',pose=[x,.4,z,0,0,0])
         self.assertNotIn('assess_alignment',w.allowed_actions())
-        self.assertIn('descend',w.observations()['current_grasp_step']['next_action'])
+        self.assertIn('project_ground',w.observations()['current_grasp_step']['next_action'])
         before=w.robot['position'][:];frame(w)
         r=w.command('no-op','W1','move_arm',pose=[x,.4,z,0,0,0])
         self.assertFalse(r['accepted']);self.assertIn('already at this pose',r['reason']);self.assertIsNone(w.robot['action'])
-        self.act(w,'move_arm',pose=[x,.13,z,0,0,0]);self.assertIn('assess_alignment',w.allowed_actions())
+        self.act(w,'move_arm',pose=[x,.13,z,0,0,0]);self.assertNotIn('assess_alignment',w.allowed_actions())
+        u,v=project(w.camera(),[x,.08,z]);self.act(w,'project_ground',u=u,v=v);self.assertIn('assess_alignment',w.allowed_actions())
+
+    def test_crown_projection_uses_camera_ray_not_hidden_target(self):
+        w=OrchardCare();w.status='running';w.begin();self.settle(w);w.phase='extraction';w.nonempty_scan=True
+        x,_,z=w.orchard['tree']['position'];selected=[x+.2,.08,z+1.4]
+        u,v=project(w.camera(),selected);self.act(w,'project_ground',u=u,v=v)
+        measured=w.observations()['crown_projection']
+        for axis,value in zip(('x','y','z'),selected):self.assertAlmostEqual(measured['world'][axis],value)
+        self.assertEqual(measured['grasp_tool_center_y'],.13)
+        original=measured['world'].copy();w.weed['position']=[99,.08,99]
+        self.act(w,'project_ground',u=u,v=v);self.assertEqual(w.crown_projection['world'],original)
