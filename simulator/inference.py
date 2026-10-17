@@ -98,26 +98,14 @@ class Adapter:
 
     def call(self,observation,image=None,prompt=PROMPT):
         if not self.key: raise InferenceError(f'{self.provider} credential missing')
-        content=[dict(type='text',text=canonical(observation))]
-        if image:
-            for png in (image if isinstance(image,list) else [image])[:3]: content.append(dict(type='image_url',image_url={'url':png}))
-        flat=observation.get('trial')=='precision'
-        fleet=isinstance(observation.get('feasible_options'),list) and observation.get('role') in ('orchestrator','worker','retriever')
-        tool_name='treatment_action' if flat else 'fleet_action' if fleet else 'choose_action'
-        schema=TOOLS
-        if fleet:
-            # Fleet roles pick one enumerated option; the typed fields keep a model from inventing argument names.
-            actions=list(dict.fromkeys(o['action'] for o in observation['feasible_options']))
-            observation=dict(observation,available_actions=actions)
-            fields=dict(FLEET_FIELDS,action=dict(type='string',enum=actions),reason=dict(type='string'))
-            schema=[dict(type='function',function=dict(name=tool_name,description='Execute one listed feasible option. Copy its arguments: assign needs row and vehicle; inspect/water need zone and ownership_version; retrieve needs target; query_telemetry needs robot and since_sim_time; incident_continue/retrieve/reassign/stop/escalate need the incident_id they list, and your reason explains the decision. Leave unrelated fields out.',parameters=dict(type='object',properties=fields,required=['action','reason'],additionalProperties=False)))]
-        if flat:
-            fields={k:ARGUMENT_FIELDS[k] for k in ('u','v','span','frame_id','opening','force','joints','stem_between_fingers','depth_consistent','evidence')}
-            fields.update({k:dict(type='number') for k in ('x','y','z','rx','ry','rz')})
-            fields.update(action=dict(type='string',enum=observation['available_actions']),reason=dict(type='string'))
-            schema=[dict(type='function',function=dict(name=tool_name,description='Execute one available action. scan_lidar and project_ground REQUIRE normalized image u,v and current frame_id. project_ground selects the visible root/soil junction, not a leaf. move_arm requires x,y,z in WORLD METERS. Optional rx,ry,rz default to zero (gripper straight DOWN). set_gripper requires opening and force. Assess/confirm require current frame_id and evidence.',parameters=dict(type='object',properties=fields,required=['action','reason','frame_id'] if observation.get('care_progress') else ['action','reason'],additionalProperties=False)))]
-        body=dict(model=self.model,messages=[dict(role='system',content=prompt),dict(role='user',content=content)],tools=schema,tool_choice='required' if flat or fleet else {'type':'function','function':{'name':tool_name}},temperature=.1,max_tokens=int(budget('MAX_TOKENS')))
-        if flat or fleet: body['parallel_tool_calls']=False
+        return self.call_body(build_request(observation,image,prompt,self.model))
+
+    def call_body(self,body):
+        if not self.key: raise InferenceError(f'{self.provider} credential missing')
+        # Recorded payloads may name the original student; teacher routing is explicit.
+        body=dict(body,model=self.model)
+        tool_name=body['tools'][0]['function']['name']
+        allowed_actions=body['tools'][0]['function']['parameters']['properties']['action'].get('enum')
         request=urllib.request.Request(self.base.rstrip('/')+'/chat/completions',data=canonical(body).encode(),headers={'Authorization':'Bearer '+self.key,'Content-Type':'application/json'},method='POST')
         started=time.monotonic(); response=None
         try:
@@ -135,7 +123,7 @@ class Adapter:
         cost=reported_cost(usage)
         try:
             if not envelope_valid:raise InferenceError('Provider returned an invalid response envelope')
-            decision=parse_response(response,tool_name,observation.get('available_actions'))
+            decision=parse_response(response,tool_name,allowed_actions)
         except InferenceError as exc:
             exc.metrics=self.failed_metrics(started);exc.metrics['usage']={k:v for k,v in usage.items() if k in ('prompt_tokens','completion_tokens','total_tokens') and type(v) is int and v>=0}
             exc.metrics.update(cost=cost,response_id=response.get('id'),returned_model=response.get('model'))
@@ -177,3 +165,27 @@ ARGUMENT_FIELDS={
     'diagnosis':{'type':'string'},'hypothesis':{'type':'string'},'prompt':{'type':'string'}
 }
 TOOLS[0]['function']['parameters']['properties']['arguments'].update(properties=ARGUMENT_FIELDS,additionalProperties=False)
+
+def build_request(observation,image=None,prompt=PROMPT,model=None):
+    """The policy-visible wire payload, shared by live inference and distillation."""
+    content=[dict(type='text',text=canonical(observation))]
+    if image:
+        for png in (image if isinstance(image,list) else [image])[:3]: content.append(dict(type='image_url',image_url={'url':png}))
+    flat=observation.get('trial')=='precision'
+    fleet=isinstance(observation.get('feasible_options'),list) and observation.get('role') in ('orchestrator','worker','retriever')
+    tool_name='treatment_action' if flat else 'fleet_action' if fleet else 'choose_action'
+    schema=TOOLS
+    if fleet:
+        # Fleet roles pick one enumerated option; the typed fields keep a model from inventing argument names.
+        actions=list(dict.fromkeys(o['action'] for o in observation['feasible_options']))
+        observation=dict(observation,available_actions=actions)
+        fields=dict(FLEET_FIELDS,action=dict(type='string',enum=actions),reason=dict(type='string'))
+        schema=[dict(type='function',function=dict(name=tool_name,description='Execute one listed feasible option. Copy its arguments: assign needs row and vehicle; inspect/water need zone and ownership_version; retrieve needs target; query_telemetry needs robot and since_sim_time; incident_continue/retrieve/reassign/stop/escalate need the incident_id they list, and your reason explains the decision. Leave unrelated fields out.',parameters=dict(type='object',properties=fields,required=['action','reason'],additionalProperties=False)))]
+    if flat:
+        fields={k:ARGUMENT_FIELDS[k] for k in ('u','v','span','frame_id','opening','force','joints','stem_between_fingers','depth_consistent','evidence')}
+        fields.update({k:dict(type='number') for k in ('x','y','z','rx','ry','rz')})
+        fields.update(action=dict(type='string',enum=observation['available_actions']),reason=dict(type='string'))
+        schema=[dict(type='function',function=dict(name=tool_name,description='Execute one available action. scan_lidar and project_ground REQUIRE normalized image u,v and current frame_id. project_ground selects the visible root/soil junction, not a leaf. move_arm requires x,y,z in WORLD METERS. Optional rx,ry,rz default to zero (gripper straight DOWN). set_gripper requires opening and force. Assess/confirm require current frame_id and evidence.',parameters=dict(type='object',properties=fields,required=['action','reason','frame_id'] if observation.get('care_progress') else ['action','reason'],additionalProperties=False)))]
+    body=dict(model=model,messages=[dict(role='system',content=prompt),dict(role='user',content=content)],tools=schema,tool_choice='required' if flat or fleet else {'type':'function','function':{'name':tool_name}},temperature=.1,max_tokens=int(budget('MAX_TOKENS')))
+    if flat or fleet: body['parallel_tool_calls']=False
+    return body

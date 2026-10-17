@@ -1,0 +1,11 @@
+{
+  "model": "nvidia/Llama-3.1-Nemotron-Nano-8B-v1",
+  "revision": "54641c1611fcff44fa4865626462445e0a153fc7",
+  "dataset_id": "37e76db9635fa1aeabe299d4c14846c05888c95c052ae8f8821f0d21e81709f6",
+  "examples": 20,
+  "max_tokens": 361,
+  "min_supervised_tokens": 48,
+  "weights_downloaded": false,
+  "training_executed": false,
+  "source": "Synthetic fleet-action fixtures; no live telemetry export or teacher inference"
+}

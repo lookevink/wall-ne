@@ -48,7 +48,7 @@ class BoundaryTests(unittest.TestCase):
         w=Mission(rows=0);w.status='running'
         with patch('threading.Thread.start'),patch.object(Runtime,'persist',return_value=True):
             runtime=Runtime(world=w,config={'mode':'live','engine':'crusoe','speed':8})
-        with patch('simulator.runtime.Adapter',FakeAdapter),patch.object(Runtime,'persist',return_value=True):
+        with patch('simulator.runtime.Adapter',FakeAdapter),patch.object(Runtime,'persist',return_value=True),patch('simulator.persistence.Repository.artifact',return_value={'id':'policy-input'}):
             # Resolve mocked role calls synchronously without real network or background physics.
             class Immediate:
                 def submit(self,fn,*args):

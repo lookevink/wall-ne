@@ -9,7 +9,7 @@ from .engine import Mission,TERMINAL
 from .agents import DemoController
 from .persistence import Repository,StorageError
 from .telemetry import Telemetry
-from .inference import Adapter,InferenceError,PROMPT
+from .inference import Adapter,InferenceError,PROMPT,build_request
 
 class Runtime:
     def __init__(self,world=None,repository=None,config=None):
@@ -30,6 +30,7 @@ class Runtime:
                 self.config['fallback']=dict(after_failures=2,engine='gemma',provider_base=Adapter('gemma').base,
                     models={role:aliases.get(model,model) for role,model in self.config['models'].items()})
         self.config.setdefault('trial',getattr(self.world,'trial',None))
+        self.config.setdefault('capture_training_inputs',True)
         self.provider_routes={}
         self.committed=0; self.epoch=0; self.persisted=False; self.storage_error=None; self.pending=None
         self.telemetry=Telemetry(); self.controller=DemoController(); self.executor=concurrent.futures.ThreadPoolExecutor(max_workers=7)
@@ -147,6 +148,8 @@ class Runtime:
     def dispatch(self,robot,role,observation,image=None):
         if self.storage_error or self.world.status!='running': return False
         adapter=self.adapter(role)
+        observation=copy.deepcopy(observation);image=copy.deepcopy(image)
+        prompt=getattr(self.world,'prompt_texts',{}).get(role,PROMPT)
         request=dict(id=uid(),session_id=self.world.id,role=role,model=adapter.model,
                      provider=getattr(adapter,'provider',self.config['engine']),provider_base=adapter.base,
                      fallback=bool(self.provider_routes.get(role,{}).get('fallback')),
@@ -155,10 +158,20 @@ class Runtime:
                      input_images=copy.deepcopy(observation.get('input_images',[])),scan_artifact_id=(observation.get('scan') or {}).get('artifact_id'),
                      telemetry_sequences={key:value.get('sequence') for key,value in self.telemetry.latest.items()},
                      image_hash=digest(image) if image else None)
+        if self.config.get('capture_training_inputs',False):
+            payload=dict(schema_version=1,request_id=request['id'],observation=observation,
+                         body=build_request(observation,image,prompt,adapter.model))
+            try:
+                artifact=self.repository.artifact(self.world.id,robot,'policy_input',payload,
+                    dict(request_id=request['id'],role=role,observation_hash=request['observation_hash']))
+            except StorageError as exc:
+                self.storage_error=str(exc);self.waiting='storage_blocked';return False
+            self.pending_artifacts=getattr(self,'pending_artifacts',[])+[artifact]
+            request['policy_input_artifact_id']=artifact['id']
+            request['policy_input_hash']=digest(payload)
         self.requests[robot]=request
         self.world.event('inference_requested',robot,request=request)
         if not self.persist(): return False
-        prompt=getattr(self.world,'prompt_texts',{}).get(role,PROMPT)
         def call():
             try:
                 result=adapter.call(observation,image,prompt);result['request_id']=request['id'];return result
