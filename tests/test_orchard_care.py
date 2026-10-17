@@ -62,3 +62,26 @@ class OrchardCareTests(unittest.TestCase):
         self.assertFalse(w.task_checks()['images'])
         w.tasks[0]['prescription']=100
         self.assertFalse(w.verify()['inventory'])
+
+    def test_care_stage_cannot_loop_on_images_or_fresh_meters(self):
+        w=OrchardCare();w.status='running';w.begin();self.settle(w)
+        self.assertNotIn('capture_image',w.allowed_actions())
+        self.act(w,'inspect_tree');self.assertNotIn('read_moisture',w.allowed_actions())
+        x,_,z=w.orchard['tree']['position'];u,v=project(w.camera(),[x,.08,z+.35])
+        self.act(w,'aim_nozzle',u=u,v=v);self.act(w,'water_tree')
+        self.assertEqual(w.allowed_actions(),['stop','read_moisture'])
+        self.act(w,'read_moisture');self.assertEqual(w.allowed_actions(),['stop','next_stage'])
+        self.act(w,'next_stage');self.act(w,'fertilize_tree')
+        self.assertEqual(w.allowed_actions(),['stop','read_application'])
+        self.act(w,'read_application');self.assertEqual(w.allowed_actions(),['stop','next_stage'])
+        self.act(w,'next_stage');self.assertEqual(set(w.allowed_actions()),{'stop','remove_pest','next_stage'})
+
+    def test_approach_pose_requires_descent_and_rejects_noop(self):
+        w=OrchardCare();w.status='running';w.begin();self.settle(w);w.phase='extraction';w.nonempty_scan=True
+        x,_,z=w.weed['position'];self.act(w,'move_arm',pose=[x,.4,z,0,0,0])
+        self.assertNotIn('assess_alignment',w.allowed_actions())
+        self.assertIn('descend',w.observations()['current_grasp_step']['next_action'])
+        before=w.robot['position'][:];frame(w)
+        r=w.command('no-op','W1','move_arm',pose=[x,.4,z,0,0,0])
+        self.assertFalse(r['accepted']);self.assertIn('already at this pose',r['reason']);self.assertIsNone(w.robot['action'])
+        self.act(w,'move_arm',pose=[x,.13,z,0,0,0]);self.assertIn('assess_alignment',w.allowed_actions())

@@ -8,7 +8,7 @@ from .arm import ik
 from .camera import project_ground, ray
 from .common import digest, distance, finite
 
-CARE_GUIDE='''CARE MISSION: Complete each assigned tree; navigation and dock service are automatic after verification. Only the current stage's actions are available. EVERY tool call must include frame_id copied from the current frame, including inspect_tree, water_tree, fertilize_tree, next_stage and verify.
+CARE_GUIDE='''CARE MISSION: Complete each assigned tree; navigation and dock service are automatic after verification. Only the current stage's actions are available. Fresh images arrive AUTOMATICALLY after physical changes. Do not request another image to inspect what is already in the current image. Once no caterpillars remain visible, call next_stage for independent verification. EVERY tool call must include frame_id copied from the current frame, including inspect_tree, water_tree, fertilize_tree, next_stage and verify.
 INSPECTION: inspect_tree records the fresh image and moisture/prescription meters.
 IRRIGATION: A fixed service camera views the assigned trunk and root basin (world position in task_tree). aim_nozzle selects a visible ground point near the trunk with normalized image u,v and current frame_id. water_tree runs a metered, bounded dose to the measured 65% target; no liters argument. It consumes real tank volume and only moisture deposited within the root basin counts. Read moisture after delivery, then next_stage. A failed aim requires a new aim; don't water blindly.
 FERTILIZER: The retained nozzle aim applies here too. fertilize_tree delivers exactly the remaining measured prescription, bounded by stock. Read_application after delivery, then next_stage. No grams argument is needed.
@@ -89,10 +89,16 @@ class OrchardCare(OrchardManipulation):
         if getattr(self,'mission_type',None)!='full_care':return super().allowed_actions()
         if self.phase in ('travel','service','return'):return ['stop']
         if self.phase=='final':return ['verify','stop']
-        actions=['capture_image','stop']
+        actions=['stop']
         if self.phase=='inspection':return actions+['inspect_tree']
-        if self.phase=='irrigation':return actions+['aim_nozzle','water_tree','read_moisture','next_stage']
-        if self.phase=='fertilizer':return actions+['aim_nozzle','fertilize_tree','read_application','next_stage']
+        if self.phase=='irrigation':
+            if self.moisture_reading is None or self.moisture_reading['dose_sequence']!=self.dose_sequence:return actions+['read_moisture']
+            if self.moisture_reading['value']>=65-1e-6:return actions+['next_stage']
+            return actions+['aim_nozzle']+(['water_tree'] if self.aim is not None else [])
+        if self.phase=='fertilizer':
+            if self.fertilizer_meter is None:return actions+['read_application']
+            if self.fertilizer_meter['effective']>=self.fertilizer_meter['prescription']-1e-6:return actions+['next_stage']
+            return actions+['aim_nozzle']+(['fertilize_tree'] if self.aim is not None else [])
         if self.phase=='pests':return actions+['remove_pest','next_stage']
         return super().allowed_actions()
 
@@ -103,7 +109,7 @@ class OrchardCare(OrchardManipulation):
         obs['sensors'].update(fertilizer=self.fertilizer_meter)
         obs['resources'].update(fertilizer_stock=self.fertilizer_stock)
         obs['aimed']=self.aim is not None;obs['nozzle_aim_world']=self.aim
-        obs['instructions']=CARE_GUIDE+'\n'+obs['instructions']
+        obs['instructions']=(('CURRENT TASK: wrist extraction. Other care stages are already verified. After depositing, verify starts the checked dock return automatically.\n'+obs['instructions']) if self.phase=='extraction' else CARE_GUIDE+'\n'+obs['instructions'])
         obs['worker']=self.robot['id']
         obs['instructions']=obs['instructions'].replace('W1',self.robot['id'])
         return obs
@@ -182,6 +188,7 @@ class OrchardCare(OrchardManipulation):
 
     def read_application(self):
         self.fertilizer_meter=dict(prescription=self.prescription,delivered=self.fertilizer_delivered,effective=self.fertilizer_effective,revision=self.revision)
+        self.feedback=f'Measured fertilizer {self.fertilizer_effective:.2f}/{self.prescription} g; choose next_stage when the prescription is met'
 
     def stow(self):
         # A checked physical motion stows the tool before the chassis moves.

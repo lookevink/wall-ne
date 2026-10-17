@@ -206,11 +206,19 @@ class Handler(BaseHTTPRequestHandler):
                 sid=str(uuid.UUID(path.split('/')[-2]))
                 return self.send(ReviewService(app.repository).review_session(sid,**body))
             if path=='/api/prompt-candidates': return self.send(ReviewService(app.repository).create_candidate(**body))
-            allowed={'reset','start','pause','breakdown','false-claim','retry','abort','stop','clog','fault','frame','depth','resume','command'}
+            allowed={'continue-care','reset','start','pause','breakdown','false-claim','retry','abort','stop','clog','fault','frame','depth','resume','command'}
             if action not in allowed or path not in ('/api/'+action,'/api/treatment/'+action): return self.send({'error':'unknown route'},404)
             if action=='reset':
                 if 'model_pins' in body or 'provider_base' in body or 'prompt_version' in body: raise ValueError('prompt/model overrides are only available to frozen evaluation campaigns')
                 return self.send(app.reset(treatment,body))
+            if action=='continue-care':
+                if treatment:raise ValueError('fleet continuation belongs to the main orchard')
+                with app.reset_lock:
+                    if runtime.world.status=='running' or runtime.snapshot()['inference']['pending_calls']:raise ValueError('stop and finish inference accounting before continuing')
+                    from .fleet_continuation import continue_fleet
+                    replacement=continue_fleet(app.repository,body['session_id'],str(body.get('reason','Controller update'))[:400])
+                    runtime.close();app.fleet=replacement
+                    return self.send(replacement.snapshot())
             if action=='start' and treatment and runtime.world.kind=='arm':raise ValueError('Live arm runs now use the main orchard at /')
             if action=='start': runtime.start()
             elif action in ('pause','abort','stop'): runtime.pause('paused' if action=='pause' else 'aborted')

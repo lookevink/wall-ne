@@ -66,7 +66,8 @@ class Manipulation(Treatment):
             if self.deposited:return actions+['verify']
             if self.holding:return actions+['set_gripper','move_arm' if self.contact_ack else 'confirm_contact']
             if self.opening>=.06 and not self.must_reopen:
-                actions+=['move_arm','assess_alignment']
+                actions+=['move_arm']
+                if .09<=self.tool_pose()['position'][1]<=.22:actions+=['assess_alignment']
                 if self.alignment and self.alignment['aligned'] and self.alignment['revision']==self.revision:actions+=['set_gripper']
             return actions
         actions=['capture_image','move_arm','set_gripper','open_gripper','verify','return','stop']
@@ -91,6 +92,10 @@ class Manipulation(Treatment):
                 obs['scan']={k:self.scan[k] for k in ('artifact_id','frame_id','revision','bounds','rays','misses') if k in self.scan}
                 obs['scan'].update(current_revision=self.revision,units='World meters: x right, y UP, z toward rover. Image u,v are not world positions.',returns=[dict(image=dict(u=p[0],v=p[1]),world=dict(x=p[2],y=p[3],z=p[4])) for i,p in enumerate(self.scan['points']) if p and self.scan['surface_classes'][i]=='unclassified_surface'],filtering='Known robot and ground returns omitted. Remaining surfaces include weed, clover and tree; no object identity is inferred.')
             obs.update(instructions=INSTRUCTIONS,grasp_stage=('return' if self.stage_verified else 'scan' if not self.nonempty_scan else 'lift_or_carry' if self.holding and self.contact_ack else 'confirm_contact' if self.holding else 'reopen_after_missed_grasp' if self.must_reopen or self.opening<.06 else 'close_jaws' if 'set_gripper' in self.allowed_actions() else 'approach_and_visually_align'))
+        p=self.tool_pose()['position']
+        if self.trial=='precision' and self.nonempty_scan and not self.holding and self.opening>=.06:
+            obs['current_grasp_step']=dict(tool_center_world=p,valid_grasp_height=.09<=p[1]<=.22,
+                next_action='At approach height: descend to tool-center y=0.13 at the visually selected stem x,z; do not repeat the current pose. If this is rounded clover, retract and select the pointed weed instead.' if .22<p[1]<=.45 else 'Inspect the current fingers/stem and assess alignment before closing.' if .09<=p[1]<=.22 else 'Approach the observed weed crown at y=0.4, then descend to y=0.13.')
         return obs
 
     def record_control_progress(self,action):
@@ -113,6 +118,9 @@ class Manipulation(Treatment):
             if self.must_reopen: raise ValueError('reopen after miss or slip before repositioning')
             if self.holding and self.trial in STAGED and self.contact_ack is None: raise ValueError('confirm actual contact with fresh image before carrying')
             end=ik(args['pose'],self.base(),self.joints) if 'pose' in args else args['joints']
+            target=fk(end,self.base());current=self.tool_pose()
+            if norm(sub(target['position'],current['position']))<.003 and max(abs(a-b) for a,b in zip(target['euler'],current['euler']))<.5:
+                raise ValueError(f'Arm already at this pose (y={current["position"][1]:.3f} m). A repeated move makes no progress. If above the observed stem, descend to y=0.13 before alignment; otherwise change viewpoint or target from current evidence.')
             try: samples,duration=trajectory(self.joints,end,self.base(),getattr(self,'trunks',((0,0),)))
             except ValueError as exc: self.collision=str(exc); raise
             self.collision=None; self.alignment=None

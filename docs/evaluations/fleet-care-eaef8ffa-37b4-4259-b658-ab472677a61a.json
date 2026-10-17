@@ -1,0 +1,892 @@
+{
+  "session_id": "eaef8ffa-37b4-4259-b658-ab472677a61a",
+  "arena": "orchard",
+  "mission": "fleet_care",
+  "status": "blocked",
+  "checks": {
+    "all_workers_used": true,
+    "care_verified": false,
+    "inventory": true,
+    "reserve": true,
+    "returned": false,
+    "trees_complete": false
+  },
+  "feedback": "W3 blocked: Three rejected actions without new progress",
+  "assignments": {
+    "0": {
+      "session_id": "e5ca66d8-e9a4-404f-b636-1cbea6ceb17f",
+      "status": "assigned",
+      "vehicle": "W1"
+    },
+    "1": {
+      "session_id": "34ae8ae2-27f2-48b3-a715-5ef691c293a9",
+      "status": "assigned",
+      "vehicle": "W2"
+    },
+    "2": {
+      "session_id": "c7bd7b49-de6e-40df-8698-32ca6d918932",
+      "status": "blocked",
+      "vehicle": "W3"
+    },
+    "3": {
+      "session_id": "06c1f388-f221-49ca-b503-a0365a9165c3",
+      "status": "assigned",
+      "vehicle": "W4"
+    },
+    "4": {
+      "session_id": "8006782b-22f7-4111-9ce0-be9933b2cd0a",
+      "status": "assigned",
+      "vehicle": "W5"
+    }
+  },
+  "results": {
+    "c7bd7b49-de6e-40df-8698-32ca6d918932": {
+      "checks": {
+        "battery": true,
+        "evidence": false,
+        "fertilized": false,
+        "inspected": false,
+        "inventory": true,
+        "pests_removed": false,
+        "preserved": true,
+        "returned": false,
+        "trees_complete": false,
+        "watered": false,
+        "weeds_collected": false
+      },
+      "completed_trees": [],
+      "inference": [
+        {
+          "cost": null,
+          "decision": {
+            "action": "inspect_tree",
+            "arguments": {
+              "frame_id": "1cbc8d1d-fcbc-4c5d-b303-2d62f6cd2595"
+            },
+            "rationale": "Starting the inspection stage for the assigned tree to obtain moisture and prescription data."
+          },
+          "fallback": false,
+          "id": "70025bd7-17e7-4476-9113-0fa8ba7cb87f",
+          "latency": 3.386924583999999,
+          "provider": "crusoe",
+          "provider_base": "https://api.inference.crusoecloud.com/v1",
+          "request_id": "18da125f-e286-42ea-8147-8a512ef3aa68",
+          "requested_model": "google/gemma-4-31b-it",
+          "response_id": "07fa5be6a11d4c0b9b3f51318cc59b3e",
+          "returned_model": "google/gemma-4-31b-it",
+          "usage": {
+            "completion_tokens": 79,
+            "prompt_tokens": 3542,
+            "total_tokens": 3621
+          }
+        },
+        {
+          "cost": null,
+          "decision": {
+            "action": "aim_nozzle",
+            "arguments": {
+              "frame_id": "69a981e7-240c-438d-83d5-3424703fda48",
+              "u": 0.48,
+              "v": 0.7
+            },
+            "rationale": "Aiming the nozzle at the root basin of tree 07 to begin irrigation as per the current care stage."
+          },
+          "fallback": false,
+          "id": "b5c718a3-3fb1-4844-a312-9abd0c72db5c",
+          "latency": 4.380938666999995,
+          "provider": "crusoe",
+          "provider_base": "https://api.inference.crusoecloud.com/v1",
+          "request_id": "5e99ce77-55e3-42aa-9eaf-93849ea0341c",
+          "requested_model": "google/gemma-4-31b-it",
+          "response_id": "1434a610fa0942739d0f56b01ee63a3e",
+          "returned_model": "google/gemma-4-31b-it",
+          "usage": {
+            "completion_tokens": 108,
+            "prompt_tokens": 3784,
+            "total_tokens": 3892
+          }
+        },
+        {
+          "cost": null,
+          "decision": {
+            "action": "water_tree",
+            "arguments": {
+              "frame_id": "69a981e7-240c-438d-83d5-3424703fda48"
+            },
+            "rationale": "The nozzle is aimed at [3.546, 0.08, 13.181], which is within the root basin radius of 0.72m from the tree root at [3.455, 0, 12.644]. Proceeding to water the tree to reach the target moisture of 65%."
+          },
+          "fallback": false,
+          "id": "7bedab55-99bd-4072-a201-c52a1261d2a3",
+          "latency": 5.157405208,
+          "provider": "crusoe",
+          "provider_base": "https://api.inference.crusoecloud.com/v1",
+          "request_id": "21a1a477-5620-4965-8f54-042b33efac83",
+          "requested_model": "google/gemma-4-31b-it",
+          "response_id": "3991a56c7ad544dfb1d628e66abb72d4",
+          "returned_model": "google/gemma-4-31b-it",
+          "usage": {
+            "completion_tokens": 148,
+            "prompt_tokens": 4074,
+            "total_tokens": 4222
+          }
+        },
+        {
+          "cost": null,
+          "decision": {
+            "action": "read_moisture",
+            "arguments": {
+              "frame_id": "ff25c002-6bd2-45ec-ac82-7b2e30ca2d15"
+            },
+            "rationale": "Watering has been completed; I must now read the moisture level to verify if the target of 65% has been reached before proceeding to the next stage."
+          },
+          "fallback": false,
+          "id": "6ab4b304-1a9f-4e90-a1a0-ff260b0b0b27",
+          "latency": 3.3307270419999924,
+          "provider": "crusoe",
+          "provider_base": "https://api.inference.crusoecloud.com/v1",
+          "request_id": "08d8cfd8-4ecc-42db-a62e-0dabfb4a2a18",
+          "requested_model": "google/gemma-4-31b-it",
+          "response_id": "d1912cd1e051468e8c85a12d49c4a144",
+          "returned_model": "google/gemma-4-31b-it",
+          "usage": {
+            "completion_tokens": 99,
+            "prompt_tokens": 4470,
+            "total_tokens": 4569
+          }
+        },
+        {
+          "cost": null,
+          "decision": {
+            "action": "next_stage",
+            "arguments": {
+              "frame_id": "ff25c002-6bd2-45ec-ac82-7b2e30ca2d15"
+            },
+            "rationale": "Moisture measurement is 65.00%, which meets the target moisture of 65%. Irrigation stage is complete."
+          },
+          "fallback": false,
+          "id": "06d63712-5639-4dad-a307-303a158a0096",
+          "latency": 5.395009208999994,
+          "provider": "crusoe",
+          "provider_base": "https://api.inference.crusoecloud.com/v1",
+          "request_id": "c68e9170-6038-4b24-b2ab-ffb0402b8f16",
+          "requested_model": "google/gemma-4-31b-it",
+          "response_id": "0cf7814652454647ac3cbf2f0cd1be0d",
+          "returned_model": "google/gemma-4-31b-it",
+          "usage": {
+            "completion_tokens": 91,
+            "prompt_tokens": 4655,
+            "total_tokens": 4746
+          }
+        },
+        {
+          "cost": null,
+          "decision": {
+            "action": "fertilize_tree",
+            "arguments": {
+              "frame_id": "3676de6d-465b-4ea8-b66c-ee1eba820762"
+            },
+            "rationale": "The irrigation stage is verified (moisture at 65%), and the nozzle is already aimed. I will now deliver the prescribed fertilizer."
+          },
+          "fallback": false,
+          "id": "b1f64ccc-5510-4a2a-aaa5-3307bbafa180",
+          "latency": 6.164677666000003,
+          "provider": "crusoe",
+          "provider_base": "https://api.inference.crusoecloud.com/v1",
+          "request_id": "79ca04d4-191b-4c0c-9522-018b96692544",
+          "requested_model": "google/gemma-4-31b-it",
+          "response_id": "d5704a85d2e848f6b8b3abae311d5202",
+          "returned_model": "google/gemma-4-31b-it",
+          "usage": {
+            "completion_tokens": 94,
+            "prompt_tokens": 4867,
+            "total_tokens": 4961
+          }
+        },
+        {
+          "cost": null,
+          "decision": {
+            "action": "read_application",
+            "arguments": {
+              "frame_id": "efc18c55-14a3-4142-87e7-ef3c9c553d08"
+            },
+            "rationale": "Fertilizer has been delivered; reading application to verify the amount before proceeding to the next stage."
+          },
+          "fallback": false,
+          "id": "67e1a72e-3be3-4994-b6c3-79e40d38c9f3",
+          "latency": 6.753851582999999,
+          "provider": "crusoe",
+          "provider_base": "https://api.inference.crusoecloud.com/v1",
+          "request_id": "66584ef0-c50b-4d67-8aab-935a76a4d406",
+          "requested_model": "google/gemma-4-31b-it",
+          "response_id": "dab8afab99694629832030b7f4188eb2",
+          "returned_model": "google/gemma-4-31b-it",
+          "usage": {
+            "completion_tokens": 88,
+            "prompt_tokens": 5088,
+            "total_tokens": 5176
+          }
+        },
+        {
+          "cost": null,
+          "decision": {
+            "action": "next_stage",
+            "arguments": {
+              "frame_id": "efc18c55-14a3-4142-87e7-ef3c9c553d08"
+            },
+            "rationale": "Fertilizer prescription of 22g has been met (22.00/22 g delivered). Proceeding to the next care stage."
+          },
+          "fallback": false,
+          "id": "b4f0fdbb-8d74-46ac-abeb-ec2e3b9b19e5",
+          "latency": 3.662856667000014,
+          "provider": "crusoe",
+          "provider_base": "https://api.inference.crusoecloud.com/v1",
+          "request_id": "3d16f46f-1b1c-44c2-952d-ddfceb63e4d3",
+          "requested_model": "google/gemma-4-31b-it",
+          "response_id": "70f1949b47ad4f3b88e178484d8be292",
+          "returned_model": "google/gemma-4-31b-it",
+          "usage": {
+            "completion_tokens": 100,
+            "prompt_tokens": 5157,
+            "total_tokens": 5257
+          }
+        },
+        {
+          "cost": null,
+          "decision": {
+            "action": "remove_pest",
+            "arguments": {
+              "frame_id": "c8a3ac40-d1e7-4ce3-a35b-3d8bd6f5c5d1",
+              "u": 0.46,
+              "v": 0.51
+            },
+            "rationale": "Removing the upper caterpillar pest located at u=0.46, v=0.51 while preserving the ladybird above it."
+          },
+          "fallback": false,
+          "id": "dde70cc8-a3d7-403b-ad80-dec2aaf795eb",
+          "latency": 6.557462458000003,
+          "provider": "crusoe",
+          "provider_base": "https://api.inference.crusoecloud.com/v1",
+          "request_id": "80dcebf8-b652-4878-8a85-08607630bafb",
+          "requested_model": "google/gemma-4-31b-it",
+          "response_id": "1699da9435d24408906c287f7595da69",
+          "returned_model": "google/gemma-4-31b-it",
+          "usage": {
+            "completion_tokens": 112,
+            "prompt_tokens": 5157,
+            "total_tokens": 5269
+          }
+        },
+        {
+          "cost": null,
+          "decision": {
+            "action": "remove_pest",
+            "arguments": {
+              "frame_id": "2a8908b3-e7d8-4e04-9385-00023164c049",
+              "u": 0.51,
+              "v": 0.65
+            },
+            "rationale": "A purple caterpillar is visible on the lower part of the trunk; removing it while preserving the ladybird above."
+          },
+          "fallback": false,
+          "id": "316cd444-cb55-4b53-ab78-727e497dcc14",
+          "latency": 4.25368929199999,
+          "provider": "crusoe",
+          "provider_base": "https://api.inference.crusoecloud.com/v1",
+          "request_id": "fc049bff-e6a6-4a36-a9d0-1d4e0d066c66",
+          "requested_model": "google/gemma-4-31b-it",
+          "response_id": "f51cdc6bc1164269bf77edde935148d2",
+          "returned_model": "google/gemma-4-31b-it",
+          "usage": {
+            "completion_tokens": 109,
+            "prompt_tokens": 5176,
+            "total_tokens": 5285
+          }
+        },
+        {
+          "cost": null,
+          "decision": {
+            "action": "next_stage",
+            "arguments": {
+              "frame_id": "026fa327-c346-4063-9560-1c7d08c1a329"
+            },
+            "rationale": "Pest removal contact has been confirmed and no further caterpillars are visible in the current image; only a ladybird remains, which must be preserved. Proceeding to the next stage."
+          },
+          "fallback": false,
+          "id": "02e31a9e-40b0-4a51-bc97-809131ce55cc",
+          "latency": 9.737310125000022,
+          "provider": "crusoe",
+          "provider_base": "https://api.inference.crusoecloud.com/v1",
+          "request_id": "ab126bbb-f212-4b9a-bf7e-15b55bb96f38",
+          "requested_model": "google/gemma-4-31b-it",
+          "response_id": "225d8bc5c3a542bd902cea8564e01f12",
+          "returned_model": "google/gemma-4-31b-it",
+          "usage": {
+            "completion_tokens": 104,
+            "prompt_tokens": 5152,
+            "total_tokens": 5256
+          }
+        },
+        {
+          "cost": null,
+          "decision": {
+            "action": "scan_lidar",
+            "arguments": {
+              "frame_id": "cd5e21b6-011b-48ce-96bc-710a9b605998",
+              "span": 0.04,
+              "u": 0.5,
+              "v": 0.5
+            },
+            "rationale": "Scanning the small pointed-leaf weed located centrally in the image to determine its world coordinates for extraction."
+          },
+          "fallback": false,
+          "id": "9cbb8d1e-de99-43c8-ae01-8eb33719d3d4",
+          "latency": 5.730431500000009,
+          "provider": "crusoe",
+          "provider_base": "https://api.inference.crusoecloud.com/v1",
+          "request_id": "d619f3f6-98a2-4998-830f-8ebf8d1c3f05",
+          "requested_model": "google/gemma-4-31b-it",
+          "response_id": "b41f0cd4d5d14f24969c73f4dbd5109f",
+          "returned_model": "google/gemma-4-31b-it",
+          "usage": {
+            "completion_tokens": 112,
+            "prompt_tokens": 5472,
+            "total_tokens": 5584
+          }
+        },
+        {
+          "cost": null,
+          "decision": {
+            "action": "move_arm",
+            "arguments": {
+              "frame_id": "cd5e21b6-011b-48ce-96bc-710a9b605998",
+              "pose": [
+                3.4554792600963267,
+                0.4,
+                13.845035553720564,
+                0,
+                0,
+                0
+              ]
+            },
+            "rationale": "Moving the arm to a position above the measured weed crown (x=3.455, z=13.85) at y=0.4 to prepare for descent and grasping."
+          },
+          "fallback": false,
+          "id": "dc674c4c-843d-491a-86a7-fb398550c949",
+          "latency": 7.981246292000009,
+          "provider": "crusoe",
+          "provider_base": "https://api.inference.crusoecloud.com/v1",
+          "request_id": "83063504-b379-4b2d-ae00-df646a229a9f",
+          "requested_model": "google/gemma-4-31b-it",
+          "response_id": "d80e50415fbd4d6fb836ce736ed308d8",
+          "returned_model": "google/gemma-4-31b-it",
+          "usage": {
+            "completion_tokens": 161,
+            "prompt_tokens": 11603,
+            "total_tokens": 11764
+          }
+        },
+        {
+          "cost": null,
+          "decision": {
+            "action": "open_gripper",
+            "arguments": {
+              "frame_id": "db912f5c-770d-487a-be21-afcc5beb6ef0"
+            },
+            "rationale": "Opening the gripper to prepare for the approach to the weed crown."
+          },
+          "fallback": false,
+          "id": "30e62b70-b4e8-4511-b1cb-fbae942e0a9c",
+          "latency": 5.706574833000019,
+          "provider": "crusoe",
+          "provider_base": "https://api.inference.crusoecloud.com/v1",
+          "request_id": "eb50b069-f1d6-4b6b-b012-dab6070d37b0",
+          "requested_model": "google/gemma-4-31b-it",
+          "response_id": "88879a6c4bae47e9a024bf3ec91dd0b9",
+          "returned_model": "google/gemma-4-31b-it",
+          "usage": {
+            "completion_tokens": 76,
+            "prompt_tokens": 11796,
+            "total_tokens": 11872
+          }
+        },
+        {
+          "cost": null,
+          "decision": {
+            "action": "move_arm",
+            "arguments": {
+              "frame_id": "36bc789b-c472-4c02-991e-7d3ecc112694",
+              "pose": [
+                3.4554792600963267,
+                0.4,
+                13.845035553720564,
+                0,
+                0,
+                0
+              ]
+            },
+            "rationale": "The previous scan identified the weed crown around x=3.455, z=13.845 with y values around 0.35. I am moving the arm to y=0.4 above the measured crown to begin the approach phase for extraction."
+          },
+          "fallback": false,
+          "id": "b0aaa819-0fe9-4dfb-bcf4-f3ca8ae0748f",
+          "latency": 15.263929999999988,
+          "provider": "crusoe",
+          "provider_base": "https://api.inference.crusoecloud.com/v1",
+          "request_id": "17c01b85-eaa3-4f1c-9e10-6f17bd64c3f9",
+          "requested_model": "google/gemma-4-31b-it",
+          "response_id": "47f15bf7cdbb4b7f9cad9d6545b18e39",
+          "returned_model": "google/gemma-4-31b-it",
+          "usage": {
+            "completion_tokens": 177,
+            "prompt_tokens": 11856,
+            "total_tokens": 12033
+          }
+        },
+        {
+          "cost": null,
+          "decision": {
+            "action": "assess_alignment",
+            "arguments": {
+              "depth_consistent": true,
+              "evidence": "The gripper is positioned directly above the weed crown. The stem is centered between the inner finger faces, and the depth is consistent with the measured crown height of approximately 0.35m, with the tool center at 0.4m.",
+              "frame_id": "3da0509d-0cd0-4499-98f0-1c821794c75c"
+            },
+            "rationale": "The arm has moved to the approach position (y=0.4) above the weed crown. I am now assessing alignment before descending to the grasp height."
+          },
+          "fallback": false,
+          "id": "f142edf2-76e9-46bf-990e-9130deeca0de",
+          "latency": 11.570520041999998,
+          "provider": "crusoe",
+          "provider_base": "https://api.inference.crusoecloud.com/v1",
+          "request_id": "e259f99b-a536-4e82-9024-d3f1086e30ae",
+          "requested_model": "google/gemma-4-31b-it",
+          "response_id": "9f8aa74504a5487394be097771da32d8",
+          "returned_model": "google/gemma-4-31b-it",
+          "usage": {
+            "completion_tokens": 161,
+            "prompt_tokens": 12092,
+            "total_tokens": 12253
+          }
+        },
+        {
+          "cost": null,
+          "decision": {
+            "action": "assess_alignment",
+            "arguments": {
+              "depth_consistent": true,
+              "evidence": "The gripper is positioned directly above the weed crown. The stem is centered between the inner finger faces, and the depth is consistent with the measured crown height of approximately 0.35m, with the tool center at 0.4m.",
+              "frame_id": "3da0509d-0cd0-4499-98f0-1c821794c75c",
+              "stem_between_fingers": true
+            },
+            "rationale": "Re-attempting alignment assessment with the missing stem_between_fingers argument to proceed to grasping."
+          },
+          "fallback": false,
+          "id": "6608fe97-4b00-4ffe-bc5d-3474c572c4ee",
+          "latency": 9.700495999999987,
+          "provider": "crusoe",
+          "provider_base": "https://api.inference.crusoecloud.com/v1",
+          "request_id": "5b45dd8f-9e66-4d84-9e8f-9311669186a2",
+          "requested_model": "google/gemma-4-31b-it",
+          "response_id": "4413303daab74b1b9b6b7ba75bc2931d",
+          "returned_model": "google/gemma-4-31b-it",
+          "usage": {
+            "completion_tokens": 159,
+            "prompt_tokens": 12152,
+            "total_tokens": 12311
+          }
+        },
+        {
+          "cost": null,
+          "decision": {
+            "action": "set_gripper",
+            "arguments": {
+              "frame_id": "3da0509d-0cd0-4499-98f0-1c821794c75c",
+              "opening": 0,
+              "u": 0.5,
+              "v": 0.5,
+              "x": 3.4554792600963267,
+              "y": 0.4,
+              "z": 13.845035553720564
+            },
+            "rationale": "Alignment has been assessed and verified. Closing the gripper with 30N force to grasp the weed crown."
+          },
+          "fallback": false,
+          "id": "f0810c68-1ca2-4a98-8864-de6eb2a2cf09",
+          "latency": 12.968376000000035,
+          "provider": "crusoe",
+          "provider_base": "https://api.inference.crusoecloud.com/v1",
+          "request_id": "15172abe-7469-4c09-adab-31047d18cc23",
+          "requested_model": "google/gemma-4-31b-it",
+          "response_id": "16a0c280fb0743fbb40ccad1e6286407",
+          "returned_model": "google/gemma-4-31b-it",
+          "usage": {
+            "completion_tokens": 165,
+            "prompt_tokens": 12381,
+            "total_tokens": 12546
+          }
+        },
+        {
+          "cost": null,
+          "decision": {
+            "action": "set_gripper",
+            "arguments": {
+              "frame_id": "3da0509d-0cd0-4499-98f0-1c821794c75c",
+              "opening": 0,
+              "u": 0.5,
+              "v": 0.5,
+              "x": 3.4554792600963267,
+              "y": 0.4,
+              "z": 13.845035553720564
+            },
+            "rationale": "The alignment has been assessed as correct with the stem between the fingers. I am now closing the gripper with the required force of 30N to grasp the weed crown."
+          },
+          "fallback": false,
+          "id": "387b2e65-eacc-435d-851f-be15cb27f96c",
+          "latency": 15.251633167000023,
+          "provider": "crusoe",
+          "provider_base": "https://api.inference.crusoecloud.com/v1",
+          "request_id": "29771b21-0122-4195-b627-e2c46b31c5d9",
+          "requested_model": "google/gemma-4-31b-it",
+          "response_id": "15895abc19254c47aa6c43c135d49cea",
+          "returned_model": "google/gemma-4-31b-it",
+          "usage": {
+            "completion_tokens": 179,
+            "prompt_tokens": 12426,
+            "total_tokens": 12605
+          }
+        },
+        {
+          "cost": null,
+          "decision": {
+            "action": "set_gripper",
+            "arguments": {
+              "frame_id": "3da0509d-0cd0-4499-98f0-1c821794c75c",
+              "opening": 0,
+              "u": 0.5,
+              "v": 0.5,
+              "x": 3.4554792600963267,
+              "y": 0.4,
+              "z": 13.845035553720564
+            },
+            "rationale": "The gripper is aligned with the weed crown. Closing the jaws with 30N force to grasp the stem for extraction."
+          },
+          "fallback": false,
+          "id": "cf3581bf-17ca-4797-90d2-5ba8845070b9",
+          "latency": 9.699815708000017,
+          "provider": "crusoe",
+          "provider_base": "https://api.inference.crusoecloud.com/v1",
+          "request_id": "ad2e5b41-275e-4b7a-806a-bd3da1d2bdd4",
+          "requested_model": "google/gemma-4-31b-it",
+          "response_id": "de5989e9dac5468b81953493a1f642e6",
+          "returned_model": "google/gemma-4-31b-it",
+          "usage": {
+            "completion_tokens": 169,
+            "prompt_tokens": 12452,
+            "total_tokens": 12621
+          }
+        }
+      ],
+      "status": "blocked",
+      "worker": "W3"
+    }
+  },
+  "inference": {
+    "calls": 106,
+    "cost": null,
+    "failed_calls": 0,
+    "latency_seconds": 44.045535583,
+    "pending_calls": 0,
+    "results": [
+      {
+        "cost": null,
+        "decision": {
+          "action": "assign",
+          "arguments": {
+            "row": 0,
+            "vehicle": "W1"
+          },
+          "rationale": "Assign the first idle worker W1 to the first tree (row 0) to begin mobilizing all workers and cover distinct trees."
+        },
+        "fallback": false,
+        "id": "7a8b1420-7111-4523-89e8-cedd09aeca33",
+        "latency": 5.7684556659999995,
+        "provider": "crusoe",
+        "provider_base": "https://api.inference.crusoecloud.com/v1",
+        "request_id": "e5c97432-f8bc-41cb-9de7-3df12df2b604",
+        "requested_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "response_id": "chatcmpl-89180b33346831bd",
+        "returned_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "usage": {
+          "completion_tokens": 387,
+          "prompt_tokens": 3031,
+          "total_tokens": 3418
+        }
+      },
+      {
+        "cost": null,
+        "decision": {
+          "action": "assign",
+          "arguments": {
+            "row": 1,
+            "vehicle": "W2"
+          },
+          "rationale": "Assign tree at row 1 to idle worker W2, preferring idle workers that have not yet participated."
+        },
+        "fallback": false,
+        "id": "04208c47-12b7-4b93-93ae-4abcb45b28fd",
+        "latency": 6.007683832999998,
+        "provider": "crusoe",
+        "provider_base": "https://api.inference.crusoecloud.com/v1",
+        "request_id": "e8a95d04-8e5f-4768-b4d8-8e77d64f77e4",
+        "requested_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "response_id": "chatcmpl-bc48d146aa366c66",
+        "returned_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "usage": {
+          "completion_tokens": 364,
+          "prompt_tokens": 2962,
+          "total_tokens": 3326
+        }
+      },
+      {
+        "cost": null,
+        "decision": {
+          "action": "assign",
+          "arguments": {
+            "row": 2,
+            "vehicle": "W3"
+          },
+          "rationale": "Assign tree at row 2 (index 7) to idle worker W3, who has not yet participated, preferring idle workers and avoiding duplicate assignments."
+        },
+        "fallback": false,
+        "id": "0bdb22ca-1d04-4731-9ed5-93da3ec6260c",
+        "latency": 16.044543542000003,
+        "provider": "crusoe",
+        "provider_base": "https://api.inference.crusoecloud.com/v1",
+        "request_id": "f3097a3b-36eb-48e6-b9bc-ddbc8e894175",
+        "requested_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "response_id": "chatcmpl-bce87b477b83ba89",
+        "returned_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "usage": {
+          "completion_tokens": 1256,
+          "prompt_tokens": 2859,
+          "total_tokens": 4115
+        }
+      },
+      {
+        "cost": null,
+        "decision": {
+          "action": "assign",
+          "arguments": {
+            "row": 3,
+            "vehicle": "W4"
+          },
+          "rationale": "Assign tree at row 3 to idle worker W4, who has not yet participated, to mobilize all workers and prefer idle workers."
+        },
+        "fallback": false,
+        "id": "dc42a3cc-7972-434f-a068-23b439023f0e",
+        "latency": 6.800684416999999,
+        "provider": "crusoe",
+        "provider_base": "https://api.inference.crusoecloud.com/v1",
+        "request_id": "da9fa80c-2ec9-413f-b03f-1d02863d77b7",
+        "requested_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "response_id": "chatcmpl-aef0fd0ff68c7949",
+        "returned_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "usage": {
+          "completion_tokens": 355,
+          "prompt_tokens": 2811,
+          "total_tokens": 3166
+        }
+      },
+      {
+        "cost": null,
+        "decision": {
+          "action": "assign",
+          "arguments": {
+            "row": 4,
+            "vehicle": "W5"
+          },
+          "rationale": "Assign the next unassigned tree (row 4) to the idle worker W5 to mobilize all workers and progress toward assigning ten distinct trees."
+        },
+        "fallback": false,
+        "id": "f8b08c41-16a0-4d3f-8efe-3b04645bae4c",
+        "latency": 9.424168125000001,
+        "provider": "crusoe",
+        "provider_base": "https://api.inference.crusoecloud.com/v1",
+        "request_id": "1915e5e5-d58f-4c3a-b60e-add031f6a206",
+        "requested_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "response_id": "chatcmpl-812170534c689354",
+        "returned_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "usage": {
+          "completion_tokens": 507,
+          "prompt_tokens": 2900,
+          "total_tokens": 3407
+        }
+      }
+    ],
+    "tokens": 973528
+  },
+  "config": {
+    "arena": "orchard",
+    "code_hash": "fd525160d37e883bf35f6d60363e0ec5ac6d4645c456babae569d93563978b14",
+    "engine": "crusoe",
+    "fallback": {
+      "after_failures": 2,
+      "engine": "gemma",
+      "models": {
+        "orchestrator": "nvidia/nemotron-3-super-120b-a12b",
+        "planner": "nvidia/nemotron-3-super-120b-a12b",
+        "retriever": "nvidia/nemotron-3-nano-30b-a3b",
+        "treatment": "google/gemma-4-31b-it",
+        "verifier": "nvidia/nemotron-3-super-120b-a12b",
+        "worker": "nvidia/nemotron-3-nano-30b-a3b"
+      },
+      "provider_base": "https://ai-gateway.vercel.sh/v1"
+    },
+    "mode": "vision",
+    "models": {
+      "orchestrator": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "planner": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "retriever": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "treatment": "google/gemma-4-31b-it",
+      "verifier": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "worker": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
+    },
+    "provider_base": "https://api.inference.crusoecloud.com/v1",
+    "speed": 8,
+    "treatment_code_hash": "ad9e49e0b11e9fe5bb8ec03ea24582a848f7cd932f1f8744d57bb8892cf68a2e",
+    "trial": null
+  },
+  "provider_routes": {
+    "orchestrator": {
+      "failures": 0,
+      "fallback": false
+    }
+  },
+  "workers": {
+    "W1": {
+      "session_id": "e5ca66d8-e9a4-404f-b636-1cbea6ceb17f",
+      "phase": "extraction",
+      "status": "paused",
+      "checks": {
+        "battery": true,
+        "evidence": false,
+        "fertilized": false,
+        "inspected": false,
+        "inventory": true,
+        "pests_removed": false,
+        "preserved": true,
+        "returned": false,
+        "trees_complete": false,
+        "watered": false,
+        "weeds_collected": false
+      },
+      "feedback": "No meaningful progress: choose a different viewpoint/grasp pose (at least 2 cm or 3 degrees), reopen after a miss, or stop. Repeated images and identical poses are not recovery.",
+      "provider_routes": {
+        "treatment": {
+          "failures": 0,
+          "fallback": false
+        }
+      }
+    },
+    "W2": {
+      "session_id": "34ae8ae2-27f2-48b3-a715-5ef691c293a9",
+      "phase": "extraction",
+      "status": "paused",
+      "checks": {
+        "battery": true,
+        "evidence": false,
+        "fertilized": false,
+        "inspected": false,
+        "inventory": true,
+        "pests_removed": false,
+        "preserved": true,
+        "returned": false,
+        "trees_complete": false,
+        "watered": false,
+        "weeds_collected": false
+      },
+      "feedback": "No meaningful progress: choose a different viewpoint/grasp pose (at least 2 cm or 3 degrees), reopen after a miss, or stop. Repeated images and identical poses are not recovery.",
+      "provider_routes": {
+        "treatment": {
+          "failures": 0,
+          "fallback": false
+        }
+      }
+    },
+    "W3": {
+      "session_id": "c7bd7b49-de6e-40df-8698-32ca6d918932",
+      "phase": "extraction",
+      "status": "blocked",
+      "checks": {
+        "battery": true,
+        "evidence": false,
+        "fertilized": false,
+        "inspected": false,
+        "inventory": true,
+        "pests_removed": false,
+        "preserved": true,
+        "returned": false,
+        "trees_complete": false,
+        "watered": false,
+        "weeds_collected": false
+      },
+      "feedback": "Three rejected actions without new progress",
+      "provider_routes": {
+        "treatment": {
+          "failures": 0,
+          "fallback": false
+        }
+      }
+    },
+    "W4": {
+      "session_id": "06c1f388-f221-49ca-b503-a0365a9165c3",
+      "phase": "extraction",
+      "status": "paused",
+      "checks": {
+        "battery": true,
+        "evidence": false,
+        "fertilized": false,
+        "inspected": false,
+        "inventory": true,
+        "pests_removed": false,
+        "preserved": true,
+        "returned": false,
+        "trees_complete": false,
+        "watered": false,
+        "weeds_collected": false
+      },
+      "feedback": "No meaningful progress: choose a different viewpoint/grasp pose (at least 2 cm or 3 degrees), reopen after a miss, or stop. Repeated images and identical poses are not recovery.",
+      "provider_routes": {
+        "treatment": {
+          "failures": 0,
+          "fallback": false
+        }
+      }
+    },
+    "W5": {
+      "session_id": "8006782b-22f7-4111-9ce0-be9933b2cd0a",
+      "phase": "extraction",
+      "status": "paused",
+      "checks": {
+        "battery": true,
+        "evidence": false,
+        "fertilized": false,
+        "inspected": false,
+        "inventory": true,
+        "pests_removed": false,
+        "preserved": true,
+        "returned": false,
+        "trees_complete": false,
+        "watered": false,
+        "weeds_collected": false
+      },
+      "feedback": "Care stage physically verified; inspect the new camera image",
+      "provider_routes": {
+        "treatment": {
+          "failures": 0,
+          "fallback": false
+        }
+      }
+    }
+  },
+  "wall_seconds": 310.054286875
+}

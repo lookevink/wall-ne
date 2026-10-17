@@ -153,7 +153,7 @@ class TreatmentRuntime(Runtime):
         obs['budgets'].update(wall_seconds_remaining=max(0,wall_limit-self.active_wall),reported_dollars_remaining=max(0,cost_limit-sum(r['cost'] or 0 for r in self.inference)),cost_complete=all(r['cost'] is not None for r in self.inference))
         images=[self.image]
         obs['input_images']=[dict(index=0,meaning='Full current camera image',frame_id=w.frame['id'])]
-        if w.trial!='precision' and self.scan_image and w.scan and w.scan['frame_id']==w.frame['id'] and not obs.get('scan_stale'):
+        if self.scan_image and w.scan and w.scan['frame_id']==w.frame['id'] and not obs.get('scan_stale'):
             images.append(self.scan_image);obs['input_images'].append(dict(index=1,meaning='Magnified RGB crop of current scan bounds; use full-image u,v for actions',**w.scan['rgb_crop']))
         self.dispatch(self.world.robot['id'],'treatment',obs,images)
         self.waiting='inference_wait'
