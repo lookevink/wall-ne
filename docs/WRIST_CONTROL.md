@@ -14,9 +14,9 @@ State-dependent tool availability enforces scanning, open-jaw approach, fresh po
 
 ## Crusoe execution
 
-Crusoe is primary, using `google/gemma-4-31b-it`. The adapter sends one `treatment_action` tool with a current action enum, flat arguments, `tool_choice: required`, temperature .1 and max_tokens 4096. Optional rx/ry/rz default to zero. Unrelated fleet and review fields are omitted from the arm schema.
+Crusoe is primary, using `google/gemma-4-31b-it`. The adapter sends one `treatment_action` tool with a current action enum, flat arguments, `tool_choice: required`, temperature .1 and `WALLNE_MAX_TOKENS` output tokens (default 16384). Optional rx/ry/rz default to zero. Unrelated fleet and review fields are omitted from the arm schema.
 
-Two consecutive provider or malformed-response failures switch the role to the same Gemma model on Gateway. Physical misses/rejected movements do not trigger fallback. Three Gateway failures block the mission. Requests, models, routes, failure output and accounting are retained; unknown dollar costs remain unknown. Arm missions retain 240-second wall and $1 reported-cost caps.
+The Gateway fallback is opt-in (`WALLNE_GATEWAY_FALLBACK=1`) and off by default, so a Crusoe run stays a Crusoe run: provider or malformed-response failures back off and block the mission visibly after three. When enabled, two consecutive failures switch the role to the same Gemma model on Gateway; physical misses/rejected movements never trigger it, and the route change is recorded. Requests, models, routes, failure output and accounting are retained; unknown dollar costs remain unknown. Arm missions use `WALLNE_WALL_CAP` (default 3600 s) and `WALLNE_COST_CAP` (default $1 reported); each call waits up to `WALLNE_INFERENCE_TIMEOUT` (default 300 s). Learning runs are not rushed.
 
 ## Acceptance
 
@@ -27,3 +27,18 @@ Success requires all seven independent checks: extraction, collection/release, f
 The arm, weed and protected plants join the existing orchard scene. RGB and LiDAR use the same full orchard geometry and world coordinates. The actual planted tree positions drive trunk collision checks; a test verifies the physics inventory against procedural rendering. Robot bodies are excluded from the wrist sensor layer; arms, plants, ground and orchard structures remain visible. Shader wind is frozen during this condition to align range and RGB. Navigation follows a fixed apron route, independent of hidden weed coordinates. No multi-worker weeding scheduler is implemented.
 
 Run `python3 -m scripts.arm_experiments --engine crusoe --condition precision --seed 7` with the main orchard page open. The repeatability runner and new evaluation campaigns use the same arena. Saved missions retain the arena, prompt/model pins, implementation hash, inventory, movement, scans and RGB evidence.
+
+## Orchard repeatability series
+
+`python3 -m scripts.wrist_repeatability 7,7,7,11,23,8` on 2026-10-17, recorded in `docs/evaluations/wrist-repeatability-ed71f406-4b64-4619-ac66-5f39c50e7bc6.json`: Crusoe `google/gemma-4-31b-it`, precision wrist controller in the orchard arena, Gateway fallback off, prompt `9dbe48a3`, implementation hash `16bac89f…`, six sequential fresh sessions. Repeats of seed 7 measure repeatability; seeds 11, 23 and 8 are held-out placements.
+
+| # | Seed | Session | Result | Calls | Wall s | Inference s |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | 7 | `6fcd89ab` | completed, 7/7 | 13 | 149 | 98 |
+| 2 | 7 | `b95a510f` | completed, 7/7 | 13 | 168 | 100 |
+| 3 | 7 | `9f594a5b` | completed, 7/7 | 14 | 190 | 118 |
+| 4 | 11 | `2ba25d01` | blocked, 3/7 | 29 | 334 | 207 |
+| 5 | 23 | `9bdc10ea` | completed, 7/7 | 14 | 154 | 93 |
+| 6 | 8 | `4905a3d6` | completed, 7/7 | 13 | 184 | 115 |
+
+Five of six missions completed with zero failed provider calls and no fallback. Every success had the same 13–14 decision shape: scan, approach, descend, assess, close at 30 N, confirm, lift, carry, release, verify, return. Seed 11 failed on localization: the focused scan returned the crown at z≈14.30 (a leaf surface) while the stem stood at z=14.236, so every closure at 6.5 cm horizontal offset missed the 5.5 cm contact radius, and the controller kept asserting visual alignment at the same pose until the progress detector blocked the mission. That is a one-leaf-width localization error with no visual correction, evidence for the review loop rather than a reason to loosen the verifier. Crusoe reports no dollar cost, so cost stays unknown. Six trials are a smoke test, not statistics.
