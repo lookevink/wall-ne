@@ -1,10 +1,12 @@
 """Loopback-only HTTP API and allowlisted local assets; no credentials leave Python."""
 import argparse
+import copy
 import gzip
 import json
 import mimetypes
 import pathlib
 import threading
+import time
 import urllib.parse
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from .common import load_env,canonical,uid,digest,treatment_implementation_hash
@@ -15,7 +17,9 @@ from .care import PlantCare
 from .manipulation import Manipulation
 from .orchard_manipulation import OrchardManipulation
 from .orchard_care import OrchardCare
-from .fleet_care import FleetCareWorld,FleetCareRuntime
+from .fleet_care import FleetCareWorld,FleetCareRuntime,result_outcome
+from .almanac import Season,DayClock
+from . import timelapse
 from .treatment_runtime import TreatmentRuntime
 from .persistence import Repository,StorageError
 from .review import ReviewService
@@ -24,16 +28,126 @@ from .evaluation import Campaigns
 ROOT=pathlib.Path(__file__).resolve().parent.parent
 WORLDS={'irrigation':Treatment,'care':PlantCare,'arm':Manipulation}
 
+def saved_outcomes(state):
+    """Care outcomes recorded in a saved orchard checkpoint; unfinished workers count as untouched."""
+    if state.get('mission_type')=='fleet_care':
+        outcomes={}
+        for i,a in state.get('assignments',{}).items():
+            result=state.get('results',{}).get(a.get('session_id'))
+            outcome=result and result_outcome(result)
+            if outcome:outcomes[int(i)]=outcome
+        return outcomes
+    return {0:dict(weed_removed=bool(state['extracted']))} if state.get('arena')=='orchard' and 'extracted' in state else {}
+
+
 class App:
-    def __init__(self):
+    def __init__(self,recover_season=True):
         self.repository=Repository(); self.fleet=TreatmentRuntime(OrchardManipulation(),repository=self.repository,config=dict(mode='vision',engine='crusoe',speed=4,arena='orchard',treatment_code_hash=treatment_implementation_hash()))
         self.treatment=TreatmentRuntime(repository=self.repository)
-        self.reset_lock=threading.Lock(); self.campaigns=Campaigns(self)
+        self.reset_lock=threading.RLock(); self.campaigns=Campaigns(self)
+        # The orchard calendar outlives individual missions. Each day's world saves its own conditions.
+        self.season=Season(7); self.clock=DayClock(self.season); self.season_lock=threading.Lock()
+        self.plan=dict(mission='full_care',mode='demo',speed=8); self.carry={}; self.season_notice=None; self.blocked_days=0
+        threading.Thread(target=self.season_loop,daemon=True).start()
+        if recover_season: threading.Thread(target=self.recover_season,daemon=True).start()
 
-    def reset(self,treatment,body):
+    def day_plan(self,body):
+        plan=dict(self.plan,**{k:body[k] for k in ('mission','mode','speed') if k in body})
+        if plan['mission'] not in ('weeding','watering','full_care'): raise ValueError('unknown orchard mission')
+        if plan['speed'] not in (1,4,8,16): raise ValueError('speed must be 1/4/8/16')
+        if plan['mission']=='watering' and plan['mode'] not in ('demo','live'): raise ValueError('invalid fleet mode')
+        return plan
+
+    def day_outcomes(self,runtime):
+        record=getattr(runtime.world,'season',None)
+        if not record or record['seed']!=self.season.seed or record['day']!=self.season.day: return dict(self.carry)
+        if isinstance(runtime,FleetCareRuntime): return runtime.day_outcomes()
+        with runtime.lock: return saved_outcomes(runtime.world.__dict__)
+
+    def begin_day(self,season,body):
+        """Close the current day, then create and start the given day's mission. Agents are always on."""
+        with self.reset_lock:
+            plan=self.day_plan(body)
+            snapshot=self.reset(False,dict(plan,seed=(season.seed+season.day-1)%100001),season)
+            with self.season_lock:
+                self.season=season;self.clock.reset(season);self.carry={};self.plan=plan;self.season_notice=None
+            self.fleet.start()
+            return snapshot
+
+    def next_day(self,body,automatic=False):
+        with self.reset_lock:
+            world=self.fleet.world;status=world.status
+            if getattr(world,'season',None):self.blocked_days=self.blocked_days+1 if status=='blocked' else 0
+            if automatic and self.blocked_days>=2:
+                with self.season_lock:self.clock.auto_advance=False;self.season_notice='Auto-advance stopped after two blocked days; inspect the mission journal, then start the next day.'
+                return self.fleet.snapshot()
+            return self.begin_day(self.season.next_day(self.day_outcomes(self.fleet) if self.season.day else {}),body)
+
+    def new_season(self,body):
+        seed=body.get('seed',7)
+        if type(seed)!=int or not 0<=seed<=100000: raise ValueError('seed must be 0..100000')
+        with self.reset_lock:
+            self.blocked_days=0
+            return self.begin_day(Season(seed).next_day(),body)
+
+    def pace(self,body):
+        with self.season_lock:
+            if 'day_minutes' in body:
+                if body['day_minutes'] not in (5,10,20,40,80): raise ValueError('day length must be 5/10/20/40/80 minutes')
+                self.clock.day_minutes=body['day_minutes']
+            if 'auto_advance' in body:
+                if type(body['auto_advance'])!=bool: raise ValueError('auto_advance must be boolean')
+                self.clock.auto_advance=body['auto_advance'];self.season_notice=None
+                if body['auto_advance']:self.blocked_days=0
+        return self.epoch_view()
+
+    def season_loop(self):
+        previous=time.monotonic()
+        while True:
+            time.sleep(.25);now=time.monotonic();runtime=self.fleet
+            status='storage_blocked' if runtime.storage_error else runtime.world.status
+            with self.season_lock:
+                self.clock.tick(now-previous,status,now);due=self.clock.due(now)
+            previous=now
+            if due:
+                try:self.next_day({},automatic=True)
+                except Exception as exc:
+                    with self.season_lock:self.clock.auto_advance=False;self.season_notice=f'Auto-advance stopped: {exc}'
+
+    def recover_season(self):
+        """Continue the latest saved season after a restart; Next day then begins the following day."""
+        try:
+            rows=self.repository.read('sessions','select=id,metadata&order=started_at.desc,id.desc&limit=25')
+            # Worker sessions inherit the parent's configuration; only the parent holds the season.
+            configs=[((r.get('metadata') or {}).get('configuration') or {},r) for r in rows]
+            row=next((r for c,r in configs if c.get('season_day') and not c.get('parent_session_id')),None)
+            if not row: return
+            state=self.repository.restore(row['id']);season=Season.from_record(state['season'])
+            with self.reset_lock:
+                if self.season.day or getattr(self.fleet.world,'season',None): return
+                with self.season_lock:
+                    self.season=season;self.clock.reset(season);self.clock.clock=self.clock.night;self.clock.mode='night'
+                    self.carry=saved_outcomes(state);self.season_notice=f'Recovered season {season.seed} at day {season.day}. Next day continues it.'
+        except Exception:
+            pass
+
+    def epoch_view(self):
+        with self.season_lock:
+            view=self.clock.view();season=self.season;view.update(history=copy.deepcopy(season.history[-14:]),notice=self.season_notice,plan=dict(self.plan))
+        live=self.day_outcomes(self.fleet) if season.day else {}
+        conditions=season.conditions()
+        view['trees']=[dict(index=c['index'],row=c['tree']['row'],position=c['tree']['position'],morning_moisture=c['moisture'],
+                            moisture=live.get(c['index'],{}).get('moisture',c['moisture']),weed_age=c['weed']['age'],weed_size=c['weed']['size'],
+                            weed_removed=bool(live.get(c['index'],{}).get('weed_removed')),pests=c['pests'],
+                            pests_remaining=live.get(c['index'],{}).get('pests_remaining',c['pests']),prescription=c['prescription'],
+                            cared=bool(live.get(c['index'],{}).get('cared'))) for c in conditions]
+        return view
+
+    def reset(self,treatment,body,season=None):
         with self.reset_lock:
             seed=body.get('seed',8 if treatment else 7)
             if type(seed)!=int or not 0<=seed<=100000: raise ValueError('seed must be 0..100000')
+            conditions=None
             if treatment:
                 kind=body.get('kind','irrigation'); cls=WORLDS.get(kind)
                 if not cls: raise ValueError('invalid mission kind')
@@ -46,7 +160,11 @@ class App:
                 if mission not in ('weeding','watering','full_care'):raise ValueError('unknown orchard mission')
                 mode='vision' if mission in ('weeding','full_care') else body.get('mode','demo')
                 if mission=='watering' and mode not in ('demo','live'): raise ValueError('invalid fleet mode')
-                world=FleetCareWorld(seed,body.get('tree_count',10)) if mission=='full_care' else OrchardManipulation(seed) if mission=='weeding' else Mission(seed)
+                conditions=season.conditions() if season and season.day else None
+                if mission=='full_care':world=FleetCareWorld(seed,body.get('tree_count',10),conditions=conditions)
+                elif mission=='weeding':world=OrchardManipulation(conditions[0]['weed']['specimen_seed'],growth=conditions[0]['weed']) if conditions else OrchardManipulation(seed)
+                else:world=Mission(seed)
+                if conditions:world.season=season.record()
             engine=body.get('engine','crusoe')
             if engine not in ('crusoe','nemotron','gemma','gemini'): raise ValueError('invalid inference engine')
             speed=body.get('speed',4 if treatment else 8)
@@ -64,6 +182,7 @@ class App:
             config['code_hash']=implementation_hash()
             if world.kind!='fleet' or getattr(world,'arena',None)=='orchard':config['treatment_code_hash']=treatment_implementation_hash()
             if getattr(world,'arena',None)=='orchard':config['arena']='orchard'
+            if conditions:config.update(season_seed=season.seed,season_day=season.day)
             runtime=(FleetCareRuntime if getattr(world,'mission_type',None)=='fleet_care' else TreatmentRuntime if world.kind!='fleet' else Runtime)(world,self.repository,config)
             if treatment: self.treatment=runtime
             else: self.fleet=runtime
@@ -109,7 +228,10 @@ class Handler(BaseHTTPRequestHandler):
                     x,_,z=world.weed['position'];offset,height,back={'aligned':(0,.15,0),'approach':(0,.35,.12),'recovery':(.12,.25,.12),'offset':(-.12,.15,0)}[pose];world.joints=ik([x+offset,height,z+back,0,0,0],world.base())
                 result=world.snapshot();result['diagnostic_fixture']=pose
                 return self.send(result)
-            if path in ('/api/state','/api/export'): return self.send(app.fleet.snapshot())
+            if path in ('/api/state','/api/export'):
+                state=app.fleet.snapshot();state['epoch']=app.epoch_view()
+                return self.send(state)
+            if path=='/api/timelapse': return self.send(dict(reels=timelapse.reels()))
             if path in ('/api/treatment/state','/api/treatment/export'): return self.send(app.treatment.snapshot())
             if path.startswith('/api/treatment/frame/'):
                 if query.get('mission',[''])[0]!=app.treatment.world.id: raise ValueError('cross-mission frame')
@@ -206,6 +328,11 @@ class Handler(BaseHTTPRequestHandler):
                 sid=str(uuid.UUID(path.split('/')[-2]))
                 return self.send(ReviewService(app.repository).review_session(sid,**body))
             if path=='/api/prompt-candidates': return self.send(ReviewService(app.repository).create_candidate(**body))
+            if path=='/api/next-day': return self.send(app.next_day(body))
+            if path=='/api/season': return self.send(app.new_season(body))
+            if path=='/api/epoch': return self.send(app.pace(body))
+            if path=='/api/timelapse/frame': return self.send(timelapse.save_frame(body.get('reel'),body.get('index'),body.get('data_url'),body.get('meta')))
+            if path=='/api/timelapse/render': return self.send(timelapse.render(body.get('reel'),body.get('fps',30)))
             allowed={'continue-care','reset','start','pause','breakdown','false-claim','retry','abort','stop','clog','fault','frame','depth','resume','command'}
             if action not in allowed or path not in ('/api/'+action,'/api/treatment/'+action): return self.send({'error':'unknown route'},404)
             if action=='reset':

@@ -34,6 +34,21 @@ Use a dedicated test project when running persistence integration tests; they cr
 
 Crusoe is primary; live treatment defaults to Gemma 4. Two consecutive provider/protocol failures switch the affected role to its pinned AI Gateway fallback for the rest of the session. Physical misses and rejected actions do not trigger fallback. Gemini, Nemotron VL and Gemma remain explicit Gateway comparison conditions. See [the wrist control and routing notes](docs/WRIST_CONTROL.md). `AI_GATEWAY_KEY` is accepted as an alias for `AI_GATEWAY_API_KEY`. Missing credentials, failed inference and exhausted budgets produce blocked results; there is no silent offline fallback.
 
+## Days, seasons and timelapses
+
+The main orchard runs on a season calendar. **Next day** ends today's mission and starts the next day's mission at dawn; there is no start button, because agents are always on. **Pause** holds the mission and the orchard clock; **Resume** continues both. The orchard menu's **Start new season** restarts at day 1 with the chosen seed; mission, controller and speed apply from the next day.
+
+Each morning is computed from the previous day's measured end state and the night's weather. Watered soil dries according to temperature and humidity, pulled weeds re-sprout as seedlings while missed ones keep growing, and caterpillars breed, arrive or are eaten by the resident ladybird. Fertilizer comes due as nutrient deficit accrues. The day's conditions are saved with that mission's checkpoint, and after a restart the server continues the latest saved season.
+
+The clock runs at the chosen daylight length while the mission runs, then sweeps through sunset to night once the mission settles. Optional auto-advance begins the next day after nightfall. It starts a new paid live mission every day and stops itself after two blocked days. Sun, sky, mist, headlights and wet-soil decals are operator-view effects; decision cameras always render under the calibrated lighting.
+
+**Record timelapse** (orchard menu) saves the main view as captioned 1080p JPEG frames in `.runtime/timelapse/<reel>/`, across as many days as you record. Keep the tab visible while recording, since hidden tabs do not render. **Render video** stitches the reel with ffmpeg. You can also render from the command line:
+
+```sh
+python3 -m scripts.timelapse            # latest reel
+python3 -m scripts.timelapse --list
+```
+
 ## Recovery and evidence
 
 A storage failure freezes dispatch and physical time. “Retry storage” retries the retained batch; successful retry leaves the mission paused. Restarts restore the entire committed checkpoint, configuration, pinned prompt versions and accounting. Resume through `POST /api/treatment/resume` or `POST /api/resume` with `{"session_id":"..."}`. An old writer's lease must expire before a new process can take ownership. Treatment recovery requires a new image before decisions resume.

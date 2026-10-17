@@ -81,7 +81,7 @@ export function landscape(scene) {
   for(let x=-34;x<=34;x+=3.4)cylinder(structures,[x,0,-19],[x,1.2,-19],.045,.04,wood);
   for(const y of [.45,.9])cylinder(structures,[-34,y,-19],[34,y,-19],.012,.012,metal,4);
   batchStatic(structures); scene.add(structures);
-  scenery(scene);
+  const sky=scenery(scene);
   const meadow=groundcover(scene);
-  return {ground,wind:meadow.wind};
+  return {ground,sky,wind:meadow.wind};
 }
