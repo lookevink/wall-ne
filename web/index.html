@@ -5,8 +5,21 @@
   <section class="viewport" id="viewport" aria-label="Main orchard view">
     <div class="top-hud">
       <div class="identity glass"><button class="icon-button" data-dialog="orchard-menu" aria-label="Open orchard menu" title="Orchard menu">☰</button><img class="brand-logo" src="/assets/brand/wall-ne-logo.png" alt="WALL-NE" width="960" height="320"><span id="status" class="status">PAUSED</span></div>
+      <div id="incident-strip" class="incident-strip" hidden role="status" aria-label="Open incidents"></div>
     </div>
     <div class="compass" aria-hidden="true">N<span>↑</span></div>
+    <aside id="worker-hud" class="worker-hud glass" hidden aria-live="polite" aria-label="Selected machine telemetry">
+      <div class="hud-head"><b id="hud-id">W1</b><span id="hud-role">Orchard worker</span><span id="hud-health" class="health-pill" data-status="healthy">healthy</span><button id="hud-close" class="icon-button" aria-label="Return to orchard view" title="Return to orchard view">✕</button></div>
+      <dl class="hud-grid">
+        <div><dt>State</dt><dd id="hud-state">—</dd></div><div><dt>Task</dt><dd id="hud-task">—</dd></div>
+        <div><dt>Battery</dt><dd id="hud-battery">—</dd></div><div><dt>Water</dt><dd id="hud-water">—</dd></div>
+        <div><dt>Heartbeat</dt><dd id="hud-heartbeat">—</dd></div><div><dt>Progress</dt><dd id="hud-progress">—</dd></div>
+        <div class="wide"><dt>Fault</dt><dd id="hud-fault">none</dd></div>
+      </dl>
+      <div id="hud-arm" hidden><div class="hud-label">ARM · JOINTS °</div><div id="hud-joints" class="joint-bars"></div><p id="hud-tool" class="hud-mono"></p></div>
+      <div class="hud-label">LAST MODEL DECISION</div><p id="hud-decision" class="hud-mono">—</p>
+      <div class="hud-label">RECENT EVENTS</div><ul id="hud-events" class="hud-events"></ul>
+    </aside>
     <div class="bottom-hud">
       <div id="notice" class="notice" role="alert"></div>
       <div class="mission-hud glass">

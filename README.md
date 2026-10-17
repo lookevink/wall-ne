@@ -45,3 +45,11 @@ A terminal/paused-session review can propose one immutable prompt candidate. A f
 ## Validation
 
 See `docs/VALIDATION.md` for milestone status, exact evidence paths and incomplete gates. `docs/BUILD_PLAN.md` is the supplied contract. Successful synthetic or scripted tests do not establish live model performance. All quantities are simulation parameters, not agricultural or robot safety recommendations.
+
+## Telemetry, incidents and the orchestrator
+
+Every robot emits telemetry independently of inference: a health sample at each 0.05 s physics substep and a 1 Hz heartbeat, carrying position, battery, water, lifecycle, waiting reason, fault, progress markers and, for arm workers, six joint angles, tool pose, jaw opening, force, load and contact. Samples are chunked into ≤2-simulated-second gzip artifacts and committed with the session's events; heartbeats are also kept in memory for queries.
+
+Health is computed by code from those heartbeats (`healthy`, `healthy_wait`, `stale_heartbeat`, `stalled`, `possible_loop`, `disabled`) and incidents are opened once per robot and kind while a condition holds (breakdown, stale heartbeat, stall, loop, storage), then closed when it clears. In live fleet mode a new incident engages the orchestrator at once with two non-physical tools: `query_telemetry(robot, since_sim_time)` returns a bounded heartbeat history in its next observation, and `respond_incident(incident_id, decision, reason)` records `continue`, `retrieve`, `reassign`, `stop` or `escalate`; escalate pauses the mission for a human. Neither tool can change physical state, and three queries in a row without a physical decision count as a failure.
+
+On the orchard page, selecting a machine opens its telemetry panel: health, state, task, battery, water, heartbeat age, time since progress, fault, arm joints and load, the robot's last model decision in its own words, and its recent events. Open incidents and escalations show in the strip beside the status badge.

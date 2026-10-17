@@ -20,7 +20,10 @@ TOOL_HELP={
  'set_gripper':{'opening':'0..0.12 meters','force':'0..45 newtons'},'open_gripper':{},
  'scan_lidar':{'u':'0..1','v':'0..1','span':'.04..0.5','frame_id':'current frame id'},'measure_depth':{'u':'0..1','v':'0..1','frame_id':'current frame id'},
  'project_ground':{'u':'0..1','v':'0..1','frame_id':'current frame id'},'assess_alignment':{'frame_id':'current frame id','stem_between_fingers':'boolean','depth_consistent':'boolean','evidence':'8..600 characters'},
- 'confirm_contact':{'frame_id':'current frame id','evidence':'8..600 characters'},'verify':{},'return':{},'stop':{}
+ 'confirm_contact':{'frame_id':'current frame id','evidence':'8..600 characters'},'verify':{},'return':{},'stop':{},
+ 'query_telemetry':{'robot':'W1..W5 or R1','since_sim_time':'simulated seconds; a bounded heartbeat history arrives as telemetry_query_result in your next observation'},
+ 'respond_incident':{'incident_id':'an open incident id from open_incidents','decision':'continue|retrieve|reassign|stop|escalate','reason':'1..600 characters; escalate pauses the mission for a human'},
+ 'incident_continue':{'incident_id':'open incident id'},'incident_retrieve':{'incident_id':'open incident id'},'incident_reassign':{'incident_id':'open incident id'},'incident_stop':{'incident_id':'open incident id'},'incident_escalate':{'incident_id':'open incident id; pauses the mission for a human'}
 }
 
 class InferenceError(RuntimeError):
@@ -33,6 +36,26 @@ def parse_response(response,tool_name='choose_action',allowed_actions=None):
         choices=response['choices']
         if len(choices)!=1: raise ValueError()
         calls=choices[0]['message']['tool_calls']
+        # With tool_choice=required some models repeat one call, differing only in wording, until they run out of tokens; one distinct decision is still one decision.
+        if tool_name!='choose_action' and len(calls)>1:
+            def arguments_of(c):
+                try: a=json.loads(c.get('function',{}).get('arguments') or '')
+                except ValueError: return None
+                return a if isinstance(a,dict) else None
+            parsed_calls=[arguments_of(c) for c in calls]
+            names={c.get('function',{}).get('name') for c in calls}
+            if None not in parsed_calls and len(names)==1:
+                merged={}
+                consistent=all(a.get('action')==parsed_calls[0].get('action') for a in parsed_calls)
+                for a in parsed_calls:
+                    for k,v in a.items():
+                        if k in ('reason','rationale'): continue
+                        if k in merged and merged[k]!=v: consistent=False
+                        merged.setdefault(k,v)
+                if consistent:
+                    # Every call names the same decision; keep the first wording and the union of the fields the repeats filled in.
+                    merged['reason']=parsed_calls[0].get('reason',parsed_calls[0].get('rationale'))
+                    calls=[dict(calls[0],function=dict(calls[0]['function'],arguments=json.dumps(merged)))]
         if len(calls)!=1 or calls[0]['type']!='function' or calls[0]['function']['name']!=tool_name: raise ValueError()
         parsed=json.loads(calls[0]['function']['arguments'],parse_constant=lambda _: (_ for _ in ()).throw(ValueError()))
         if tool_name=='treatment_action':
@@ -42,6 +65,12 @@ def parse_response(response,tool_name='choose_action',allowed_actions=None):
             if action=='move_arm' and 'joints' not in parsed:
                 parsed['pose']=[parsed.pop(k) for k in ('x','y','z')]+[parsed.pop(k,0) for k in ('rx','ry','rz')]
             parsed=dict(action=action,arguments=parsed,rationale=reason)
+        elif tool_name=='fleet_action':
+            if not isinstance(parsed,dict) or set(parsed)-set(FLEET_FIELDS)-{'action','reason'}:raise ValueError()
+            action=parsed.pop('action',None);reason=parsed.pop('reason',None)
+            if not isinstance(reason,str) or len(reason)>1200 or action not in allowed_actions:raise ValueError()
+            # Fields the model left at their empty defaults are not arguments.
+            parsed=dict(action=action,arguments={k:v for k,v in parsed.items() if v not in ('',None)},rationale=reason)
         if not isinstance(parsed,dict) or set(parsed)-{'action','arguments','rationale'} or not isinstance(parsed.get('action'),str) or not isinstance(parsed.get('arguments'),dict): raise ValueError()
         if 'rationale' in parsed and (not isinstance(parsed['rationale'],str) or len(parsed['rationale'])>1200): raise ValueError()
         return parsed
@@ -72,14 +101,22 @@ class Adapter:
         if image:
             for png in (image if isinstance(image,list) else [image])[:3]: content.append(dict(type='image_url',image_url={'url':png}))
         flat=observation.get('trial')=='precision'
-        tool_name='treatment_action' if flat else 'choose_action'
+        fleet=isinstance(observation.get('feasible_options'),list) and observation.get('role') in ('orchestrator','worker','retriever')
+        tool_name='treatment_action' if flat else 'fleet_action' if fleet else 'choose_action'
         schema=TOOLS
+        if fleet:
+            # Fleet roles pick one enumerated option; the typed fields keep a model from inventing argument names.
+            actions=list(dict.fromkeys(o['action'] for o in observation['feasible_options']))
+            observation=dict(observation,available_actions=actions)
+            fields=dict(FLEET_FIELDS,action=dict(type='string',enum=actions),reason=dict(type='string'))
+            schema=[dict(type='function',function=dict(name=tool_name,description='Execute one listed feasible option. Copy its arguments: assign needs row and vehicle; inspect/water need zone and ownership_version; retrieve needs target; query_telemetry needs robot and since_sim_time; incident_continue/retrieve/reassign/stop/escalate need the incident_id they list, and your reason explains the decision. Leave unrelated fields out.',parameters=dict(type='object',properties=fields,required=['action','reason'],additionalProperties=False)))]
         if flat:
             fields={k:ARGUMENT_FIELDS[k] for k in ('u','v','span','frame_id','opening','force','joints','stem_between_fingers','depth_consistent','evidence')}
             fields.update({k:dict(type='number') for k in ('x','y','z','rx','ry','rz')})
             fields.update(action=dict(type='string',enum=observation['available_actions']),reason=dict(type='string'))
             schema=[dict(type='function',function=dict(name=tool_name,description='Execute one available action. move_arm requires x,y,z in WORLD METERS. Optional rx,ry,rz default to zero (gripper straight DOWN). set_gripper requires opening and force. Assess/confirm require current frame_id and evidence.',parameters=dict(type='object',properties=fields,required=['action','reason','frame_id'] if observation.get('care_progress') else ['action','reason'],additionalProperties=False)))]
-        body=dict(model=self.model,messages=[dict(role='system',content=prompt),dict(role='user',content=content)],tools=schema,tool_choice='required' if flat else {'type':'function','function':{'name':tool_name}},temperature=.1,max_tokens=4096)
+        body=dict(model=self.model,messages=[dict(role='system',content=prompt),dict(role='user',content=content)],tools=schema,tool_choice='required' if flat or fleet else {'type':'function','function':{'name':tool_name}},temperature=.1,max_tokens=4096)
+        if flat or fleet: body['parallel_tool_calls']=False
         request=urllib.request.Request(self.base.rstrip('/')+'/chat/completions',data=canonical(body).encode(),headers={'Authorization':'Bearer '+self.key,'Content-Type':'application/json'},method='POST')
         started=time.monotonic(); response=None
         try:
@@ -120,6 +157,10 @@ def reported_cost(usage):
         numbers=[float(v) for v in values if v is not None]
         return sum(numbers) if all(math.isfinite(v) and v>=0 for v in numbers) else None
     except (TypeError,ValueError): return None
+
+# Fleet roles choose among enumerated options; these typed fields cover every option's arguments plus the orchestrator's telemetry tools.
+FLEET_FIELDS=dict(row=dict(type='integer'),vehicle=dict(type='string'),zone=dict(type='string'),ownership_version=dict(type='integer'),target=dict(type='string'),
+                  robot=dict(type='string'),since_sim_time=dict(type='number'),incident_id=dict(type='string'),incident_robot=dict(type='string'),decision=dict(type='string',enum=['continue','retrieve','reassign','stop','escalate']))
 
 # Explicit argument fields are essential for providers that compile object schemas;
 # an unspecified object may be interpreted as an empty object by a schema adapter.

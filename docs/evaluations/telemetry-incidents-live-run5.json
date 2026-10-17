@@ -1,0 +1,200 @@
+{
+ "session_id": "43d7e09a-eb76-41f3-b1c3-0865e06e172c",
+ "arena": "orchard",
+ "mission": "watering",
+ "mode": "live",
+ "engine": "crusoe",
+ "seed": 7,
+ "status": "blocked",
+ "verification": {
+  "idle": true,
+  "battery": true,
+  "contract": true,
+  "coverage": false,
+  "returned": false,
+  "critical_water": false
+ },
+ "summary": "Live fleet run with two injected breakdowns away from the depot: code-detected incidents engaged the orchestrator, which queried W1 telemetry and activated the spare; R1 retrieved both workers and both incidents resolved. The mission later blocked on repeated malformed worker tool calls (addressed by the reworded-duplicate collapse in the following commit). The orchestrator fell back to Gateway after two 25 s Crusoe timeouts; that limit is raised on the budgets branch.",
+ "events": 986,
+ "timeline": [
+  {
+   "sequence": 223,
+   "sim_time": 234.3,
+   "robot": "orchestrator",
+   "type": "provider_fallback",
+   "reason": "crusoe unavailable or timed out",
+   "to_provider": "gateway",
+   "from_provider": "crusoe"
+  },
+  {
+   "sequence": 413,
+   "sim_time": 410.7,
+   "robot": "W1",
+   "type": "breakdown"
+  },
+  {
+   "sequence": 415,
+   "sim_time": 410.7,
+   "robot": "W2",
+   "type": "breakdown"
+  },
+  {
+   "sequence": 425,
+   "sim_time": 414.7,
+   "robot": "W1",
+   "type": "incident",
+   "detail": "W1 disabled: drive failure; retrieval required",
+   "incident_kind": "breakdown",
+   "incident_robot": "W1"
+  },
+  {
+   "sequence": 426,
+   "sim_time": 414.7,
+   "robot": "W2",
+   "type": "incident",
+   "detail": "W2 disabled: drive failure; retrieval required",
+   "incident_kind": "breakdown",
+   "incident_robot": "W2"
+  },
+  {
+   "sequence": 430,
+   "sim_time": 422.1,
+   "robot": "orchestrator",
+   "type": "decision",
+   "action": "query_telemetry",
+   "arguments": {
+    "robot": "W1",
+    "since_sim_time": 350.7
+   },
+   "rationale": "W1 has a drive failure and is disabled; need to check its telemetry to assess battery, position, and fault details for recovery planning.",
+   "provider": "gateway",
+   "model": "nvidia/nemotron-3-super-120b-a12b"
+  },
+  {
+   "sequence": 431,
+   "sim_time": 422.1,
+   "robot": "orchestrator",
+   "type": "telemetry_query",
+   "samples": 7,
+   "returned": 7
+  },
+  {
+   "sequence": 442,
+   "sim_time": 433.8,
+   "robot": "orchestrator",
+   "type": "decision",
+   "action": "incident_retrieve",
+   "arguments": {
+    "target": "W5",
+    "vehicle": "W5"
+   },
+   "rationale": "W1 has a drive failure and is disabled; need to retrieve it using a spare vehicle.",
+   "provider": "gateway",
+   "model": "nvidia/nemotron-3-super-120b-a12b"
+  },
+  {
+   "sequence": 467,
+   "sim_time": 452.1,
+   "robot": "orchestrator",
+   "type": "decision",
+   "action": "query_telemetry",
+   "arguments": {
+    "robot": "W1",
+    "since_sim_time": 382.9
+   },
+   "rationale": "Check telemetry for disabled robot W1 to inform retrieval decision",
+   "provider": "gateway",
+   "model": "nvidia/nemotron-3-super-120b-a12b"
+  },
+  {
+   "sequence": 468,
+   "sim_time": 452.1,
+   "robot": "orchestrator",
+   "type": "telemetry_query",
+   "samples": 7,
+   "returned": 7
+  },
+  {
+   "sequence": 481,
+   "sim_time": 460.3,
+   "robot": "orchestrator",
+   "type": "decision",
+   "action": "activate_spare",
+   "arguments": {
+    "robot": "W5"
+   },
+   "rationale": "Activate spare robot W5 to retrieve disabled worker W1",
+   "provider": "gateway",
+   "model": "nvidia/nemotron-3-super-120b-a12b"
+  },
+  {
+   "sequence": 566,
+   "sim_time": 536.8,
+   "robot": "R1",
+   "type": "decision",
+   "action": "retrieve",
+   "arguments": {
+    "zone": "0:2",
+    "target": "W1",
+    "vehicle": "W5",
+    "decision": "retrieve"
+   },
+   "rationale": "Retrieve disabled worker W1 for inspection and repair",
+   "provider": "crusoe",
+   "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
+  },
+  {
+   "sequence": 621,
+   "sim_time": 583.5,
+   "robot": "W1",
+   "type": "recovered",
+   "by": "R1"
+  },
+  {
+   "sequence": 629,
+   "sim_time": 585.4,
+   "robot": "W1",
+   "type": "incident_resolved",
+   "incident_kind": "breakdown",
+   "incident_robot": "W1"
+  },
+  {
+   "sequence": 683,
+   "sim_time": 645.2,
+   "robot": "R1",
+   "type": "decision",
+   "action": "retrieve",
+   "arguments": {
+    "target": "W2",
+    "decision": "retrieve"
+   },
+   "rationale": "Retrieve target W2 to address the open incident requiring retrieval",
+   "provider": "crusoe",
+   "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
+  },
+  {
+   "sequence": 714,
+   "sim_time": 675.1,
+   "robot": "W2",
+   "type": "recovered",
+   "by": "R1"
+  },
+  {
+   "sequence": 722,
+   "sim_time": 676.7,
+   "robot": "W2",
+   "type": "incident_resolved",
+   "incident_kind": "breakdown",
+   "incident_robot": "W2"
+  },
+  {
+   "sequence": 849,
+   "sim_time": 790.9,
+   "robot": "W4",
+   "type": "provider_fallback",
+   "reason": "Provider returned an invalid single tool call",
+   "to_provider": "gateway",
+   "from_provider": "crusoe"
+  }
+ ]
+}

@@ -37,6 +37,7 @@ export class RoverViews {
       const vehicle=state.vehicles[feed.id];if(!vehicle)continue;
       feed.tile.querySelector('[data-feed-status]').textContent=vehicle.lifecycle==='spare'?'Reserve':vehicle.action?.kind||vehicle.lifecycle;
       feed.tile.querySelector('[data-feed-battery]').textContent=`${vehicle.battery.toFixed(0)}%`;
+      feed.tile.querySelector('.feed-indicator').dataset.health=state.health?.[feed.id]?.status||'';
     }
   }
   resize() {

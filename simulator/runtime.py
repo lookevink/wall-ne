@@ -3,7 +3,7 @@ import concurrent.futures
 import copy
 import threading
 import time
-from .common import uid,digest
+from .common import uid,digest,utc
 from .engine import Mission,TERMINAL
 from .agents import DemoController
 from .persistence import Repository,StorageError
@@ -30,7 +30,15 @@ class Runtime:
         self.committed=0; self.epoch=0; self.persisted=False; self.storage_error=None; self.pending=None
         self.telemetry=Telemetry(); self.controller=DemoController(); self.executor=concurrent.futures.ThreadPoolExecutor(max_workers=7)
         self.futures={}; self.requests={}; self.inference=[]; self.failures={}; self.retry_after={}; self.waiting=None; self.closed=False; self.last_commit=0; self.active_wall=0
+        self.query_answers={}; self.query_streak={}; self.incident_alert=False; self.escalation=None; self.offered={}
         self.thread=threading.Thread(target=self.loop,daemon=True); self.thread.start()
+
+    def monitor(self,now):
+        # Health and incidents are computed by code from heartbeats; a model only reads them and records a response.
+        health=self.telemetry.health(now,self.failures)
+        opened,resolved=self.telemetry.detect_incidents(self.world,health,self.storage_error)
+        if opened and self.config['mode']=='live': self.incident_alert=True
+        return health
 
     def persist(self):
         try:
@@ -213,8 +221,17 @@ class Runtime:
                 elif robot=='verifier':
                     if decision['action'] not in ('verify','claim_complete'): raise InferenceError('Verifier must evaluate the completion evidence')
                     self.world.command(uid(),'verifier','claim_complete')
+                elif decision['action']=='query_telemetry' or decision['action']=='respond_incident' or decision['action'].startswith('incident_'):
+                    # incident_<decision> options carry the decision in the action name; the rationale serves as the reason when none is given.
+                    if decision['action']!='query_telemetry':
+                        args=dict(args,decision=args.get('decision') or decision['action'].partition('_')[2],reason=args.get('reason') or decision.get('rationale') or '')
+                    self.orchestrator_tool(robot,'query_telemetry' if decision['action']=='query_telemetry' else 'respond_incident',args)
                 else:
-                    receipt=self.world.command(uid(),robot,decision['action'],**args)
+                    self.query_streak[robot]=0
+                    args=self.complete_arguments(robot,decision)
+                    try: receipt=self.world.command(uid(),robot,decision['action'],**args)
+                    except TypeError: raise InferenceError('Rejected model command: invalid argument names') from None
+                    self.telemetry.note_command(robot,receipt['accepted'])
                     if not receipt['accepted']: raise InferenceError('Rejected model command: '+receipt['reason'])
                 self.failures[robot]=0
                 if not self.persist(): return
@@ -228,6 +245,8 @@ class Runtime:
         if self.storage_error or self.world.status!='running': return
         obs=self.world.observations()
         obs['telemetry']=copy.deepcopy(self.telemetry.latest)
+        obs['fleet_health']=self.telemetry.health(now,self.failures)
+        obs['open_incidents']=copy.deepcopy(list(self.telemetry.incidents.values()))
         # Deterministic feasible option enumeration constrains role calls, but does not choose for a model.
         if not getattr(self.world,'planned',False):
             if 'planner' not in self.futures and self.world.status=='running' and now>=self.retry_after.get('planner',0):
@@ -241,11 +260,67 @@ class Runtime:
         grouped={}
         for robot,action,args in candidates: grouped.setdefault(robot,[]).append(dict(action=action,arguments=args))
         if all(self.world.verify().values()): grouped['orchestrator']=[dict(action='claim_complete',arguments={})]
+        # A new incident engages the orchestrator even when the rule-based enumeration has nothing for it to assign.
+        if self.incident_alert: grouped.setdefault('orchestrator',[])
+        if 'orchestrator' in grouped:
+            # One concrete option per incident and decision, so the choice is an enumerated action rather than a free-form argument.
+            for incident in obs['open_incidents'][:2]:
+                for choice in ('continue','retrieve','reassign','stop','escalate'):
+                    grouped['orchestrator'].append(dict(action='incident_'+choice,arguments=dict(incident_id=incident['id'],incident_robot=incident['robot'])))
+            grouped['orchestrator'].append(dict(action='query_telemetry',arguments=dict(robot='W1',since_sim_time=round(max(0,self.world.time-60),1))))
         for robot,options in grouped.items():
             if robot in self.futures or self.world.status!='running' or now<self.retry_after.get(robot,0): continue
             role='orchestrator' if robot=='orchestrator' else 'retriever' if robot=='R1' else 'worker'
             permitted=dict(observation=obs,role=role,robot=robot,feasible_options=options)
+            if robot in self.query_answers: permitted['telemetry_query_result']=self.query_answers.pop(robot)
+            if robot=='orchestrator': self.incident_alert=False
+            self.offered[robot]=copy.deepcopy(options)
             if not self.dispatch(robot,role,permitted): return
+
+    def complete_arguments(self,robot,decision):
+        """A role picks one offered option: fields it left out are copied from that option, fields the option never had are dropped, and nothing is invented when the choice is ambiguous."""
+        args={k:v for k,v in decision['arguments'].items() if k not in ('robot','decision','reason','action','command_id')}
+        offered=[o for o in getattr(self,'offered',{}).get(robot,[]) if o['action']==decision['action']]
+        if not offered: return args
+        matches=[o for o in offered if all(o['arguments'].get(k)==v for k,v in args.items() if k in o['arguments'])]
+        if len(matches)==1: return {**matches[0]['arguments'],**{k:v for k,v in args.items() if k in matches[0]['arguments']}}
+        known=set().union(*(o['arguments'].keys() for o in offered))
+        return {k:v for k,v in args.items() if k in known}
+
+    def orchestrator_tool(self,robot,action,args):
+        """Non-physical orchestrator tools: a bounded telemetry query answered by code, and a recorded incident decision."""
+        if robot!='orchestrator': raise InferenceError(f'{action} is an orchestrator tool')
+        try:
+            if action=='query_telemetry':
+                self.query_streak[robot]=self.query_streak.get(robot,0)+1
+                if self.query_streak[robot]>3: raise ValueError('repeated telemetry queries without a physical decision')
+                answer=self.telemetry.query(str(args.get('robot','')),float(args.get('since_sim_time') or 0))
+                answer['queries_before_decision']=f"{self.query_streak[robot]} of 3; choose a physical option or an incident_* decision next"
+                self.query_answers[robot]=answer
+                self.world.event('telemetry_query',robot,arguments=args,samples=answer['samples'],returned=answer['returned'])
+            else:
+                choice=args.get('decision'); reason=args.get('reason','')
+                if choice not in ('continue','retrieve','reassign','stop','escalate') or not isinstance(reason,str) or not 1<=len(reason)<=600: raise ValueError('respond_incident needs decision continue|retrieve|reassign|stop|escalate and a reason of 1..600 characters')
+                incident_id=args.get('incident_id')
+                if not incident_id:
+                    # An omitted id is resolved only when it is unambiguous: a named robot with one open incident, or a single open incident.
+                    import re
+                    named=args.get('incident_robot') or args.get('target') or args.get('robot') or args.get('vehicle')
+                    candidates=[i for i in self.telemetry.incidents.values() if not named or i['robot']==named]
+                    if len(candidates)!=1:
+                        # Models often put the helper vehicle in `target`; the robot the reason talks about is the incident's.
+                        candidates=[i for i in self.telemetry.incidents.values() if re.search(r'\b'+re.escape(i['robot'])+r'\b',reason)]
+                    if len(candidates)!=1: raise ValueError('respond_incident needs incident_id; open incidents: '+', '.join(f"{i['id']} ({i['robot']} {i['kind']})" for i in self.telemetry.incidents.values()))
+                    incident_id=candidates[0]['id']
+                incident=self.telemetry.respond(str(incident_id),choice,reason)
+                self.query_streak[robot]=0
+                self.world.event('incident_response',robot,incident_id=incident['id'],incident_kind=incident['kind'],target=incident['robot'],decision=choice,reason=reason)
+                if choice=='stop': self.world.status='aborted'; self.world.event('aborted',robot,reason=reason)
+                elif choice=='escalate':
+                    # The robot is asking for a human: physical time pauses until an operator resumes.
+                    self.escalation=dict(incident_id=incident['id'],robot=incident['robot'],reason=reason,wall_utc=utc())
+                    self.world.status='paused'; self.world.event('escalation',robot,incident_id=incident['id'],target=incident['robot'],reason=reason)
+        except (ValueError,TypeError) as exc: raise InferenceError(str(exc)) from None
 
     def step(self,elapsed):
         if self.storage_error: return
@@ -272,17 +347,30 @@ class Runtime:
                     if self.persisted and self.world.status not in TERMINAL and now-self.telemetry.last_heartbeat>=1:
                         waiting={robot:'inference_wait' for robot in self.futures} if self.world.kind=='fleet' else self.waiting
                         self.telemetry.sample(self.world,self.epoch,True,waiting)
+                        self.monitor(now)
                     if self.persisted and self.world.seq>self.committed and now-self.last_commit>=.5: self.persist()
                 except (ValueError,StorageError,InferenceError) as exc:
                     if hasattr(self.world,'feedback'): self.world.feedback=str(exc)
                     self.world.status='blocked'; self.world.event('blocked',error=str(exc)); self.persist()
                 except Exception:
+                    # The operator-facing event stays generic; the traceback goes to the server's stderr.
+                    import traceback; traceback.print_exc()
                     self.world.status='blocked'; self.world.event('blocked',error='Internal runtime error; inspect server diagnostics'); self.persist()
 
     def snapshot(self):
         with self.lock:
-            state=self.world.snapshot(); state['events']=state['events'][-100:]
+            # Heartbeats live in `telemetry`; keeping them out of the event window leaves room for the decisions and incidents the UI tickers show.
+            state=self.world.snapshot(); state['events']=[e for e in state['events'] if e['type']!='heartbeat'][-100:]
+            # Each robot also keeps its own short ticker, so a disabled worker's breakdown stays visible after the shared window moves on.
+            ticker={}
+            for e in reversed(self.world.events):
+                robot=e.get('robot_id')
+                if not robot or e['type'] in ('heartbeat','checkpoint','inference_requested','capture_requested','observation'): continue
+                rows=ticker.setdefault(robot,[])
+                if len(rows)<10: rows.append(e)
+            state['robot_events']={robot:list(reversed(rows)) for robot,rows in ticker.items()}
             state.update(config=self.config,provider_routes=copy.deepcopy(self.provider_routes),storage=dict(healthy=not self.storage_error,error=self.storage_error,committed_sequence=self.committed),telemetry=self.telemetry.latest,
+                         health=self.telemetry.health(time.monotonic(),self.failures),incidents=dict(open=copy.deepcopy(list(self.telemetry.incidents.values())),recent=copy.deepcopy(self.telemetry.closed[-10:])),escalation=copy.deepcopy(self.escalation),
                          inference=dict(calls=len(self.inference),pending_calls=len(self.futures),latency_seconds=sum(r.get('latency',0) for r in self.inference),failed_calls=sum(r.get('status') in ('failed','interrupted_unknown') for r in self.inference),tokens=sum(r['usage'].get('total_tokens',0) for r in self.inference),cost=sum(r['cost'] for r in self.inference) if self.inference and all(r['cost'] is not None for r in self.inference) else None,results=self.inference[-30:]),waiting=self.waiting)
             if self.storage_error: state['status']='storage_blocked'
             return state
