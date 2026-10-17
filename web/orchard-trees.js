@@ -6,27 +6,28 @@ import {cylinder, material} from './static-geometry.js';
 import {batchStatic} from './batch-geometry.js';
 import {ORCHARD,planting,rowX} from './orchard-layout.js';
 
-function windMaterial(mat, clock) {
+function windMaterial(mat, clock, strength) {
   mat.onBeforeCompile = shader => {
     shader.uniforms.orchardTime = clock;
-    shader.vertexShader = 'uniform float orchardTime;\n' + shader.vertexShader;
+    shader.uniforms.orchardWind = strength;
+    shader.vertexShader = 'uniform float orchardTime;\nuniform float orchardWind;\n' + shader.vertexShader;
     shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', `
       #include <begin_vertex>
       #ifdef USE_INSTANCING
       vec3 anchor = instanceMatrix[3].xyz;
       float breeze = sin(orchardTime * 1.3 + anchor.x * .8 + anchor.z * .5);
-      transformed.z += breeze * .035 * (position.y + .2);
-      transformed.x += sin(orchardTime * 2.1 + anchor.z) * .012;
+      transformed.z += orchardWind * breeze * .035 * (position.y + .2);
+      transformed.x += orchardWind * sin(orchardTime * 2.1 + anchor.z) * .012;
       #endif
     `);
   };
-  mat.customProgramCacheKey = () => 'almond-breeze-v1';
+  mat.customProgramCacheKey = () => 'almond-breeze-v2';
   return mat;
 }
 export function orchard(scene) {
-  const group = new THREE.Group(), rng = random(982), clock = {value:0};
+  const group = new THREE.Group(), rng = random(982), clock = {value:0},strength={value:0},windVector={value:new THREE.Vector3()};let sensorMode=false;
   const bark = material(0xd2c2a5); bark.map = barkTexture(); bark.bumpMap = bark.map; bark.bumpScale = .035;
-  const leaf = windMaterial(new THREE.MeshStandardMaterial({map:leafTexture(), color:0xc1ce8e, roughness:.83, side:THREE.DoubleSide}), clock);
+  const leaf = windMaterial(new THREE.MeshStandardMaterial({map:leafTexture(), color:0xc1ce8e, roughness:.83, side:THREE.DoubleSide}), clock,strength);
   const hull = new THREE.MeshStandardMaterial({map:hullTexture(), roughness:1});
   const leafShape = leafGeometry(), hullShape = new THREE.SphereGeometry(.067, 7, 6);
   const variants = Array.from({length:ORCHARD.variants},(_,i)=>71+i*17).map(seed => {
@@ -63,7 +64,8 @@ export function orchard(scene) {
     hullData.forEach((matrix,i) => fruit.setMatrixAt(i,matrix)); fruit.computeBoundingSphere();
     const center = new THREE.Vector3(rowX(row),2,-1);
     // Subpixel fruit adds no detail to the overview; each onboard view gets nearby fruit.
-    fruit.onBeforeRender = (_r,_s,camera) => { fruit.count = camera.position.distanceTo(center) < 32 ? hullData.length : 0; };
+    fruit.onBeforeRender = (_r,_s,camera) => { fruit.count = sensorMode||camera.position.distanceTo(center) < 32 ? hullData.length : 0; };
+    fruit.userData.fullCount=hullData.length;
     group.add(fruit); hulls.push(fruit);
   }
   for (const variant of variants) {
@@ -82,7 +84,7 @@ export function orchard(scene) {
     // EZ-Tree replaces project_vertex; restore the instance transform it omits.
     const compileWind=tree.leavesMesh.material.onBeforeCompile;
     tree.leavesMesh.material.onBeforeCompile=shader=>{
-      compileWind(shader);shader.uniforms.uTime=clock;
+      compileWind(shader);shader.uniforms.uTime=clock;shader.uniforms.uWindStrength=windVector;
       shader.vertexShader=shader.vertexShader.replace('mvPosition = modelViewMatrix * mvPosition;', `
         #ifdef USE_INSTANCING
         mvPosition = instanceMatrix * mvPosition;
@@ -96,5 +98,7 @@ export function orchard(scene) {
     }
   }
   scene.add(group);
-  return {group, leaves, hulls, count:trees.length, wind(time,enabled) { clock.value = enabled ? time : 0; }};
+  return {group, leaves, hulls, count:trees.length,
+    sensorMode(enabled){sensorMode=enabled;if(enabled)for(const hull of hulls)hull.count=hull.userData.fullCount;},
+    wind(time,enabled) { clock.value = enabled ? time : 0;strength.value=enabled?1:0;windVector.value.setScalar(enabled?.5:0); }};
 }

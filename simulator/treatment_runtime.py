@@ -18,7 +18,9 @@ class TreatmentRuntime(Runtime):
 
     def start(self):
         if self.world.kind=='arm' and self.config['mode']!='vision': raise ValueError('arm experiments require live vision; scripted diagnostics are tests only')
-        self.started_wall=time.monotonic(); super().start()
+        with self.lock:
+            if hasattr(self.world,'begin') and self.world.status not in TERMINAL and not self.storage_error:self.world.begin()
+            self.started_wall=time.monotonic(); super().start()
 
     def restore(self,session):
         super().restore(session)
@@ -26,11 +28,12 @@ class TreatmentRuntime(Runtime):
             self.pixels=None; self.image=None; self.scan_image=None;self.frame_bytes={}
             self.capture_started=None;self.depth_started=None
             self.world.frame=None;self.world.frame_request=None;self.world.depth_request=None
-            self.world.event('observation_required_after_restore','T1')
+            self.world.event('observation_required_after_restore',self.world.robot['id'])
             self.persist()
 
     def accept_frame(self,body):
         with self.lock:
+            if getattr(self.world,'arena',None)=='orchard' and body.get('arena')!='orchard':raise ValueError('orchard sensor evidence required')
             if self.storage_error: raise ValueError('storage_blocked')
             if self.world.status in TERMINAL: raise ValueError('terminal sessions are read-only')
             if body.get('mission_id')!=self.world.id: raise ValueError('cross-mission frame')
@@ -38,7 +41,7 @@ class TreatmentRuntime(Runtime):
             if not req or body.get('request_id')!=req['id'] or req['revision']!=self.world.revision: raise ValueError('stale capture request')
             raw,pixels=decode_url(body['data_url'])
             try:
-                artifact=self.repository.artifact(self.world.id,'T1','frame',raw,dict(request_id=req['id'],revision=req['revision'],camera=req['camera']))
+                artifact=self.repository.artifact(self.world.id,self.world.robot['id'],'frame',raw,dict(request_id=req['id'],revision=req['revision'],camera=req['camera']))
             except Exception:
                 self.storage_error='Frame artifact upload failed'; raise ValueError('storage_blocked') from None
             frame=self.world.accept_frame(req['id'],artifact); self.pending_artifacts.append(artifact)
@@ -49,6 +52,7 @@ class TreatmentRuntime(Runtime):
 
     def accept_depth(self,body):
         with self.lock:
+            if getattr(self.world,'arena',None)=='orchard' and body.get('arena')!='orchard':raise ValueError('orchard sensor evidence required')
             if self.storage_error: raise ValueError('storage_blocked')
             if self.world.status in TERMINAL: raise ValueError('terminal sessions are read-only')
             if body.get('mission_id')!=self.world.id or not self.world.depth_request: raise ValueError('cross-mission/unsolicited depth')
@@ -57,12 +61,12 @@ class TreatmentRuntime(Runtime):
             points=lidar.validate(req,body['request_id'],body['frame_id'],body['revision'],body['points'])
             artifacts=[];crop_data=None;crop_meta=None
             try:
-                artifact=self.repository.artifact(self.world.id,'T1','depth',points,dict(request_id=req['id'],frame_id=req['frame_id'],revision=req['revision'],camera=req['camera'],units='world meters'))
+                artifact=self.repository.artifact(self.world.id,self.world.robot['id'],'depth',points,dict(request_id=req['id'],frame_id=req['frame_id'],revision=req['revision'],camera=req['camera'],units='world meters'))
                 artifacts.append(artifact)
                 source=self.frame_bytes.get(req['frame_id'])
                 if source:
                     crop,mapping=crop_url(source,req['bounds'])
-                    crop_artifact=self.repository.artifact(self.world.id,'T1','frame',crop,dict(subtype='scan_crop',source_frame_id=req['frame_id'],source_artifact_id=self.world.frame['artifact_id'],**mapping))
+                    crop_artifact=self.repository.artifact(self.world.id,self.world.robot['id'],'frame',crop,dict(subtype='scan_crop',source_frame_id=req['frame_id'],source_artifact_id=self.world.frame['artifact_id'],**mapping))
                     artifacts.append(crop_artifact)
                     crop_meta=dict(artifact_id=crop_artifact['id'],source_frame_id=req['frame_id'],**mapping)
                     crop_data='data:image/png;base64,'+base64.b64encode(crop).decode()
@@ -96,47 +100,47 @@ class TreatmentRuntime(Runtime):
         # The current PNG must correspond to current authoritative geometry.
         if w.frame is None or w.frame['revision']!=w.revision or w.frame['phase']!=w.phase or w.frame_request:
             if not w.frame_request:
-                w.request_frame(); w.event('capture_requested','T1',request=w.frame_request); self.persist()
+                w.request_frame(); w.event('capture_requested',self.world.robot['id'],request=w.frame_request); self.persist()
             if self.capture_started is None: self.capture_started=time.monotonic()
-            if time.monotonic()-self.capture_started>30: raise ValueError('camera request timed out after 30 seconds; keep treatment page open')
+            if time.monotonic()-self.capture_started>30: raise ValueError('camera request timed out after 30 seconds; keep the mission page open')
             self.waiting='sensor_wait'; return
         self.waiting=None
         if self.config['mode']=='pixels':
             obs=w.observations(); obs['aimed']=w.aim is not None
             action,args=self.pixel_controller.decide(obs,self.pixels)
-            receipt=w.command(uid(),'T1',action,**args)
+            receipt=w.command(uid(),self.world.robot['id'],action,**args)
             self.consecutive_invalid=0 if receipt['accepted'] else self.consecutive_invalid+1
             if action in ('remove_weed','remove_pest') and w.feedback.startswith('No contact'):
                 fingerprint=(action,w.frame.get('content_hash'))
                 self.miss_count=self.miss_count+1 if fingerprint==self.last_miss else 1;self.last_miss=fingerprint
                 if self.miss_count>=3:
-                    w.status='blocked';w.feedback='Possible loop: three misses without changed image evidence or removal progress';w.event('loop_incident','T1',reason=w.feedback)
+                    w.status='blocked';w.feedback='Possible loop: three misses without changed image evidence or removal progress';w.event('loop_incident',self.world.robot['id'],reason=w.feedback)
             else: self.miss_count=0;self.last_miss=None
             if self.consecutive_invalid>=3: w.status='blocked'; w.feedback='Three rejected actions without physical progress'
             self.persist(); return
-        entry=self.futures.get('T1')
-        if not entry and time.monotonic()<self.retry_after.get('T1',0): self.waiting='inference_backoff';return
+        entry=self.futures.get(self.world.robot['id'])
+        if not entry and time.monotonic()<self.retry_after.get(self.world.robot['id'],0): self.waiting='inference_backoff';return
         if entry:
             session,future=entry
             if not future.done(): self.waiting='inference_wait'; return
-            del self.futures['T1']
+            del self.futures[self.world.robot['id']]
             if session!=w.id: return
             try:
-                result=self.consume('T1',future); self.inference.append(result); self.failures['T1']=0
+                result=self.consume(self.world.robot['id'],future); self.inference.append(result); self.failures[self.world.robot['id']]=0
                 if sum(r['cost'] or 0 for r in self.inference)>=1:
                     w.status='blocked';w.feedback='Reported cost cap'
-                    w.event('inference_discarded','T1',result=result,reason=w.feedback);self.persist();return
-                decision=result['decision']; w.event('decision','T1',result=result,frame_id=w.frame['id'],prompt_version=w.prompt_versions)
-                receipt=w.command(uid(),'T1',decision['action'],**decision['arguments'])
+                    w.event('inference_discarded',self.world.robot['id'],result=result,reason=w.feedback);self.persist();return
+                decision=result['decision']; w.event('decision',self.world.robot['id'],result=result,frame_id=w.frame['id'],prompt_version=w.prompt_versions)
+                receipt=w.command(uid(),self.world.robot['id'],decision['action'],**decision['arguments'])
                 if receipt['accepted'] and w.kind=='arm' and not w.robot['action']:w.record_control_progress(decision['action'])
                 self.consecutive_invalid=0 if receipt['accepted'] else self.consecutive_invalid+1
                 if self.consecutive_invalid>=3: w.status='blocked'; w.feedback='Three rejected actions without new progress'
             except InferenceError as exc:
                 if exc.metrics: self.inference.append(exc.metrics)
-                self.failures['T1']=getattr(exc,'provider_failure_count',self.failures.get('T1',0)+1)
-                w.event('inference_error','T1',error=str(exc))
-                self.retry_after['T1']=time.monotonic()+min(8,2**self.failures['T1'])
-                if self.failures['T1']>=3: w.status='blocked'; w.feedback=str(exc)
+                self.failures[self.world.robot['id']]=getattr(exc,'provider_failure_count',self.failures.get(self.world.robot['id'],0)+1)
+                w.event('inference_error',self.world.robot['id'],error=str(exc))
+                self.retry_after[self.world.robot['id']]=time.monotonic()+min(8,2**self.failures[self.world.robot['id']])
+                if self.failures[self.world.robot['id']]>=3: w.status='blocked'; w.feedback=str(exc)
             self.persist(); return
         obs=w.observations(); obs['tool_arguments']={k:TOOL_HELP[k] for k in w.allowed_actions() if k in TOOL_HELP}
         if w.trial=='precision':
@@ -146,5 +150,5 @@ class TreatmentRuntime(Runtime):
         obs['input_images']=[dict(index=0,meaning='Full current camera image',frame_id=w.frame['id'])]
         if w.trial!='precision' and self.scan_image and w.scan and w.scan['frame_id']==w.frame['id'] and not obs.get('scan_stale'):
             images.append(self.scan_image);obs['input_images'].append(dict(index=1,meaning='Magnified RGB crop of current scan bounds; use full-image u,v for actions',**w.scan['rgb_crop']))
-        self.dispatch('T1','treatment',obs,images)
+        self.dispatch(self.world.robot['id'],'treatment',obs,images)
         self.waiting='inference_wait'

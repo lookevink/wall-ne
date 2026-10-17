@@ -18,9 +18,9 @@ class ExperimentTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             try:
                 os.chdir(directory)
-                with patch('scripts.arm_experiments.api',api): result=trial('gemini','wrist')
+                with patch('scripts.arm_experiments.api',api): result=trial('gemini','precision')
             finally:os.chdir(old)
-        self.assertIn('/api/treatment/stop',calls);self.assertEqual(result['session_id'],'test-session');self.assertEqual(result['status'],'aborted');self.assertIsNotNone(result['export_error'])
+        self.assertIn('/api/stop',calls);self.assertEqual(result['session_id'],'test-session');self.assertEqual(result['status'],'aborted');self.assertIsNotNone(result['export_error'])
 
     def test_interruption_stops_outstanding_trial(self):
         state=dict(id='test-session',status='running',inference={'cost':None,'calls':0},checks={});reads=0;stopped=[]
@@ -32,5 +32,5 @@ class ExperimentTests(unittest.TestCase):
             if path.endswith('/stop'):stopped.append(True)
             return state
         with patch('scripts.arm_experiments.api',api):
-            with self.assertRaises(KeyboardInterrupt):trial('gemini','wrist')
+            with self.assertRaises(KeyboardInterrupt):trial('gemini','precision')
         self.assertEqual(stopped,[True])

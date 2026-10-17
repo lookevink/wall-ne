@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import {fieldRover} from './field-rover.js';
 import {landscape} from './orchard-landscape.js';
 import {orchard} from './orchard-trees.js';
+import {OrchardArm} from './orchard-arm.js';
 
 export class FleetScene {
   constructor(element) {
@@ -26,6 +27,10 @@ export class FleetScene {
       const mesh=fieldRover(id);this.scene.add(mesh);this.robots[id]=mesh;
       this.feedCameras[id]=new THREE.PerspectiveCamera(65,16/9,.1,700);
     }
+    this.camera.layers.enable(1);
+    for(const camera of Object.values(this.feedCameras))camera.layers.enable(1);
+    this.feedCameras.WRIST=new THREE.PerspectiveCamera(70,16/9,.05,30);
+    this.armControl=new OrchardArm(this);
     this.expanded=null;this.windEnabled=!matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.paused=false;this.last=0;this.frames=0;this.statsAt=performance.now();this.fps=0;
     this.target=new THREE.Vector3(0,0,0);this.orbit={theta:.56,phi:.73,radius:69};this.bindNavigation();this.setView('overview');
@@ -62,17 +67,22 @@ export class FleetScene {
     this.renderer.setSize(this.element.clientWidth,this.element.clientHeight,false);this.camera.aspect=this.element.clientWidth/this.element.clientHeight;this.camera.fov=this.currentView==='overview'?THREE.MathUtils.radToDeg(2*Math.atan(Math.tan(THREE.MathUtils.degToRad(43)/2)/Math.min(1,this.camera.aspect))):43;this.camera.updateProjectionMatrix();
   }
   update(state) {
+    this.orchardMission=state.arena==='orchard';
     for(const [id,v] of Object.entries(state.vehicles)) {
       const m=this.robots[id];m.position.set(v.position[0],0,v.position[1]);const next=v.action?.route?.[0];
       if(next)m.rotation.y=Math.atan2(next[0]-v.position[0],next[1]-v.position[1])+Math.PI;
+      if(this.orchardMission&&id==='W1')m.rotation.y=0;
+      m.traverse(object=>object.layers.set(this.orchardMission?1:0));
       const c=this.feedCameras[id];c.position.set(v.position[0],1.6,v.position[1]-.5);
       const forward=new THREE.Vector3(0,-.15,-1).applyAxisAngle(new THREE.Vector3(0,1,0),m.rotation.y);c.lookAt(c.position.clone().add(forward));m.visible=v.lifecycle!=='spare';
     }
+    this.armControl.update(state);
+    if(!this.orchardMission&&this.expanded==='WRIST')this.expanded=null;
   }
 
   draw(time) {
     if(this.paused||document.hidden||time-this.last<1000/30)return false;
-    this.last=time-(time-this.last)%(1000/30);this.trees.wind(time/1000,this.windEnabled);this.landscape.wind(time/1000,this.windEnabled);
+    this.last=time-(time-this.last)%(1000/30);this.trees.wind(time/1000,this.windEnabled&&!this.orchardMission);this.landscape.wind(time/1000,this.windEnabled&&!this.orchardMission);
     this.renderer.shadowMap.autoUpdate=false;this.renderer.shadowMap.needsUpdate=time-(this.lastShadow||0)>100;
     if(this.renderer.shadowMap.needsUpdate)this.lastShadow=time;
     this.renderer.setRenderTarget(null);

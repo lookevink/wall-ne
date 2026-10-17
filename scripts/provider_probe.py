@@ -9,7 +9,7 @@ from simulator.inference import Adapter,InferenceError
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('engine',choices=['crusoe','gemini','nemotron','gemma']);args=p.parse_args();load_env()
-    with urllib.request.urlopen('http://127.0.0.1:8765/api/treatment/state') as r:state=json.load(r)
+    with urllib.request.urlopen('http://127.0.0.1:8765/api/state') as r:state=json.load(r)
     frame=state['frames'][0]
     with urllib.request.urlopen(f'http://127.0.0.1:8765/api/sessions/{state["id"]}/artifacts/{frame["artifact_id"]}') as r:image='data:image/png;base64,'+base64.b64encode(r.read()).decode()
     try:

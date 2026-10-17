@@ -34,7 +34,7 @@ class Campaigns:
         if not self.active or self.active['id']==ident:self.active=result
         return result
 
-    def start(self,candidate_id,engine='gemini',trial='wrist'):
+    def start(self,candidate_id,engine='crusoe',trial='precision'):
         repo=self.app.repository
         with self.lock:
             if self.active and self.active['status']=='running': raise ValueError('a campaign is already running')
@@ -49,10 +49,11 @@ class Campaigns:
             source_config=source['metadata']['configuration']
             if source_config.get('engine')!=engine: raise ValueError('campaign must preserve reviewed provider/model condition')
             source_state=repo.restore(source['id'])
+            if source_state.get('arena')!='orchard':raise ValueError('New campaigns require an orchard mission source')
             if source_state['trial']!=trial: raise ValueError('campaign must preserve reviewed sensor condition')
             seeds=[source['seed']]+[s for s in (11,23,8,31) if s!=source['seed']][:3]
             cases=[f'seed{s}' for s in seeds]
-            manifest=dict(scenarios=cases,seeds=seeds,source_session=source['id'],withheld_case=cases[-1],engine=engine,trial=trial,kind='arm',wall_cap=240,cost_cap=1,command_cap=50,physical_rules='wall-ne/1',models=source_config.get('models'),provider_base=source_config.get('provider_base'),source_code_hash=source_config.get('code_hash'),code_hash=implementation_hash(),checks=7,withheld_condition='protected clover preservation')
+            manifest=dict(scenarios=cases,seeds=seeds,source_session=source['id'],withheld_case=cases[-1],engine=engine,trial=trial,kind='arm',arena='orchard',wall_cap=240,cost_cap=1,command_cap=50,physical_rules='wall-ne/1',models=source_config.get('models'),provider_base=source_config.get('provider_base'),source_code_hash=source_config.get('code_hash'),code_hash=implementation_hash(),checks=7,withheld_condition='protected clover preservation')
             manifest['treatment_code_hash']=treatment_implementation_hash()
             campaign=dict(id=uid(),baseline_id=candidate['parent_id'],candidate_id=candidate_id,manifest=manifest,status='running',results=[],reason='Campaign in progress')
             # Persist the frozen manifest before either prompt runs, separately from final immutable evaluations.
@@ -66,8 +67,8 @@ class Campaigns:
         try:
             for scenario,seed in zip(manifest['scenarios'],manifest['seeds']):
                 for variant,version in [('baseline',campaign['baseline_id']),('candidate',campaign['candidate_id'])]:
-                    s=app.reset(True,dict(kind='arm',seed=seed,mode='vision',engine=manifest['engine'],trial=manifest['trial'],prompt_version=version,campaign_id=campaign['id'],model_pins=manifest['models'],provider_base=manifest['provider_base']))
-                    current=app.treatment
+                    s=app.reset(False,dict(mission='weeding',kind='arm',seed=seed,mode='vision',engine=manifest['engine'],trial=manifest['trial'],prompt_version=version,campaign_id=campaign['id'],model_pins=manifest['models'],provider_base=manifest['provider_base']))
+                    current=app.fleet
                     result=dict(scenario=scenario,variant=variant,session_id=s['id'],passed=False,commands=0,cost=None,hard_violations=0,regressions_passed=False,status='created')
                     campaign['results'].append(result)
                     if current.config.get('treatment_code_hash',current.config.get('code_hash'))!=manifest.get('treatment_code_hash',manifest['code_hash']):
@@ -76,7 +77,7 @@ class Campaigns:
                         raise ValueError('implementation changed since frozen campaign manifest')
                     current.start();start=time.monotonic()
                     while current.world.status=='running' and not current.storage_error:
-                        if app.treatment is not current: raise ValueError('campaign interrupted by session replacement')
+                        if app.fleet is not current: raise ValueError('campaign interrupted by session replacement')
                         if time.monotonic()-start>=240:current.pause('blocked');break
                         time.sleep(.5)
                     accounting_deadline=time.monotonic()+60

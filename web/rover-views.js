@@ -22,6 +22,7 @@ export class RoverViews {
       const master=id===null;
       const tile=document.createElement('button');tile.type='button';tile.className='feed';tile.setAttribute('aria-label',master?'Show master view':`Show ${id} first-person camera`);tile.setAttribute('aria-pressed',String(view.expanded===id));
       tile.innerHTML=`<canvas width="640" height="360" aria-hidden="true"></canvas><div class="feed-title"><b><i class="feed-indicator"></i>${master?'MASTER':id}</b><span>${master?'OVERVIEW':'FPV'}</span></div><div class="feed-state"><span data-feed-status>${master?'Master view':id==='R1'?'Recovery':id==='W5'?'Reserve':'Worker'}</span><small data-feed-battery>${master?'↗':'—'}</small></div>`;
+      if(id==='WRIST'){tile.setAttribute('aria-label','Show W1 wrist decision camera');tile.querySelector('.feed-title span').textContent='DECISION RGB';}
       tile.onclick=()=>{view.expanded=id;};
       element.append(tile);const ctx=tile.querySelector('canvas').getContext('2d');this.feeds.push({id,tile,ctx,image:ctx.createImageData(640,360)});
     }
@@ -32,6 +33,7 @@ export class RoverViews {
   update(state) {
     for(const feed of this.feeds){
       if(feed.id===null)continue;
+      if(feed.id==='WRIST'){feed.tile.hidden=state.arena!=='orchard';feed.tile.querySelector('[data-feed-status]').textContent=state.phase||'Wrist';continue;}
       const vehicle=state.vehicles[feed.id];if(!vehicle)continue;
       feed.tile.querySelector('[data-feed-status]').textContent=vehicle.lifecycle==='spare'?'Reserve':vehicle.action?.kind||vehicle.lifecycle;
       feed.tile.querySelector('[data-feed-battery]').textContent=`${vehicle.battery.toFixed(0)}%`;
@@ -53,6 +55,7 @@ export class RoverViews {
     const r=this.view.renderer;
     const rail=this.element.getBoundingClientRect();
     for(const feed of this.feeds) {
+      if(feed.tile.hidden)continue;
       const bounds=feed.tile.getBoundingClientRect();
       // Seed every tile once so pausing cameras never leaves an unseen tile blank.
       if(feed.hasFrame&&(bounds.bottom<=rail.top||bounds.top>=rail.bottom))continue;

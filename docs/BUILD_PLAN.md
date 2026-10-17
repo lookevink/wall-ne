@@ -47,9 +47,9 @@ Implement three executable modes:
 | --- | --- | --- | --- |
 | Fleet | `/` | Deterministic demo or separate live Crusoe role calls | Inspect/water orchard, recover workers, return |
 | Treatment | `/treatment.html`, `irrigation` or `care` | Actual PNG heuristics or live multimodal tool calls | One plant; water, weed, fertilize, vacuum pests |
-| Manipulation | `/treatment.html`, `arm` | Live image/tool decisions; optional labeled baseline/diagnostics | One weed; grasp, extract, collect, verify, return |
+| Manipulation | `/`, W1 weeding | Live wrist image/tool decisions in orchard world coordinates | Drive to tree; grasp, extract, collect, verify, return |
 
-Keep fleet watering and articulated treatment as separate workflows within this scope. The fleet's five video feeds are spectator views, not its decision input. Use the articulated arm for the gripper task. Implement complete-care watering, fertilizer and vacuum tools as bounded treatment actions.
+The main orchard hosts a one-worker articulated weeding mission alongside the selectable fleet watering workflow. The W1 wrist feed supplies live RGB and aligned depth for weeding; other fleet video feeds remain spectator views. Use the articulated arm for the gripper task. Implement complete-care watering, fertilizer and vacuum tools as bounded treatment actions.
 
 ## 2. Non-negotiable boundaries
 

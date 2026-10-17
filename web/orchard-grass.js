@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import {random} from './almond-geometry.js';
-import {AISLE_COUNT,aisleX} from './orchard-layout.js';
 
 // Folded, tapering blades grow out of a shared crown. No alpha cards or rectangles.
 export function grassClump(seed) {
@@ -37,16 +36,16 @@ function meadowFloor(scene) {
 }
 export function groundcover(scene) {
   meadowFloor(scene);
-  const rng=random(7351),clock={value:0};
+  const rng=random(7351),clock={value:0},strength={value:0};
   const mat=new THREE.MeshLambertMaterial({color:0xffffff,vertexColors:true,side:THREE.DoubleSide});
   mat.onBeforeCompile=shader=>{
-    shader.uniforms.meadowTime=clock;shader.vertexShader='uniform float meadowTime;\n'+shader.vertexShader;
+    shader.uniforms.meadowTime=clock;shader.uniforms.meadowWind=strength;shader.vertexShader='uniform float meadowTime;\nuniform float meadowWind;\n'+shader.vertexShader;
     shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
       #ifdef USE_INSTANCING
       vec3 root=instanceMatrix[3].xyz;
       float wave=sin(meadowTime*1.4+root.x*.35+root.z*.7)+.4*sin(meadowTime*2.3+root.z*1.2);
-      transformed.x += wave*position.y*position.y*.5;
-      transformed.z += cos(meadowTime+root.x*.45)*position.y*position.y*.25;
+      transformed.x += meadowWind*wave*position.y*position.y*.5;
+      transformed.z += meadowWind*cos(meadowTime+root.x*.45)*position.y*position.y*.25;
       #endif`);
   };mat.customProgramCacheKey=()=> 'meadow-blades-v1';
   const groups=Array.from({length:4},()=>[]);
@@ -55,11 +54,7 @@ export function groundcover(scene) {
     const patch=(Math.sin(x*.7+z*.24)+Math.sin(z*.65-x*.18))*.25+.5;
     groups[Math.floor(rng()*4)].push({x,z,height,rotation:rng()*Math.PI*2,width:.65+rng()*.8,patch,edge});
   }
-  for(let row=0;row<AISLE_COUNT;row++)for(let i=0;i<1150;i++) {
-    const z=-15.8+rng()*29.5,edge=.42+.08*Math.sin(z*1.4+row),offset=(rng()-.5)*edge*2;
-    plant(aisleX(row)+offset,z,.35+rng()*.28);
-    if(i%3===0)plant(aisleX(row)+(i%2?1:-1)*(1.02+rng()*.27),z,.35+rng()*.38);
-  }
+  // Keep the planted block clear for upcoming weed-removal trials.
   // Wild shoulders are taller and uneven; keep the cross-road and station clear.
   for(let i=0;i<9000;i++) {
     const side=i%2?1:-1,x=side*(22.2+rng()*17),z=-34+rng()*47.8;
@@ -85,5 +80,5 @@ export function groundcover(scene) {
     dummy.position.y=h;dummy.scale.set(1,.4,1);dummy.updateMatrix();flowers.setMatrixAt(i,dummy.matrix);
   }
   scene.add(stems,flowers);
-  return {wind(time,enabled){clock.value=enabled?time:0;}};
+  return {wind(time,enabled){clock.value=enabled?time:0;strength.value=enabled?1:0;}};
 }

@@ -36,8 +36,8 @@ def treatment_implementation_hash():
     # Pin the complete backend and the treatment sensor's local dependency graph.
     import re
     root=Path(__file__).resolve().parent.parent
-    paths=set((root/'simulator').glob('*.py'))|{root/'package-lock.json',root/'web/treatment.html'}
-    pending=[root/'web/treatment.js']
+    paths=set((root/'simulator').glob('*.py'))|{root/'package-lock.json',root/'web/treatment.html',root/'web/index.html',root/'simulator/orchard_trees.json'}
+    pending=[root/'web/treatment.js',root/'web/app.js']
     while pending:
         path=pending.pop().resolve()
         if path in paths: continue

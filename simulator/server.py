@@ -7,12 +7,13 @@ import pathlib
 import threading
 import urllib.parse
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
-from .common import load_env,canonical,uid,digest
+from .common import load_env,canonical,uid,digest,treatment_implementation_hash
 from .engine import Mission,TERMINAL
 from .runtime import Runtime
 from .treatment import Treatment
 from .care import PlantCare
 from .manipulation import Manipulation
+from .orchard_manipulation import OrchardManipulation
 from .treatment_runtime import TreatmentRuntime
 from .persistence import Repository,StorageError
 from .review import ReviewService
@@ -23,7 +24,7 @@ WORLDS={'irrigation':Treatment,'care':PlantCare,'arm':Manipulation}
 
 class App:
     def __init__(self):
-        self.repository=Repository(); self.fleet=Runtime(repository=self.repository)
+        self.repository=Repository(); self.fleet=TreatmentRuntime(OrchardManipulation(),repository=self.repository,config=dict(mode='vision',engine='crusoe',speed=4,arena='orchard',treatment_code_hash=treatment_implementation_hash()))
         self.treatment=TreatmentRuntime(repository=self.repository)
         self.reset_lock=threading.Lock(); self.campaigns=Campaigns(self)
 
@@ -39,9 +40,11 @@ class App:
                 if kind=='arm' and mode!='vision': raise ValueError('arm requires live image decisions')
                 world=cls(seed,body.get('trial','wrist' if kind=='arm' else 'baseline'))
             else:
-                mode=body.get('mode','demo')
-                if mode not in ('demo','live'): raise ValueError('invalid fleet mode')
-                world=Mission(seed)
+                mission=body.get('mission','weeding')
+                if mission not in ('weeding','watering'):raise ValueError('unknown orchard mission')
+                mode='vision' if mission=='weeding' else body.get('mode','demo')
+                if mission=='watering' and mode not in ('demo','live'): raise ValueError('invalid fleet mode')
+                world=OrchardManipulation(seed) if mission=='weeding' else Mission(seed)
             engine=body.get('engine','crusoe')
             if engine not in ('crusoe','nemotron','gemma','gemini'): raise ValueError('invalid inference engine')
             speed=body.get('speed',4 if treatment else 8)
@@ -57,8 +60,9 @@ class App:
             if body.get('model_pins'): config.update(models=body['model_pins'],provider_base=body['provider_base'])
             from .common import implementation_hash,treatment_implementation_hash
             config['code_hash']=implementation_hash()
-            if treatment:config['treatment_code_hash']=treatment_implementation_hash()
-            runtime=(TreatmentRuntime if treatment else Runtime)(world,self.repository,config)
+            if world.kind!='fleet':config['treatment_code_hash']=treatment_implementation_hash()
+            if getattr(world,'arena',None)=='orchard':config['arena']='orchard'
+            runtime=(TreatmentRuntime if world.kind!='fleet' else Runtime)(world,self.repository,config)
             if treatment: self.treatment=runtime
             else: self.fleet=runtime
             with runtime.lock: runtime.persist()
@@ -205,13 +209,14 @@ class Handler(BaseHTTPRequestHandler):
             if action=='reset':
                 if 'model_pins' in body or 'provider_base' in body or 'prompt_version' in body: raise ValueError('prompt/model overrides are only available to frozen evaluation campaigns')
                 return self.send(app.reset(treatment,body))
+            if action=='start' and treatment and runtime.world.kind=='arm':raise ValueError('Live arm runs now use the main orchard at /')
             if action=='start': runtime.start()
             elif action in ('pause','abort','stop'): runtime.pause('paused' if action=='pause' else 'aborted')
             elif action=='retry': runtime.retry()
             elif action=='resume': runtime.restore(body['session_id'])
-            elif action=='frame' and treatment: return self.send(runtime.accept_frame(body))
-            elif action=='depth' and treatment: return self.send(runtime.accept_depth(body))
-            elif action=='command': return self.send(runtime.command(body.get('robot','T1' if treatment else 'orchestrator'),body['action'],body.get('arguments',{}),body.get('command_id')))
+            elif action=='frame' and isinstance(runtime,TreatmentRuntime): return self.send(runtime.accept_frame(body))
+            elif action=='depth' and isinstance(runtime,TreatmentRuntime): return self.send(runtime.accept_depth(body))
+            elif action=='command': return self.send(runtime.command(body.get('robot',runtime.world.robot['id'] if runtime.world.kind!='fleet' else 'orchestrator'),body['action'],body.get('arguments',{}),body.get('command_id')))
             elif action in ('clog','fault') and treatment:
                 with runtime.lock:
                     if runtime.storage_error: raise ValueError('storage_blocked')
@@ -219,7 +224,7 @@ class Handler(BaseHTTPRequestHandler):
                     tool=body.get('tool','nozzle')
                     if tool not in ('nozzle','gripper','fertilizer','vacuum'): raise ValueError('invalid tool')
                     runtime.world.faults[tool]=True; runtime.world.event('fault_injected',tool=tool); runtime.persist()
-            elif action=='breakdown' and not treatment:
+            elif action=='breakdown' and runtime.world.kind=='fleet':
                 with runtime.lock:
                     if runtime.storage_error: raise ValueError('storage_blocked')
                     if runtime.world.status in TERMINAL: raise ValueError('terminal sessions are read-only')
@@ -227,7 +232,7 @@ class Handler(BaseHTTPRequestHandler):
                     if not isinstance(robots,list) or not robots or len(robots)>5 or any(robot not in ('W1','W2','W3','W4','W5') for robot in robots): raise ValueError('invalid workers')
                     for robot in dict.fromkeys(robots): runtime.world.breakdown(robot)
                     runtime.persist()
-            elif action=='false-claim' and not treatment: return self.send(runtime.command('orchestrator','claim_complete'))
+            elif action=='false-claim' and runtime.world.kind=='fleet': return self.send(runtime.command('orchestrator','claim_complete'))
             else: raise ValueError('action unavailable in this mode')
             return self.send(runtime.snapshot())
         except (ValueError,KeyError,TypeError) as exc: self.send({'error':str(exc) if isinstance(exc,ValueError) else 'invalid request arguments'},400)

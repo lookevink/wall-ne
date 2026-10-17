@@ -33,7 +33,7 @@ def ik(pose,base=(0,.8,3.3),near=None):
     if not solutions: raise ValueError('joint limits exclude pose')
     return min(solutions,key=lambda q:sum((a-b)**2 for a,b in zip(q,near or [0]*6)))
 
-def trajectory(start,end,base=(0,.8,3.3)):
+def trajectory(start,end,base=(0,.8,3.3),trunks=((0,0),)):
     start,end=validate(start),validate(end)
     count=max(1,math.ceil(max(abs(a-b) for a,b in zip(start,end))/2))
     samples=[]
@@ -43,6 +43,6 @@ def trajectory(start,end,base=(0,.8,3.3)):
             for t in range(21):
                 p=add(a,scale(sub(b,a),t/20))
                 if p[1]<.025: raise ValueError('trajectory intersects ground')
-                if math.hypot(p[0],p[2])<.21 and p[1]<2.8: raise ValueError('trajectory intersects trunk')
+                if p[1]<2.8 and any(math.hypot(p[0]-x,p[2]-z)<.21 for x,z in trunks): raise ValueError('trajectory intersects trunk')
         samples.append(q)
     return samples,max(.4,max(abs(a-b) for a,b in zip(start,end))/45)

@@ -90,6 +90,7 @@ class Runtime:
             if not rows or (rows[0]['kind']=='fleet')!=(self.world.kind=='fleet'): raise ValueError('session belongs to a different runtime family')
             if rows[0].get('status') in TERMINAL: raise ValueError('terminal sessions are read-only; create a new session')
             config=copy.deepcopy(rows[0]['metadata']['configuration'])
+            if config.get('arena')!=self.config.get('arena'):raise ValueError('saved mission belongs to a different arena')
             if config.get('treatment_code_hash'):
                 from .common import treatment_implementation_hash
                 if config['treatment_code_hash']!=treatment_implementation_hash():raise ValueError('saved treatment implementation changed; create a new session')
@@ -99,6 +100,9 @@ class Runtime:
             from .care import PlantCare
             from .manipulation import Manipulation
             cls={'fleet':Mission,'irrigation':Treatment,'care':PlantCare,'arm':Manipulation}[rows[0]['kind']]
+            if state.get('arena')=='orchard':
+                from .orchard_manipulation import OrchardManipulation
+                cls=OrchardManipulation
             self.world=cls.restore(state); self.world.status='paused'
             self.config=config
             durable_runtime=state.get('runtime_state',{})

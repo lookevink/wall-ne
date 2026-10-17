@@ -113,7 +113,7 @@ class Manipulation(Treatment):
             if self.must_reopen: raise ValueError('reopen after miss or slip before repositioning')
             if self.holding and self.trial in STAGED and self.contact_ack is None: raise ValueError('confirm actual contact with fresh image before carrying')
             end=ik(args['pose'],self.base(),self.joints) if 'pose' in args else args['joints']
-            try: samples,duration=trajectory(self.joints,end,self.base())
+            try: samples,duration=trajectory(self.joints,end,self.base(),getattr(self,'trunks',((0,0),)))
             except ValueError as exc: self.collision=str(exc); raise
             self.collision=None; self.alignment=None
             self.robot['action']=dict(kind='arm',start=self.joints[:],end=end,duration=duration,elapsed=0)
@@ -154,7 +154,7 @@ class Manipulation(Treatment):
                     self.feedback=f'No stem contact. Tool center y={p[1]:.3f} m; required 0.09..0.22 m (suggested 0.15 m), upright tilt <25 degrees. Surface-return y is not the grasp height. Reopen, inspect stem x,z and both fingers, then reposition; hidden target position is not supplied.'
                 for plant in self.protected:
                     if math.hypot(p[0]-plant['position'][0],p[2]-plant['position'][2])<.12 and p[1]<.3: self.damage.append(plant['id'])
-                if math.hypot(p[0],p[2])<.25: self.damage.append('crop')
+                if any(math.hypot(p[0]-x,p[2]-z)<.25 for x,z in getattr(self,'trunks',((0,0),))): self.damage.append('crop')
             self.alignment=None; self.invalidate()
         elif action=='project_ground':
             if self.trial not in ('baseline','known'): raise ValueError('ground projection unavailable')

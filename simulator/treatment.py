@@ -62,7 +62,7 @@ class Treatment(RecordedWorld):
 
     def command(self,command_id,robot,action,**args):
         if command_id in self.receipts: return copy.deepcopy(self.receipts[command_id])
-        receipt=dict(command_id=command_id,robot_id='T1',action=action,arguments=args,accepted=False,revision=self.revision)
+        receipt=dict(command_id=command_id,robot_id=self.robot['id'],action=action,arguments=args,accepted=False,revision=self.revision)
         try:
             if self.status in ('completed','failed','aborted','blocked'): raise ValueError('mission terminal')
             if self.robot['action']: raise ValueError('physical action in progress')

@@ -1,4 +1,6 @@
-# Precision wrist control
+# Orchard wrist control
+
+Live runs use the main orchard at `/`. W1 drives from its dock to the assigned front-row tree, parks for camera-guided extraction, carries the collected plant back to its dock and verifies completion. Fleet watering remains a separate selectable mission. The laboratory is for fixtures and tool diagnostics.
 
 Wall-ne uses a centered six-joint arm, a compact gripper and a rigid wrist RGB camera. The decision image and LiDAR see the arm, plants and ground; rover body geometry stays in the overview layer. Images are 640 × 360 with 70° vertical field of view and a 0.05 m near plane.
 
@@ -19,3 +21,9 @@ Two consecutive provider or malformed-response failures switch the role to the s
 ## Acceptance
 
 Success requires all seven independent checks: extraction, collection/release, fresh before/after images, protected plants preserved, inventory intact, battery reserve and return home. A completed live mission is required before claiming successful visual control.
+
+## Orchard sensor contract
+
+The arm, weed and protected plants join the existing orchard scene. RGB and LiDAR use the same full orchard geometry and world coordinates. The actual planted tree positions drive trunk collision checks; a test verifies the physics inventory against procedural rendering. Robot bodies are excluded from the wrist sensor layer; arms, plants, ground and orchard structures remain visible. Shader wind is frozen during this condition to align range and RGB. Navigation follows a fixed apron route, independent of hidden weed coordinates. No multi-worker weeding scheduler is implemented.
+
+Run `python3 -m scripts.arm_experiments --engine crusoe --condition precision --seed 7` with the main orchard page open. The repeatability runner and new evaluation campaigns use the same arena. Saved missions retain the arena, prompt/model pins, implementation hash, inventory, movement, scans and RGB evidence.

@@ -1,14 +1,16 @@
 import {FleetScene} from './scene.js';
 import {RoverViews} from './rover-views.js';
 import {$,api,notice,checks,journal,button,download} from './ui.js';
-let view,feeds,state;
+let view,feeds,state,currentSession=null,lastFrame=null,lastDepth=null;
+const decisionCanvas=document.createElement('canvas');decisionCanvas.width=640;decisionCanvas.height=360;
 try{view=new FleetScene($('viewport'));feeds=new RoverViews(view,$('feeds'));}catch(e){notice(`Renderer unavailable: ${e.message}`);}
-button('reset',()=>api('/api/reset',{seed:Number($('seed').value),mode:$('mode').value,speed:Number($('speed').value)}));
+button('reset',()=>api('/api/reset',{mission:$('mission').value,seed:Number($('seed').value),mode:$('mode').value,speed:Number($('speed').value)}));
 for(const action of ['start','pause','breakdown','false-claim','retry','abort'])button(action,()=>api(`/api/${action}`,{}));
 button('export',()=>download(state,`wall-ne-${state.id}.json`));
 button('camera-pause',()=>{view.paused=!view.paused;$('camera-pause').textContent=view.paused?'Resume cameras':'Pause cameras';});
 button('wind',()=>{view.windEnabled=!view.windEnabled;$('wind').textContent=`Wind ${view.windEnabled?'on':'off'}`;});
 $('wind').textContent=`Wind ${view?.windEnabled?'on':'off'}`;
+$('mission').onchange=()=>{$('mode').disabled=$('mission').value==='weeding';};$('mission').onchange();
 const workerFaults=document.createElement('div');workerFaults.className='small-buttons';workerFaults.setAttribute('aria-label','Individual worker breakdowns');
 for(const id of ['W1','W2','W3','W4','W5']){const control=document.createElement('button');control.textContent=`Break ${id}`;control.dataset.breakdownWorker=id;control.disabled=true;control.onclick=()=>api('/api/breakdown',{robots:[id]}).catch(error=>notice(error.message));workerFaults.append(control);}
 $('breakdown').parentElement.after(workerFaults);
@@ -33,14 +35,26 @@ async function poll(){
   try{
     state=await api('/api/state');if($('notice').textContent==='Failed to fetch')notice('');view?.update(state);feeds?.update(state);
     $('status').textContent=state.status.replaceAll('_',' ');$('status').classList.toggle('error',['failed','blocked','storage_blocked'].includes(state.status));
-    const zones=Object.values(state.zones),vehicles=Object.values(state.vehicles),critical=zones.filter(z=>z.initial<=state.contract.critical);
-    $('inspected').textContent=zones.filter(z=>z.inspected_at!==null).length;$('watered').textContent=critical.filter(z=>z.moisture>=65-1e-6).length;$('critical-total').textContent=`/ ${critical.length}`;
+    const arm=state.arena==='orchard',vehicles=Object.values(state.vehicles);
+    if(currentSession!==state.id){currentSession=state.id;lastFrame=null;lastDepth=null;$('mission').value=arm?'weeding':'watering';$('mission').onchange();$('seed').value=state.seed;}
+    $('goal').textContent=state.contract.goal||'Inspect and water the orchard, preserve reserve and return.';
+    $('inspected-label').textContent=arm?'Extracted':'Inspected';$('watered-label').textContent=arm?'Collected':'Watered';$('inspected-total').textContent=arm?'/ 1':'/ 36';
+    if(arm){$('inspected').textContent=Number(state.extracted);$('watered').textContent=Number(state.deposited);$('critical-total').textContent='/ 1';}
+    else{const zones=Object.values(state.zones),critical=zones.filter(z=>z.initial<=state.contract.critical);$('inspected').textContent=zones.filter(z=>z.inspected_at!==null).length;$('watered').textContent=critical.filter(z=>z.moisture>=65-1e-6).length;$('critical-total').textContent=`/ ${critical.length}`;}
+    $('arm-feedback').hidden=!arm;$('arm-feedback').textContent=arm?`W1 · ${state.phase} · ${state.feedback} · ${state.load.toFixed(1)} N load`:'';
+    $('breakdown').disabled=$('false-claim').disabled=arm;
     $('clock').textContent=`${String(Math.floor(state.time/60)).padStart(2,'0')}:${String(Math.floor(state.time%60)).padStart(2,'0')}`;$('minimum').textContent=Math.min(...vehicles.map(v=>v.minimum_battery)).toFixed(1);
     checks(state.checks);journal(state.events);updateFleet(vehicles);
-    for(const control of workerFaults.children)control.disabled=state.status!=='running'||state.vehicles[control.dataset.breakdownWorker]?.lifecycle==='disabled';
+    for(const control of workerFaults.children)control.disabled=arm||state.status!=='running'||state.vehicles[control.dataset.breakdownWorker]?.lifecycle==='disabled';
     $('storage').textContent=state.storage.error||`Supabase · committed event ${state.storage.committed_sequence}`;
-    $('inference').textContent=`${state.config.mode==='demo'?'Rule-based demo':'Live roles'} · ${state.inference.calls} calls · ${state.inference.tokens} tokens · ${state.inference.cost===null?'cost unknown':'$'+state.inference.cost.toFixed(4)}`;
+    $('inference').textContent=`${arm?`W1 wrist / ${state.provider_routes?.treatment?.fallback?'Gateway fallback':'Crusoe'}`:state.config.mode==='demo'?'Rule-based demo':'Live roles'} · ${state.inference.calls} calls · ${state.inference.tokens} tokens · ${state.inference.cost===null?'cost unknown':'$'+state.inference.cost.toFixed(4)}`;
     if(state.storage.error)notice(state.storage.error);
+    if(arm&&view&&state.status==='running'){
+      const req=state.frame_request;
+      if(req&&lastFrame!==req.id){const data=view.armControl.capture(req.camera,decisionCanvas);await api('/api/frame',{arena:'orchard',mission_id:state.id,request_id:req.id,data_url:data});lastFrame=req.id;}
+      const depth=state.depth_request;
+      if(depth&&lastDepth!==depth.id){await api('/api/depth',{arena:'orchard',mission_id:state.id,request_id:depth.id,frame_id:depth.frame_id,revision:depth.revision,points:view.armControl.depth(depth)});lastDepth=depth.id;}
+    }
   }catch(e){notice(e.message);}
   setTimeout(poll,650);
 }

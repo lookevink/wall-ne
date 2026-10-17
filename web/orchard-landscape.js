@@ -16,7 +16,7 @@ function soilTexture() {
   }
   const t = new THREE.CanvasTexture(canvas); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(22,22); t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=8; return t;
 }
-// Broken edges let soil show through the cover crop and wheel-worn strips.
+// Broken edges soften the wheel-worn strips.
 function ribbon(parent,x,width,length,mat,rng,y=.012) {
   const points=[],indices=[];
   for(let i=0;i<=40;i++) {
@@ -42,10 +42,8 @@ export function landscape(scene) {
   const ground=box(scene,[360,.16,360],[0,-.12,0],soil);ground.castShadow=false;
   const sand=material(0xc1b08b),dark=material(0x394940),metal=material(0x7f8b7b,.55),cream=material(0xdcd0af),wood=material(0x82745a);
   const wear=material(0xc0b18d);wear.map=soil.map;
-  const cover=material(0x808762);cover.map=soil.map;
   for(let aisle=0;aisle<AISLE_COUNT;aisle++) {
     const x=aisleX(aisle);
-    ribbon(structures,x,.92,30,cover,rng);
     for(const side of [-1,1])ribbon(structures,x+side*.61,.32,30,wear,rng,.014);
     cylinder(structures,[x,0,14],[x,.9,14],.035,.035,wood);
     const plaque=box(structures,[.6,.32,.06],[x,.85,14],lettering(String(aisle+1).padStart(2,'0'),128));plaque.rotation.y=.1;

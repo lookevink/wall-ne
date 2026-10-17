@@ -11,7 +11,7 @@ class Telemetry:
         self.motion=[]; self.latest={}; self.incidents=set()
 
     def robots(self,world):
-        return world.vehicles if world.kind=='fleet' else {'T1':world.robot}
+        return world.vehicles if world.kind=='fleet' else {world.robot['id']:world.robot}
 
     def sample(self,world,epoch,heartbeat=False,waiting=None):
         now=time.monotonic()
