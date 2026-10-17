@@ -1,0 +1,1164 @@
+{
+  "session_id": "02d09ab3-3a10-45c9-9097-04e1aea26055",
+  "controller": "ultra_fast",
+  "seed": 7,
+  "wall_budget_seconds": 360,
+  "status": "failed",
+  "checks": {
+    "all_workers_used": true,
+    "care_verified": false,
+    "inventory": true,
+    "reserve": true,
+    "returned": false,
+    "trees_complete": false
+  },
+  "measured_wall_seconds": 76.585204375,
+  "active_wall_seconds": 75.996425167,
+  "timing_scope": "Reset through terminal outcome",
+  "inference": {
+    "calls": 20,
+    "cost": null,
+    "failed_calls": 20,
+    "latency_seconds": 250.109602712,
+    "pending_calls": 0,
+    "results": [],
+    "tokens": 0
+  },
+  "config": {
+    "arena": "orchard",
+    "capture_training_inputs": true,
+    "care_controller": "ultra_fast",
+    "code_hash": "7c999feb7317c203c89a768e41d53ea69bbcb8cc78e4c19cf9b93be3e1d42e88",
+    "engine": "crusoe",
+    "fallback": {
+      "after_failures": 1,
+      "engine": "gemini",
+      "models": {
+        "orchestrator": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "planner": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "retriever": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+        "treatment": "google/gemini-2.5-flash",
+        "verifier": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "worker": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
+      },
+      "provider_base": "https://ai-gateway.vercel.sh/v1"
+    },
+    "inference_timeout": 6,
+    "max_tokens": 512,
+    "mode": "vision",
+    "models": {
+      "orchestrator": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "planner": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "retriever": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "treatment": "google/gemma-4-31b-it",
+      "verifier": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "worker": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
+    },
+    "provider_base": "https://api.inference.crusoecloud.com/v1",
+    "speed": 16,
+    "treatment_code_hash": "0898d7e2585492f9f09194d21660c268646ee147c0ecc444d1d8bf9bac22dd0a",
+    "trial": null
+  },
+  "assignments": {
+    "0": {
+      "session_id": "1d0ede06-dc7e-4861-91d4-82fbe7c8f980",
+      "status": "blocked",
+      "vehicle": "W1"
+    },
+    "1": {
+      "session_id": "7425b426-dc8a-4071-8a03-e3bf3be65f35",
+      "status": "blocked",
+      "vehicle": "W2"
+    },
+    "2": {
+      "session_id": "5326559a-dcf7-460c-be5d-34fd432b2ab4",
+      "status": "blocked",
+      "vehicle": "W3"
+    },
+    "3": {
+      "session_id": "73fe8d2c-fd9f-419e-b8ad-9771aa939197",
+      "status": "blocked",
+      "vehicle": "W4"
+    },
+    "4": {
+      "session_id": "8f164245-39b9-4190-9430-f4bac8a8bf3e",
+      "status": "blocked",
+      "vehicle": "W5"
+    }
+  },
+  "background_sync": {
+    "pending_operations": 500,
+    "recovery_errors": {},
+    "sessions": {
+      "0054a525-332e-4e3e-9ade-fa25299a6451": {
+        "cloud_committed_sequence": 201,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 201,
+        "synced": true
+      },
+      "02d09ab3-3a10-45c9-9097-04e1aea26055": {
+        "cloud_committed_sequence": 152,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 27,
+        "queued_sequence": 443,
+        "synced": false
+      },
+      "08530f17-5f37-4488-bcd9-ddcebb4efc08": {
+        "cloud_committed_sequence": 170,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 170,
+        "synced": true
+      },
+      "10507b29-264d-4296-ad90-2312c81ddb3b": {
+        "cloud_committed_sequence": 365,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 365,
+        "synced": true
+      },
+      "150dace5-d14b-49e1-8d52-b8928c50f5d3": {
+        "cloud_committed_sequence": 405,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 405,
+        "synced": true
+      },
+      "17c5a3a8-a358-4992-8796-81129cb74af5": {
+        "cloud_committed_sequence": 193,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 193,
+        "synced": true
+      },
+      "1d0ede06-dc7e-4861-91d4-82fbe7c8f980": {
+        "cloud_committed_sequence": 27,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 69,
+        "queued_sequence": 168,
+        "synced": false
+      },
+      "20e50776-eaa3-4208-a984-cc2d827b2311": {
+        "cloud_committed_sequence": 314,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 314,
+        "synced": true
+      },
+      "290813f2-63f4-4dd2-8759-4d5d6c6a3384": {
+        "cloud_committed_sequence": 1085,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 1085,
+        "synced": true
+      },
+      "2a2b99c3-5f2b-4ec0-aa55-f1285ae51df6": {
+        "cloud_committed_sequence": 200,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 200,
+        "synced": true
+      },
+      "2ba39659-1ee6-4902-99af-e305c75906cf": {
+        "cloud_committed_sequence": 222,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 222,
+        "synced": true
+      },
+      "30274e73-eca5-4874-84f4-5f03f9f2b4e3": {
+        "cloud_committed_sequence": 234,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 234,
+        "synced": true
+      },
+      "32546315-fcdb-4c48-9305-47dcc83f9aa2": {
+        "cloud_committed_sequence": 251,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 251,
+        "synced": true
+      },
+      "3beca442-74e0-4d53-82dd-0192d6e721a4": {
+        "cloud_committed_sequence": 285,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 285,
+        "synced": true
+      },
+      "3ea727be-bfad-4ce4-b597-3b0d34b71bc2": {
+        "cloud_committed_sequence": 440,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 440,
+        "synced": true
+      },
+      "3f374501-d997-4d7b-8804-9582f5758342": {
+        "cloud_committed_sequence": 266,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 266,
+        "synced": true
+      },
+      "461aeaf1-35d7-4d32-b508-ffdcdff1d5eb": {
+        "cloud_committed_sequence": 264,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 264,
+        "synced": true
+      },
+      "4e26f3cd-978b-456c-a40b-75c478aa5f87": {
+        "cloud_committed_sequence": 193,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 193,
+        "synced": true
+      },
+      "5326559a-dcf7-460c-be5d-34fd432b2ab4": {
+        "cloud_committed_sequence": 20,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 69,
+        "queued_sequence": 161,
+        "synced": false
+      },
+      "55c4eb03-250e-4e53-9d9a-de9f29672454": {
+        "cloud_committed_sequence": 301,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 301,
+        "synced": true
+      },
+      "585c0425-bd3f-4736-be24-9e956e97cba4": {
+        "cloud_committed_sequence": 254,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 254,
+        "synced": true
+      },
+      "59190eeb-a199-4ca7-ab0c-c81c96e44c88": {
+        "cloud_committed_sequence": 257,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 257,
+        "synced": true
+      },
+      "614d156d-2de9-4a19-aa33-a54ef36503ec": {
+        "cloud_committed_sequence": 179,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 179,
+        "synced": true
+      },
+      "66c64dfc-d0cf-4bc4-989d-db907cd27be6": {
+        "cloud_committed_sequence": 1052,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 1052,
+        "synced": true
+      },
+      "67f6b375-23df-4819-a111-502764596971": {
+        "cloud_committed_sequence": 299,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 299,
+        "synced": true
+      },
+      "6e950d2b-ee15-4d9b-abea-16ff4f4cf1aa": {
+        "cloud_committed_sequence": 319,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 319,
+        "synced": true
+      },
+      "73fe8d2c-fd9f-419e-b8ad-9771aa939197": {
+        "cloud_committed_sequence": 19,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 69,
+        "queued_sequence": 160,
+        "synced": false
+      },
+      "7425b426-dc8a-4071-8a03-e3bf3be65f35": {
+        "cloud_committed_sequence": 20,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 70,
+        "queued_sequence": 161,
+        "synced": false
+      },
+      "7dfa7886-f52c-47ab-bd61-84b7cfe2cdb6": {
+        "cloud_committed_sequence": 1075,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 1075,
+        "synced": true
+      },
+      "821bbf82-2e1d-4f3f-ba75-934c98ae7e0b": {
+        "cloud_committed_sequence": 231,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 231,
+        "synced": true
+      },
+      "8458b3de-4c46-4ab0-b822-3a8121d16fd7": {
+        "cloud_committed_sequence": 265,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 265,
+        "synced": true
+      },
+      "8697bfd8-d5b7-4f2c-8c8c-7acfec996ed0": {
+        "cloud_committed_sequence": 299,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 299,
+        "synced": true
+      },
+      "8994a396-02f6-40e2-9c72-09c76d9b8ada": {
+        "cloud_committed_sequence": 1119,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 1119,
+        "synced": true
+      },
+      "8f164245-39b9-4190-9430-f4bac8a8bf3e": {
+        "cloud_committed_sequence": 21,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 69,
+        "queued_sequence": 162,
+        "synced": false
+      },
+      "96be5d94-4366-4704-b7f4-9edde2d1686d": {
+        "cloud_committed_sequence": 261,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 261,
+        "synced": true
+      },
+      "a02911b3-6d41-4b07-935f-2fd354d8cb0d": {
+        "cloud_committed_sequence": 301,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 301,
+        "synced": true
+      },
+      "a964b71f-3f56-4792-958d-312bc1df2f90": {
+        "cloud_committed_sequence": 202,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 202,
+        "synced": true
+      },
+      "aaecd397-0cb2-48a5-baaa-222ee99c9db3": {
+        "cloud_committed_sequence": 326,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 326,
+        "synced": true
+      },
+      "b5355537-15d5-4b9d-af3d-06c423ab82fd": {
+        "cloud_committed_sequence": 305,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 305,
+        "synced": true
+      },
+      "b60cc81b-7d5a-4301-b7fc-6d14e4493237": {
+        "cloud_committed_sequence": 315,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 315,
+        "synced": true
+      },
+      "c4e88c62-c2d4-4590-aee3-d2c34b5558aa": {
+        "cloud_committed_sequence": 175,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 175,
+        "synced": true
+      },
+      "d190c728-65a6-42f1-825d-66db915e422e": {
+        "cloud_committed_sequence": 262,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 262,
+        "synced": true
+      },
+      "d2c29209-0e84-45bc-8d4b-6b3e5b8f74be": {
+        "cloud_committed_sequence": 1088,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 1088,
+        "synced": true
+      },
+      "d5b56715-d957-400d-a60d-c01c345e24ec": {
+        "cloud_committed_sequence": 174,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 174,
+        "synced": true
+      },
+      "de1f2cfd-2196-4244-b9c0-27144d8bbce3": {
+        "cloud_committed_sequence": 1552,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 1552,
+        "synced": true
+      },
+      "e04e1f2e-5657-4bc8-84b6-8f7b9bf5a52c": {
+        "cloud_committed_sequence": 261,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 261,
+        "synced": true
+      },
+      "e2d2c009-c54d-4ec7-b8bc-e670c27e86ec": {
+        "cloud_committed_sequence": 266,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 266,
+        "synced": true
+      },
+      "f6ba1a09-0a7b-4eab-ad9e-90dd56c65871": {
+        "cloud_committed_sequence": 209,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 209,
+        "synced": true
+      },
+      "f76dffe6-23f2-4054-ba52-ba061b4eed7f": {
+        "cloud_committed_sequence": 174,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 174,
+        "synced": true
+      },
+      "f81762d3-dbc5-406b-bb87-d5cbbf4e6dff": {
+        "cloud_committed_sequence": 329,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 329,
+        "synced": true
+      },
+      "fce3d194-c1e7-4262-9988-b41e84a37a73": {
+        "cloud_committed_sequence": 207,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 127,
+        "queued_sequence": 470,
+        "synced": false
+      }
+    },
+    "synced": false
+  },
+  "milestones": [
+    {
+      "seconds": 10.72,
+      "worker": "W1",
+      "session_id": "1d0ede06-dc7e-4861-91d4-82fbe7c8f980",
+      "phase": "travel",
+      "status": "running"
+    },
+    {
+      "seconds": 10.72,
+      "worker": "W2",
+      "session_id": "7425b426-dc8a-4071-8a03-e3bf3be65f35",
+      "phase": "travel",
+      "status": "running"
+    },
+    {
+      "seconds": 10.72,
+      "worker": "W3",
+      "session_id": "5326559a-dcf7-460c-be5d-34fd432b2ab4",
+      "phase": "travel",
+      "status": "running"
+    },
+    {
+      "seconds": 10.72,
+      "worker": "W4",
+      "session_id": "73fe8d2c-fd9f-419e-b8ad-9771aa939197",
+      "phase": "travel",
+      "status": "running"
+    },
+    {
+      "seconds": 10.72,
+      "worker": "W5",
+      "session_id": "8f164245-39b9-4190-9430-f4bac8a8bf3e",
+      "phase": "travel",
+      "status": "running"
+    },
+    {
+      "seconds": 11.77,
+      "worker": "W1",
+      "session_id": "1d0ede06-dc7e-4861-91d4-82fbe7c8f980",
+      "phase": "inspection",
+      "status": "running"
+    },
+    {
+      "seconds": 11.77,
+      "worker": "W2",
+      "session_id": "7425b426-dc8a-4071-8a03-e3bf3be65f35",
+      "phase": "inspection",
+      "status": "running"
+    },
+    {
+      "seconds": 12.8,
+      "worker": "W3",
+      "session_id": "5326559a-dcf7-460c-be5d-34fd432b2ab4",
+      "phase": "inspection",
+      "status": "running"
+    },
+    {
+      "seconds": 12.8,
+      "worker": "W4",
+      "session_id": "73fe8d2c-fd9f-419e-b8ad-9771aa939197",
+      "phase": "inspection",
+      "status": "running"
+    },
+    {
+      "seconds": 12.8,
+      "worker": "W5",
+      "session_id": "8f164245-39b9-4190-9430-f4bac8a8bf3e",
+      "phase": "inspection",
+      "status": "running"
+    },
+    {
+      "seconds": 17.25,
+      "worker": "W1",
+      "session_id": "1d0ede06-dc7e-4861-91d4-82fbe7c8f980",
+      "phase": "irrigation",
+      "status": "running"
+    },
+    {
+      "seconds": 17.25,
+      "worker": "W2",
+      "session_id": "7425b426-dc8a-4071-8a03-e3bf3be65f35",
+      "phase": "irrigation",
+      "status": "running"
+    },
+    {
+      "seconds": 17.25,
+      "worker": "W3",
+      "session_id": "5326559a-dcf7-460c-be5d-34fd432b2ab4",
+      "phase": "irrigation",
+      "status": "running"
+    },
+    {
+      "seconds": 17.25,
+      "worker": "W4",
+      "session_id": "73fe8d2c-fd9f-419e-b8ad-9771aa939197",
+      "phase": "irrigation",
+      "status": "running"
+    },
+    {
+      "seconds": 17.25,
+      "worker": "W5",
+      "session_id": "8f164245-39b9-4190-9430-f4bac8a8bf3e",
+      "phase": "irrigation",
+      "status": "running"
+    },
+    {
+      "seconds": 21.56,
+      "worker": "W1",
+      "session_id": "1d0ede06-dc7e-4861-91d4-82fbe7c8f980",
+      "phase": "fertilizer",
+      "status": "running"
+    },
+    {
+      "seconds": 21.56,
+      "worker": "W2",
+      "session_id": "7425b426-dc8a-4071-8a03-e3bf3be65f35",
+      "phase": "fertilizer",
+      "status": "running"
+    },
+    {
+      "seconds": 21.56,
+      "worker": "W3",
+      "session_id": "5326559a-dcf7-460c-be5d-34fd432b2ab4",
+      "phase": "fertilizer",
+      "status": "running"
+    },
+    {
+      "seconds": 21.56,
+      "worker": "W4",
+      "session_id": "73fe8d2c-fd9f-419e-b8ad-9771aa939197",
+      "phase": "fertilizer",
+      "status": "running"
+    },
+    {
+      "seconds": 21.56,
+      "worker": "W5",
+      "session_id": "8f164245-39b9-4190-9430-f4bac8a8bf3e",
+      "phase": "fertilizer",
+      "status": "running"
+    },
+    {
+      "seconds": 24.84,
+      "worker": "W1",
+      "session_id": "1d0ede06-dc7e-4861-91d4-82fbe7c8f980",
+      "phase": "pests",
+      "status": "running"
+    },
+    {
+      "seconds": 24.84,
+      "worker": "W2",
+      "session_id": "7425b426-dc8a-4071-8a03-e3bf3be65f35",
+      "phase": "pests",
+      "status": "running"
+    },
+    {
+      "seconds": 24.84,
+      "worker": "W3",
+      "session_id": "5326559a-dcf7-460c-be5d-34fd432b2ab4",
+      "phase": "pests",
+      "status": "running"
+    },
+    {
+      "seconds": 24.84,
+      "worker": "W4",
+      "session_id": "73fe8d2c-fd9f-419e-b8ad-9771aa939197",
+      "phase": "pests",
+      "status": "running"
+    },
+    {
+      "seconds": 24.84,
+      "worker": "W5",
+      "session_id": "8f164245-39b9-4190-9430-f4bac8a8bf3e",
+      "phase": "pests",
+      "status": "running"
+    },
+    {
+      "seconds": 76.59,
+      "worker": "W1",
+      "session_id": "1d0ede06-dc7e-4861-91d4-82fbe7c8f980",
+      "phase": "pests",
+      "status": "blocked"
+    },
+    {
+      "seconds": 76.59,
+      "worker": "W2",
+      "session_id": "7425b426-dc8a-4071-8a03-e3bf3be65f35",
+      "phase": "pests",
+      "status": "blocked"
+    },
+    {
+      "seconds": 76.59,
+      "worker": "W3",
+      "session_id": "5326559a-dcf7-460c-be5d-34fd432b2ab4",
+      "phase": "pests",
+      "status": "blocked"
+    },
+    {
+      "seconds": 76.59,
+      "worker": "W4",
+      "session_id": "73fe8d2c-fd9f-419e-b8ad-9771aa939197",
+      "phase": "pests",
+      "status": "blocked"
+    },
+    {
+      "seconds": 76.59,
+      "worker": "W5",
+      "session_id": "8f164245-39b9-4190-9430-f4bac8a8bf3e",
+      "phase": "pests",
+      "status": "blocked"
+    }
+  ],
+  "workers": {
+    "W1": {
+      "id": "1d0ede06-dc7e-4861-91d4-82fbe7c8f980",
+      "phase": "pests",
+      "status": "blocked",
+      "feedback": "gateway unavailable or timed out",
+      "inference": {
+        "calls": 4,
+        "cost": null,
+        "failed_calls": 4,
+        "latency_seconds": 50.049212958999995,
+        "pending_calls": 0,
+        "results": [
+          {
+            "cost": null,
+            "fallback": false,
+            "id": "f8265144-c14a-4595-b216-51c3749a3200",
+            "latency": 10.732300708999993,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "64286ecb-6f41-4999-b2f6-3e8d6a71976e",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "62ed5972-22a3-4cc3-a88b-beb658a3739d",
+            "latency": 9.846952916,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "c3c939c1-a6f2-42e5-92a5-4fafb609e81d",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "859509c6-da95-4fc8-a853-e61499c95d00",
+            "latency": 13.576639334,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "8774823a-5086-4861-88bf-b0c1f78bc969",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "c266a7e9-ea4e-481a-9cc7-9d33d605916c",
+            "latency": 15.893320000000003,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "12cd851c-6dc9-4b21-9c80-0cf1e7ed6594",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          }
+        ],
+        "tokens": 0
+      },
+      "storage_timing": {
+        "artifact": {
+          "calls": 6,
+          "max_seconds": 10.004073458999997,
+          "seconds": 21.160555916999993
+        },
+        "commit": {
+          "calls": 11,
+          "max_seconds": 4.825649665999997,
+          "seconds": 19.031001954999997
+        },
+        "metadata": {
+          "calls": 10,
+          "max_seconds": 2.326940583999999,
+          "seconds": 10.378972417000007
+        }
+      }
+    },
+    "W2": {
+      "id": "7425b426-dc8a-4071-8a03-e3bf3be65f35",
+      "phase": "pests",
+      "status": "blocked",
+      "feedback": "gateway unavailable or timed out",
+      "inference": {
+        "calls": 4,
+        "cost": null,
+        "failed_calls": 4,
+        "latency_seconds": 50.043917209000014,
+        "pending_calls": 0,
+        "results": [
+          {
+            "cost": null,
+            "fallback": false,
+            "id": "c3377b4a-9671-499a-bc7b-ff8d1b9fd76c",
+            "latency": 10.719291292000001,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "79e32850-3a15-447f-9c73-78069204b606",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "e02810b8-fe42-4b6f-aa57-bd98322bc77c",
+            "latency": 9.861948959000003,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "ebe313db-062f-4ceb-9ffb-571dbd2b2203",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "0cbef068-c8dd-4950-97f2-326797e14718",
+            "latency": 13.575455416000004,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "908375b9-0047-45d1-88ad-b96f52ccfa44",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "d0877ccc-a4c2-4c0e-8add-6ee8eab23838",
+            "latency": 15.887221542000006,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "552d0d94-fee9-4c55-b072-0948a32fc80a",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          }
+        ],
+        "tokens": 0
+      },
+      "storage_timing": {
+        "artifact": {
+          "calls": 4,
+          "max_seconds": 7.696574832999993,
+          "seconds": 18.72507224899999
+        },
+        "commit": {
+          "calls": 8,
+          "max_seconds": 5.3134262919999955,
+          "seconds": 17.621510582999996
+        },
+        "metadata": {
+          "calls": 10,
+          "max_seconds": 2.036787708000002,
+          "seconds": 9.402524541999991
+        }
+      }
+    },
+    "W3": {
+      "id": "5326559a-dcf7-460c-be5d-34fd432b2ab4",
+      "phase": "pests",
+      "status": "blocked",
+      "feedback": "gateway unavailable or timed out",
+      "inference": {
+        "calls": 4,
+        "cost": null,
+        "failed_calls": 4,
+        "latency_seconds": 50.00527496,
+        "pending_calls": 0,
+        "results": [
+          {
+            "cost": null,
+            "fallback": false,
+            "id": "aefb7e44-46d4-449c-9f91-d144554b4a4b",
+            "latency": 10.682273709,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "f6354b08-38ed-4864-88e7-878e8b041d41",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "5cc771e3-fbe2-414f-a76a-106dbadbeac2",
+            "latency": 9.857481292000003,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "f0ecb17e-f458-4162-8b58-52e19a82c806",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "34ea5b89-f59e-468e-9968-51e881c3ec07",
+            "latency": 13.604358499999996,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "314f63ec-ab04-4437-89aa-27603ac32996",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "bb2c830b-d53b-4bf0-af26-e738cb6bf7ad",
+            "latency": 15.861161459000002,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "8f7307a5-22f0-4ae8-ae16-2a4e51c67dc3",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          }
+        ],
+        "tokens": 0
+      },
+      "storage_timing": {
+        "artifact": {
+          "calls": 6,
+          "max_seconds": 12.821231832999999,
+          "seconds": 36.68011016599999
+        },
+        "commit": {
+          "calls": 8,
+          "max_seconds": 5.314451499999997,
+          "seconds": 15.225650374999997
+        },
+        "metadata": {
+          "calls": 11,
+          "max_seconds": 3.393972082999994,
+          "seconds": 12.269070291999995
+        }
+      }
+    },
+    "W4": {
+      "id": "73fe8d2c-fd9f-419e-b8ad-9771aa939197",
+      "phase": "pests",
+      "status": "blocked",
+      "feedback": "gateway unavailable or timed out",
+      "inference": {
+        "calls": 4,
+        "cost": null,
+        "failed_calls": 4,
+        "latency_seconds": 50.02457716599999,
+        "pending_calls": 0,
+        "results": [
+          {
+            "cost": null,
+            "fallback": false,
+            "id": "97a309fc-f538-4846-8158-8790de64dae6",
+            "latency": 10.676450250000002,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "70f0c971-ef89-43cd-a33d-c051695ef0df",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "02938950-ae3a-4918-be16-3e607549a101",
+            "latency": 9.925559833000001,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "14ec144c-fed4-41bd-91ba-14e437bc79cf",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "700e8ba2-8c3c-4649-a163-d4bdf5a97ffb",
+            "latency": 13.581638999999996,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "e6d27705-81db-4f44-ae2c-6c94989bab55",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "eae16871-d13b-4176-beeb-82f94793cffa",
+            "latency": 15.840928082999994,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "7710006b-2351-49ae-9b18-26d6f75c72e6",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          }
+        ],
+        "tokens": 0
+      },
+      "storage_timing": {
+        "artifact": {
+          "calls": 6,
+          "max_seconds": 10.004538416000003,
+          "seconds": 22.116727625000003
+        },
+        "commit": {
+          "calls": 7,
+          "max_seconds": 6.183887499999997,
+          "seconds": 12.918049084000003
+        },
+        "metadata": {
+          "calls": 8,
+          "max_seconds": 2.0249720000000018,
+          "seconds": 7.942102498999997
+        }
+      }
+    },
+    "W5": {
+      "id": "8f164245-39b9-4190-9430-f4bac8a8bf3e",
+      "phase": "pests",
+      "status": "blocked",
+      "feedback": "gateway unavailable or timed out",
+      "inference": {
+        "calls": 4,
+        "cost": null,
+        "failed_calls": 4,
+        "latency_seconds": 49.98662041799999,
+        "pending_calls": 0,
+        "results": [
+          {
+            "cost": null,
+            "fallback": false,
+            "id": "66c396df-e144-49b3-9660-47c1615a1551",
+            "latency": 10.686391041999997,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "876adb4d-6a4a-4b07-b784-5c34ae2a5777",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "96893ee2-e0ff-4943-a5cc-11a65a08dbb6",
+            "latency": 9.851730375000002,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "b372b810-7c1e-49e0-a351-88a62fdff49a",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "8c50f334-bdc2-499d-be48-c91877d2778e",
+            "latency": 13.611463791999995,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "71daf5fa-506c-47b3-9fd2-0a7d737bc05d",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "9ef9a64f-b881-445e-b586-27c254bc1518",
+            "latency": 15.837035208999993,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "ad956906-c444-4fb5-a6cf-2b46fc86d701",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          }
+        ],
+        "tokens": 0
+      },
+      "storage_timing": {
+        "artifact": {
+          "calls": 4,
+          "max_seconds": 7.004959667000001,
+          "seconds": 16.584276
+        },
+        "commit": {
+          "calls": 8,
+          "max_seconds": 5.187308666,
+          "seconds": 11.550667831999998
+        },
+        "metadata": {
+          "calls": 8,
+          "max_seconds": 2.142157249999997,
+          "seconds": 8.10927487299999
+        }
+      }
+    }
+  },
+  "passed": false
+}

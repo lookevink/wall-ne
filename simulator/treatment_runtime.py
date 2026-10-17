@@ -137,7 +137,9 @@ class TreatmentRuntime(Runtime):
                     receipt.get('reason')=='independent care checks reject stage clearance')
                 if not receipt['accepted'] and not expected_probe:
                     w.status='blocked';w.feedback='Bounded controller rejected: '+receipt.get('reason','unknown')
-                elif receipt['accepted'] and not w.robot['action']:w.record_control_progress(action)
+                elif receipt['accepted']:
+                    self.consecutive_invalid=0
+                    if not w.robot['action']:w.record_control_progress(action)
                 self.persist();return
         if not entry and time.monotonic()<self.retry_after.get(self.world.robot['id'],0): self.waiting='inference_backoff';return
         if entry:

@@ -9,6 +9,19 @@ PROMPT="""You are the visual decision maker for a simulated orchard robot. Use t
 from .camera import project_pixel
 
 
+def viewpoint_pose(obs):
+    """A novel observation pose from public kinematics, never a plant target."""
+    from .arm import ik
+    pose=obs['tool_pose']['position'];views=(obs.get('controller_progress') or {}).get('views',[])
+    for dx,dy,dz in ((0,0,0),(.08,.06,0),(-.08,.12,0),(0,.18,.08)):
+        target=[pose[0]+dx,.46+dy,pose[2]+.12+dz,0,0,0]
+        if math.dist(target[:3],pose)<.02 or any(math.dist(target[:3],v[:3])<.02 for v in views):continue
+        try:ik(target,obs['base'])
+        except ValueError:continue
+        return target
+    return None
+
+
 def automatic_action(obs):
     frame=obs.get('frame')
     if not frame:return None
@@ -44,6 +57,10 @@ def automatic_action(obs):
         if math.hypot(pose[0]-bx,pose[2]-bz)<.02 and abs(pose[1]-.8)<.02:return action('open_gripper')
         return action('move_arm',pose=[bx,.8,bz,0,0,0])
     if grip['must_reopen'] or grip['opening']<.06:return action('open_gripper')
+    progress=obs.get('controller_progress') or {}
+    if progress.get('recovery_required'):
+        target=viewpoint_pose(obs)
+        return action('move_arm',pose=target) if target else action('stop')
     recovery=obs.get('current_grasp_step',{}).get('wide_view_pose')
     if recovery:
         if math.dist(pose,recovery[:3])>.02:return action('move_arm',pose=recovery)
@@ -53,6 +70,12 @@ def automatic_action(obs):
     if alignment and alignment['aligned'] and alignment['revision']==frame['revision']:
         return action('set_gripper',opening=0,force=30)
     projection=obs.get('crown_projection')
+    if pose[1]>.55 and projection and projection.get('revision')!=frame['revision']:
+        scan=obs.get('scan')
+        if scan and scan['frame_id']==frame['id'] and scan['revision']==frame['revision']:
+            u0,v0,u1,v1=scan['bounds']
+            return action('project_ground',u=(u0+u1)/2,v=(v0+v1)/2)
+        return None
     if not projection:
         scan=obs.get('scan')
         if scan and scan['frame_id']==frame['id'] and scan['revision']==frame['revision']:
@@ -73,17 +96,23 @@ def automatic_action(obs):
 def vision_observation(obs):
     """Small stage-specific payload, including only already-public measurements."""
     keys=('mission_id','kind','status','phase','trial','worker','frame','camera','feedback','sensors','resources',
-          'budgets','care_progress','task_tree','tool_pose','base','bin','gripper','protocol','crown_projection','scan','scan_stale')
+          'budgets','controller_progress','current_grasp_step','care_progress','task_tree','tool_pose','base','bin','gripper','protocol','crown_projection','scan','scan_stale')
     result={k:obs[k] for k in keys if k in obs};result['controller']='ultra_fast'
     allowed=obs['available_actions'];phase=obs['phase'];grip=obs.get('gripper',{})
     if phase=='pests':wanted=['remove_pest','stop']
-    elif not obs['protocol']['nonempty_scan'] or obs.get('current_grasp_step',{}).get('wide_view_pose'):wanted=['scan_lidar','stop']
+    elif not obs['protocol']['nonempty_scan'] or obs.get('current_grasp_step',{}).get('wide_view_pose') or obs['tool_pose']['position'][1]>.55 and obs.get('scan_stale'):wanted=['scan_lidar','stop']
     elif obs['tool_pose']['position'][1]>.22 or not obs.get('crown_projection'):wanted=['project_ground','stop']
     else:wanted=['assess_alignment','project_ground','stop']
+    if phase=='extraction' and not grip.get('holding') and 'move_arm' in allowed:
+        view=viewpoint_pose(obs)
+        if view:result['viewpoint_pose']=view;wanted.append('move_arm')
+        anchor=(obs.get('crown_projection') or {}).get('world')
+        if anchor and obs['tool_pose']['position'][1]<=.55:result['refinement_region']=dict(center=anchor,radius_m=.18)
     result['available_actions']=[a for a in wanted if a in allowed]
     result['instructions']='''Choose one action using current RGB. Routine care and bounded arm motion run automatically.
 PESTS: choose the candidate ID centered on a visible elongated brown/purple caterpillar (or image u,v if no candidates are offered). Preserve round red ladybirds. Code requests independent stage clearance; you only select a visible pest or stop.
 WEED: choose the root crown where upright grass, serrated rosette or thistle meets soil. Rounded three-leaf clover must be preserved. scan_lidar: u,v at that crown, span=.16. project_ground: refine the visible ROOT/SOIL junction, not a leaf. Both use normalized image coordinates and current frame_id. Never invent world coordinates.
+RECOVERY: If the root is obscured or no local candidate matches, use move_arm to the supplied viewpoint_pose for a new image. Refinement stays within the supplied region around the previously selected crown; never jump to neighboring clover.
 ALIGNMENT: assess_alignment only if both inner finger faces and the weed stem are visible and the stem lies between them; depth_consistent must reflect measured geometry. Otherwise project_ground at the correct crown or stop. Evidence is not physical contact; measured holding/load and preservation checks remain mandatory.
 Keep reason brief. Include the current frame_id in every call.'''
     # A bounded spatial sample retains the measured surfaces without repeating a
@@ -97,7 +126,7 @@ Keep reason brief. Include the current frame_id in every call.'''
 def pixel_candidates(pixels,obs):
     """Unclassified connected RGB regions; no scene IDs or target coordinates.
 
-    A model must still identify a weed in RGB. Components may include clover or
+    A model must still identify a weed in RGB. Close refinements remain within 18 cm of the previously selected public projection. Components may include clover or
     robot surfaces. The lower-edge point is only a visual hypothesis; all usual
     LiDAR, alignment and independent contact checks still apply.
     """
@@ -122,6 +151,7 @@ def pixel_candidates(pixels,obs):
             masks.append((min(p[0] for p in corners)-.006,min(p[1] for p in corners)-.006,max(p[0] for p in corners)+.006,max(p[1] for p in corners)+.006))
         except ValueError:pass
     candidates=[]
+    anchor=(obs.get('crown_projection') or {}).get('world') if pose['position'][1]<=.55 else None
     regions=[dict(c,color='yellow-green') for c in components(pixels,'yellow_green',include_bounds=True)]+[dict(c,color='green') for c in components(pixels,'vegetation',include_bounds=True)]
     for component in regions:
         if component['area']<4:continue
@@ -131,6 +161,10 @@ def pixel_candidates(pixels,obs):
             p=project_ground(obs['frame']['camera'],component['u'],component['v'])
             ik([p[0],.13,p[2],0,0,0],obs['base'])
         except ValueError:continue
-        candidates.append(dict(id='c'+str(len(candidates)),**component))
-        if len(candidates)==8:break
-    return candidates
+        if anchor:
+            distance=math.hypot(p[0]-anchor['x'],p[2]-anchor['z'])
+            if distance>=.18:continue
+            component=dict(component,refinement_distance_m=round(distance,4))
+        candidates.append(component)
+    if anchor:candidates.sort(key=lambda c:c['refinement_distance_m'])
+    return [dict(id='c'+str(i),**c) for i,c in enumerate(candidates[:8])]

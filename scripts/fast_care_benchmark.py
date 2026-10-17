@@ -1,7 +1,7 @@
 """Measure an isolated live full-care run. Requires its orchard browser tab open.
 
 No synthetic sensors or hidden-target controller are used. A passing exit code
-requires all ten physical care checks, all five workers and <=180 real seconds.
+requires all ten physical care checks, all five workers and the selected wall budget (default 180 seconds).
 """
 import argparse
 import collections
@@ -21,19 +21,28 @@ def main():
     parser.add_argument('--port',type=int,default=8766)
     parser.add_argument('--seed',type=int,default=7)
     parser.add_argument('--start',action='store_true')
+    parser.add_argument('--seconds',type=int,default=180)
     parser.add_argument('--controller',choices=['standard','ultra_fast'],default='ultra_fast')
     args=parser.parse_args();base=f'http://127.0.0.1:{args.port}';started=time.monotonic()
     if args.start:
-        state=api(base,'/api/reset',dict(mission='full_care',tree_count=10,seed=args.seed,engine='crusoe',speed=16,care_controller=args.controller))
+        state=api(base,'/api/reset',dict(mission='full_care',tree_count=10,seed=args.seed,engine='crusoe',speed=16,care_controller=args.controller,wall_seconds=args.seconds))
         api(base,'/api/start',{})
     else:state=api(base,'/api/state')
-    session=state['id'];last=-10;uninterrupted=True
+    session=state['id'];last=-10;uninterrupted=True;milestones=[];previous={};last_completed=0
     if state.get('mission_type')!='fleet_care':raise SystemExit('Not a full-care fleet')
     while True:
         state=api(base,'/api/state')
         if state['id']!=session:raise SystemExit('Run replaced externally')
         if state['status']=='paused':uninterrupted=False
         elapsed=time.monotonic()-started
+        for worker,w in state['care_workers'].items():
+            signature=(w['id'],w['phase'],w['status'])
+            if previous.get(worker)!=signature:
+                milestones.append(dict(seconds=round(elapsed,2),worker=worker,session_id=w['id'],phase=w['phase'],status=w['status']))
+                previous[worker]=signature
+        completed=sum(a['status']=='completed' for a in state['assignments'].values())
+        if completed!=last_completed:
+            milestones.append(dict(seconds=round(elapsed,2),completed_trees=completed));last_completed=completed
         if elapsed-last>=10:
             print(json.dumps(dict(wall_seconds=round(elapsed,1),status=state['status'],calls=state['inference']['calls'],completed=sum(a['status']=='completed' for a in state['assignments'].values()),workers={k:dict(stage=w['phase'],status=w['status'],waiting=w['waiting']) for k,w in state['care_workers'].items()})),flush=True);last=elapsed
         if state['status'] in ('completed','failed','blocked','aborted','storage_blocked'):break
@@ -43,12 +52,12 @@ def main():
     deadline=time.monotonic()+15
     while state['inference']['pending_calls'] and time.monotonic()<deadline:
         time.sleep(.5);state=api(base,'/api/state')
-    report=dict(session_id=session,controller=args.controller,seed=args.seed,status=state['status'],checks=state['checks'],
+    report=dict(session_id=session,controller=args.controller,seed=args.seed,wall_budget_seconds=args.seconds,status=state['status'],checks=state['checks'],
         measured_wall_seconds=finished if args.start else None,active_wall_seconds=state['runtime_state']['active_wall'],
         timing_scope='Reset through terminal outcome' if args.start else 'Attached monitor; observational only',
         inference=state['inference'],config=state['config'],assignments=state['assignments'],background_sync=state.get('background_sync'),
-        workers={k:dict(id=w['id'],phase=w['phase'],status=w['status'],feedback=w['feedback'],inference=w['inference'],storage_timing=w.get('storage_timing',{})) for k,w in state['care_workers'].items()})
-    report['passed']=args.start and uninterrupted and len(state['tasks'])==10 and len(state['assignments'])==10 and state['status']=='completed' and all(state['checks'].values()) and finished<=180 and not state['inference']['pending_calls']
+        milestones=milestones,workers={k:dict(id=w['id'],phase=w['phase'],status=w['status'],feedback=w['feedback'],inference=w['inference'],storage_timing=w.get('storage_timing',{})) for k,w in state['care_workers'].items()})
+    report['passed']=args.start and uninterrupted and len(state['tasks'])==10 and len(state['assignments'])==10 and state['status']=='completed' and all(state['checks'].values()) and finished<=args.seconds and not state['inference']['pending_calls']
     directory=pathlib.Path('docs/evaluations');directory.mkdir(parents=True,exist_ok=True)
     path=directory/f'ultra-fast-{session}.json';path.write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps(dict(passed=report['passed'],report=str(path),seconds=round(finished,2))),flush=True)

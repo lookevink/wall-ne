@@ -67,6 +67,76 @@ class FastControlTests(unittest.TestCase):
         w=OrchardCare(tree_count=1);w.phase='extraction';w.status='running';w.nonempty_scan=True;w.must_reopen=True;w.opening=0;frame(w)
         self.assertEqual(automatic_action(w.observations())[0],'open_gripper')
 
+    def test_empty_local_candidates_offer_view_recovery_and_reject_target_jumps(self):
+        import json
+        from pathlib import Path
+        from simulator.inference import Adapter,InferenceError,build_request
+        from simulator.fast_control import viewpoint_pose
+        obs=json.loads((Path(__file__).parent/'fixtures/fast-grasp-approach.json').read_text())
+        obs.update(controller='ultra_fast',trial='precision',available_actions=['project_ground','move_arm','stop'],pixel_candidates=[])
+        obs['viewpoint_pose']=viewpoint_pose(obs)
+        obs['refinement_region']=dict(center=obs['crown_projection']['world'],radius_m=.18)
+        body=build_request(obs,model='test')
+        self.assertEqual([t['function']['name'] for t in body['tools']],['move_arm','stop'])
+        # Gemini function schemas only support string-valued enums.
+        pose_schema=body['tools'][0]['function']['parameters']['properties']['pose']
+        self.assertNotIn('enum',pose_schema)
+        self.assertEqual(pose_schema['items']['type'],'number')
+        class Reply:
+            def __enter__(self):return self
+            def __exit__(self,*args):pass
+            def read(self,*args):return json.dumps(self.body).encode()
+        reply=Reply();a=Adapter('crusoe');a.key='test'
+        def response(name,**args):
+            reply.body=dict(choices=[dict(message=dict(tool_calls=[dict(type='function',function=dict(name=name,arguments=json.dumps(dict(frame_id=obs['frame']['id'],reason='Inspect from another view',**args))))]))])
+        response('move_arm',pose=obs['viewpoint_pose'])
+        with patch('urllib.request.urlopen',return_value=reply):decision=a.call(obs)['decision']
+        self.assertEqual(decision['arguments']['pose'],obs['viewpoint_pose'])
+        response('move_arm',pose=[99,99,99,0,0,0])
+        with patch('urllib.request.urlopen',return_value=reply):
+            with self.assertRaisesRegex(InferenceError,'viewpoint'):a.call(obs)
+        # Even a raw coordinate reply cannot bypass the radius when the tool is offered.
+        obs['pixel_candidates']=[dict(id='local',u=.4957,v=.7298)]
+        response('project_ground',u=.7633413461538462,v=.5835470085470085)
+        with patch('urllib.request.urlopen',return_value=reply):
+            with self.assertRaisesRegex(InferenceError,'refinement region'):a.call(obs)
+
+    def test_recorded_refinement_keeps_the_selected_root_neighborhood(self):
+        import json,math
+        from pathlib import Path
+        from simulator.png import decode
+        from simulator.fast_control import pixel_candidates
+        fixture=Path(__file__).parent/'fixtures'
+        obs=json.loads((fixture/'fast-grasp-approach.json').read_text())
+        pixels=decode((fixture/'fast-grasp-approach.png').read_bytes())[2]
+        candidates=pixel_candidates(pixels,obs)
+        anchor=obs['crown_projection']['world'];distances=[]
+        for c in candidates:
+            p=project_ground(obs['frame']['camera'],c['u'],c['v'])
+            distances.append(math.hypot(p[0]-anchor['x'],p[2]-anchor['z']))
+        self.assertTrue(distances)
+        self.assertLess(max(distances),.18,'Refinement must not jump to neighboring clover')
+        self.assertLess(distances[0],.025,'The recorded stem-base component should lead the local candidates')
+        self.assertNotIn('weed',obs)
+
+    def test_stalled_grasp_changes_view_before_more_visual_claims(self):
+        from simulator.arm import ik
+        w=OrchardCare(tree_count=1);w.status='running';w.begin();self.settle(w)
+        w.phase='extraction';w.nonempty_scan=True
+        x,_,z=w.tool_pose()['position'];w.joints=ik([x,.13,z,0,0,0],w.base())
+        w.crown_projection=dict(world=dict(x=x,y=.08,z=z),revision=w.revision)
+        w.control_progress=None
+        for _ in range(6):w.record_control_progress('capture_image')
+        frame(w)
+        self.assertTrue(w.control_progress['recovery_required'])
+        obs=w.observations();decision=automatic_action(obs)
+        self.assertIsNotNone(decision,'A stalled grasp needs a changed viewpoint, not another rejected model claim')
+        self.assertEqual(decision[0],'move_arm')
+        self.act(w,*decision);w.record_control_progress('motion_completed')
+        self.assertFalse(w.control_progress['recovery_required'])
+        self.assertFalse(w.holding)
+        self.assertIn('controller_progress',vision_observation(obs))
+
     def test_false_alignment_cannot_close_and_contact_requires_load(self):
         w=OrchardCare(tree_count=1);w.phase='extraction';w.status='running';w.nonempty_scan=True;frame(w)
         obs=w.observations();obs['protocol']['alignment']={'aligned':False};obs['tool_pose']['position']=[0,.13,1];obs['available_actions']+=['assess_alignment']
@@ -86,6 +156,21 @@ class FastControlTests(unittest.TestCase):
         self.assertEqual(runtime.adapter('treatment').timeout,6)
         self.assertEqual(runtime.adapter('treatment').max_tokens,512)
         self.assertEqual(runtime.config['fallback']['after_failures'],1)
+        runtime.provider_routes['treatment']=dict(fallback=True)
+        self.assertEqual(runtime.adapter('treatment').timeout,15)
+
+    def test_fast_presentation_run_uses_declared_wall_budget(self):
+        from simulator.fleet_care import FleetCareRuntime
+        with patch('threading.Thread.start'):
+            runtime=FleetCareRuntime(config=dict(mode='vision',engine='crusoe',care_controller='ultra_fast'))
+        self.addCleanup(runtime.close)
+        runtime.world.status='running';runtime.active_wall=181
+        with patch.object(runtime.world,'options',return_value=[]),patch.object(runtime,'persist',return_value=True):
+            runtime.step(.05)
+        self.assertEqual(runtime.world.status,'running')
+        runtime.world.contract['wall_limit']=180
+        with patch.object(runtime,'persist',return_value=True):runtime.step(.05)
+        self.assertEqual(runtime.world.status,'blocked')
 
     def test_fast_scheduler_launches_all_five_without_model(self):
         from simulator.fleet_care import FleetCareRuntime

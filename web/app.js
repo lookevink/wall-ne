@@ -53,13 +53,14 @@ function describe(e){
 }
 // Everything here is read from the authoritative snapshot: health is code-computed, decisions are the model's own words.
 function updateHud(state){
-  const id=view?.expanded,hud=$('worker-hud'),v=id&&state.vehicles?.[id];
+  const id=view?.expanded,hud=$('worker-hud'),worker=state.care_workers?.[id],v=worker?.robot||(id&&state.vehicles?.[id]);
+  state=worker||state;
   if(!v){hud.hidden=true;return;}
   const t=state.telemetry?.[id],h=state.health?.[id];hud.hidden=false;
   $('hud-id').textContent=id;$('hud-role').textContent=v.role==='retriever'?'Recovery unit':v.lifecycle==='spare'?'Reserve worker':'Orchard worker';
   const status=h?.status||(v.lifecycle==='disabled'?'disabled':'healthy');$('hud-health').textContent=status.replaceAll('_',' ');$('hud-health').dataset.status=status;
-  $('hud-state').textContent=`${v.lifecycle} · ${v.action?.kind||'standby'}${v.action?.stage?' · '+v.action.stage:''}`;
-  $('hud-task').textContent=v.action?.zone||v.action?.target||t?.task_id||(state.arena==='orchard'&&id==='W1'&&state.phase?state.phase:'—');
+  $('hud-state').textContent=`${worker?.status||v.lifecycle} · ${v.action?.kind||worker?.waiting||'standby'}${v.action?.stage?' · '+v.action.stage:''}`;
+  $('hud-task').textContent=v.action?.zone||v.action?.target||t?.task_id||(state.arena==='orchard'&&state.phase?state.phase:'—');
   $('hud-battery').textContent=`${v.battery.toFixed(1)}% · min ${Number(v.minimum_battery??v.battery).toFixed(1)}%`;$('hud-water').textContent=v.water==null?'—':`${v.water.toFixed(1)} L`;
   $('hud-heartbeat').textContent=h?`${h.heartbeat_age.toFixed(1)} s · ${h.waiting_reason||'no wait'}`:'—';
   $('hud-progress').textContent=t?`r${t.last_progress_revision} · ${Math.max(0,state.time-(t.last_progress_sim_time??state.time)).toFixed(1)} s ago`:'—';

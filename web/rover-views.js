@@ -33,11 +33,15 @@ export class RoverViews {
   update(state) {
     for(const feed of this.feeds){
       if(feed.id===null)continue;
-      if(feed.id==='WRIST'){feed.tile.hidden=state.arena!=='orchard';feed.tile.querySelector('[data-feed-status]').textContent=state.phase||'Wrist';continue;}
-      const vehicle=state.vehicles[feed.id];if(!vehicle)continue;
-      feed.tile.querySelector('[data-feed-status]').textContent=vehicle.lifecycle==='spare'?'Reserve':vehicle.action?.kind||vehicle.lifecycle;
+      if(feed.id==='WRIST'){
+        const workers=Object.values(state.care_workers||{}),selected=state.care_workers?.[this.view.expanded]||workers.find(w=>w.status==='running')||workers[0];
+        feed.tile.hidden=state.arena!=='orchard';feed.tile.querySelector('[data-feed-status]').textContent=selected?`${selected.robot.id} · ${selected.phase}`:state.phase||'Wrist';
+        feed.tile.setAttribute('aria-label',`Show ${selected?.robot.id||'W1'} wrist decision camera`);continue;
+      }
+      const worker=state.care_workers?.[feed.id],vehicle=worker?.robot||state.vehicles[feed.id];if(!vehicle)continue;
+      feed.tile.querySelector('[data-feed-status]').textContent=worker?`${worker.phase} · ${worker.status}`:vehicle.lifecycle==='spare'?'Reserve':vehicle.action?.kind||vehicle.lifecycle;
       feed.tile.querySelector('[data-feed-battery]').textContent=`${vehicle.battery.toFixed(0)}%`;
-      feed.tile.querySelector('.feed-indicator').dataset.health=state.health?.[feed.id]?.status||'';
+      feed.tile.querySelector('.feed-indicator').dataset.health=(worker||state).health?.[feed.id]?.status||'';
     }
   }
   resize() {

@@ -1,0 +1,1671 @@
+{
+  "session_id": "de1f2cfd-2196-4244-b9c0-27144d8bbce3",
+  "controller": "ultra_fast",
+  "seed": 7,
+  "wall_budget_seconds": 360,
+  "status": "aborted",
+  "checks": {
+    "all_workers_used": true,
+    "care_verified": false,
+    "inventory": true,
+    "reserve": true,
+    "returned": false,
+    "trees_complete": false
+  },
+  "measured_wall_seconds": 261.770654292,
+  "active_wall_seconds": 260.06288875,
+  "timing_scope": "Reset through terminal outcome",
+  "inference": {
+    "calls": 61,
+    "cost": null,
+    "failed_calls": 11,
+    "latency_seconds": 377.14815529599997,
+    "pending_calls": 0,
+    "results": [],
+    "tokens": 280995
+  },
+  "config": {
+    "arena": "orchard",
+    "capture_training_inputs": true,
+    "care_controller": "ultra_fast",
+    "code_hash": "f360d9507bfb4a5003c863ffdcd14868fafb6c878c741e3954757f033cf38fd4",
+    "engine": "crusoe",
+    "fallback": {
+      "after_failures": 1,
+      "engine": "gemini",
+      "models": {
+        "orchestrator": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "planner": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "retriever": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+        "treatment": "google/gemini-2.5-flash",
+        "verifier": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "worker": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
+      },
+      "provider_base": "https://ai-gateway.vercel.sh/v1"
+    },
+    "inference_timeout": 6,
+    "max_tokens": 512,
+    "mode": "vision",
+    "models": {
+      "orchestrator": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "planner": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "retriever": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "treatment": "google/gemma-4-31b-it",
+      "verifier": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "worker": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
+    },
+    "provider_base": "https://api.inference.crusoecloud.com/v1",
+    "speed": 16,
+    "treatment_code_hash": "0cd65fd1121a0b0b6ba0693efa545e32159050a94be9201a61175b3ebc0340c1",
+    "trial": null
+  },
+  "assignments": {
+    "0": {
+      "session_id": "3f374501-d997-4d7b-8804-9582f5758342",
+      "status": "completed",
+      "vehicle": "W1"
+    },
+    "1": {
+      "session_id": "8458b3de-4c46-4ab0-b822-3a8121d16fd7",
+      "status": "completed",
+      "vehicle": "W2"
+    },
+    "2": {
+      "session_id": "f76dffe6-23f2-4054-ba52-ba061b4eed7f",
+      "status": "aborted",
+      "vehicle": "W3"
+    },
+    "3": {
+      "session_id": "a964b71f-3f56-4792-958d-312bc1df2f90",
+      "status": "aborted",
+      "vehicle": "W4"
+    },
+    "4": {
+      "session_id": "e2d2c009-c54d-4ec7-b8bc-e670c27e86ec",
+      "status": "completed",
+      "vehicle": "W5"
+    },
+    "5": {
+      "session_id": "2a2b99c3-5f2b-4ec0-aa55-f1285ae51df6",
+      "status": "aborted",
+      "vehicle": "W1"
+    },
+    "6": {
+      "session_id": "10507b29-264d-4296-ad90-2312c81ddb3b",
+      "status": "completed",
+      "vehicle": "W2"
+    },
+    "7": {
+      "session_id": "614d156d-2de9-4a19-aa33-a54ef36503ec",
+      "status": "aborted",
+      "vehicle": "W5"
+    },
+    "8": {
+      "session_id": "fce3d194-c1e7-4262-9988-b41e84a37a73",
+      "status": "assigned",
+      "vehicle": "W2"
+    }
+  },
+  "background_sync": {
+    "pending_operations": 110,
+    "recovery_errors": {},
+    "sessions": {
+      "0054a525-332e-4e3e-9ade-fa25299a6451": {
+        "cloud_committed_sequence": 201,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 201,
+        "synced": true
+      },
+      "08530f17-5f37-4488-bcd9-ddcebb4efc08": {
+        "cloud_committed_sequence": 170,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 170,
+        "synced": true
+      },
+      "10507b29-264d-4296-ad90-2312c81ddb3b": {
+        "cloud_committed_sequence": 365,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 365,
+        "synced": true
+      },
+      "150dace5-d14b-49e1-8d52-b8928c50f5d3": {
+        "cloud_committed_sequence": 405,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 405,
+        "synced": true
+      },
+      "17c5a3a8-a358-4992-8796-81129cb74af5": {
+        "cloud_committed_sequence": 193,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 193,
+        "synced": true
+      },
+      "20e50776-eaa3-4208-a984-cc2d827b2311": {
+        "cloud_committed_sequence": 314,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 314,
+        "synced": true
+      },
+      "290813f2-63f4-4dd2-8759-4d5d6c6a3384": {
+        "cloud_committed_sequence": 1085,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 1085,
+        "synced": true
+      },
+      "2a2b99c3-5f2b-4ec0-aa55-f1285ae51df6": {
+        "cloud_committed_sequence": 200,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 200,
+        "synced": true
+      },
+      "2ba39659-1ee6-4902-99af-e305c75906cf": {
+        "cloud_committed_sequence": 222,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 222,
+        "synced": true
+      },
+      "30274e73-eca5-4874-84f4-5f03f9f2b4e3": {
+        "cloud_committed_sequence": 234,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 234,
+        "synced": true
+      },
+      "32546315-fcdb-4c48-9305-47dcc83f9aa2": {
+        "cloud_committed_sequence": 251,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 251,
+        "synced": true
+      },
+      "3beca442-74e0-4d53-82dd-0192d6e721a4": {
+        "cloud_committed_sequence": 285,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 285,
+        "synced": true
+      },
+      "3ea727be-bfad-4ce4-b597-3b0d34b71bc2": {
+        "cloud_committed_sequence": 440,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 440,
+        "synced": true
+      },
+      "3f374501-d997-4d7b-8804-9582f5758342": {
+        "cloud_committed_sequence": 266,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 266,
+        "synced": true
+      },
+      "461aeaf1-35d7-4d32-b508-ffdcdff1d5eb": {
+        "cloud_committed_sequence": 264,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 264,
+        "synced": true
+      },
+      "4e26f3cd-978b-456c-a40b-75c478aa5f87": {
+        "cloud_committed_sequence": 193,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 193,
+        "synced": true
+      },
+      "55c4eb03-250e-4e53-9d9a-de9f29672454": {
+        "cloud_committed_sequence": 301,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 301,
+        "synced": true
+      },
+      "585c0425-bd3f-4736-be24-9e956e97cba4": {
+        "cloud_committed_sequence": 254,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 254,
+        "synced": true
+      },
+      "59190eeb-a199-4ca7-ab0c-c81c96e44c88": {
+        "cloud_committed_sequence": 257,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 257,
+        "synced": true
+      },
+      "614d156d-2de9-4a19-aa33-a54ef36503ec": {
+        "cloud_committed_sequence": 179,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 179,
+        "synced": true
+      },
+      "66c64dfc-d0cf-4bc4-989d-db907cd27be6": {
+        "cloud_committed_sequence": 1052,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 1052,
+        "synced": true
+      },
+      "67f6b375-23df-4819-a111-502764596971": {
+        "cloud_committed_sequence": 299,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 299,
+        "synced": true
+      },
+      "6e950d2b-ee15-4d9b-abea-16ff4f4cf1aa": {
+        "cloud_committed_sequence": 319,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 319,
+        "synced": true
+      },
+      "7dfa7886-f52c-47ab-bd61-84b7cfe2cdb6": {
+        "cloud_committed_sequence": 1075,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 1075,
+        "synced": true
+      },
+      "821bbf82-2e1d-4f3f-ba75-934c98ae7e0b": {
+        "cloud_committed_sequence": 231,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 231,
+        "synced": true
+      },
+      "8458b3de-4c46-4ab0-b822-3a8121d16fd7": {
+        "cloud_committed_sequence": 265,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 265,
+        "synced": true
+      },
+      "8697bfd8-d5b7-4f2c-8c8c-7acfec996ed0": {
+        "cloud_committed_sequence": 299,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 299,
+        "synced": true
+      },
+      "8994a396-02f6-40e2-9c72-09c76d9b8ada": {
+        "cloud_committed_sequence": 1119,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 1119,
+        "synced": true
+      },
+      "96be5d94-4366-4704-b7f4-9edde2d1686d": {
+        "cloud_committed_sequence": 261,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 261,
+        "synced": true
+      },
+      "a02911b3-6d41-4b07-935f-2fd354d8cb0d": {
+        "cloud_committed_sequence": 301,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 301,
+        "synced": true
+      },
+      "a964b71f-3f56-4792-958d-312bc1df2f90": {
+        "cloud_committed_sequence": 202,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 202,
+        "synced": true
+      },
+      "aaecd397-0cb2-48a5-baaa-222ee99c9db3": {
+        "cloud_committed_sequence": 326,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 326,
+        "synced": true
+      },
+      "b5355537-15d5-4b9d-af3d-06c423ab82fd": {
+        "cloud_committed_sequence": 305,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 305,
+        "synced": true
+      },
+      "b60cc81b-7d5a-4301-b7fc-6d14e4493237": {
+        "cloud_committed_sequence": 315,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 315,
+        "synced": true
+      },
+      "c4e88c62-c2d4-4590-aee3-d2c34b5558aa": {
+        "cloud_committed_sequence": 175,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 175,
+        "synced": true
+      },
+      "d190c728-65a6-42f1-825d-66db915e422e": {
+        "cloud_committed_sequence": 262,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 262,
+        "synced": true
+      },
+      "d2c29209-0e84-45bc-8d4b-6b3e5b8f74be": {
+        "cloud_committed_sequence": 1088,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 1088,
+        "synced": true
+      },
+      "d5b56715-d957-400d-a60d-c01c345e24ec": {
+        "cloud_committed_sequence": 174,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 174,
+        "synced": true
+      },
+      "de1f2cfd-2196-4244-b9c0-27144d8bbce3": {
+        "cloud_committed_sequence": 1433,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 10,
+        "queued_sequence": 1552,
+        "synced": false
+      },
+      "e04e1f2e-5657-4bc8-84b6-8f7b9bf5a52c": {
+        "cloud_committed_sequence": 261,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 261,
+        "synced": true
+      },
+      "e2d2c009-c54d-4ec7-b8bc-e670c27e86ec": {
+        "cloud_committed_sequence": 266,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 266,
+        "synced": true
+      },
+      "f6ba1a09-0a7b-4eab-ad9e-90dd56c65871": {
+        "cloud_committed_sequence": 209,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 209,
+        "synced": true
+      },
+      "f76dffe6-23f2-4054-ba52-ba061b4eed7f": {
+        "cloud_committed_sequence": 174,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 174,
+        "synced": true
+      },
+      "f81762d3-dbc5-406b-bb87-d5cbbf4e6dff": {
+        "cloud_committed_sequence": 329,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 329,
+        "synced": true
+      },
+      "fce3d194-c1e7-4262-9988-b41e84a37a73": {
+        "cloud_committed_sequence": 136,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 100,
+        "queued_sequence": 344,
+        "synced": false
+      }
+    },
+    "synced": false
+  },
+  "workers": {
+    "W1": {
+      "id": "2a2b99c3-5f2b-4ec0-aa55-f1285ae51df6",
+      "phase": "extraction",
+      "status": "aborted",
+      "feedback": "Selected ground ray world point: [-10.85676, 0.08, 14.05947]. Use x,z with tool-center y=0.13 only if RGB confirms the weed root crown.",
+      "inference": {
+        "calls": 6,
+        "cost": null,
+        "failed_calls": 1,
+        "latency_seconds": 35.962626250999975,
+        "pending_calls": 0,
+        "results": [
+          {
+            "cost": null,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "a213ae46-e217-4e54-a9b0-5ddb95813712",
+                "u": 0.5171875,
+                "v": 0.6773540489642185
+              },
+              "pixel_candidate": {
+                "area": 59,
+                "bounds": [
+                  0.509375,
+                  0.6277777777777778,
+                  0.525,
+                  0.7277777777777777
+                ],
+                "color": "purple",
+                "frame_id": "a213ae46-e217-4e54-a9b0-5ddb95813712",
+                "id": "p0",
+                "u": 0.5171875,
+                "v": 0.6773540489642185
+              },
+              "rationale": "Purple caterpillar identified on tree trunk."
+            },
+            "fallback": false,
+            "id": "7d31a20b-6370-4e68-9fd3-0e8682ac9aee",
+            "latency": 7.954279416999995,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "dcb25cac-25fd-49be-931d-efc257536463",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": "2d5b7adc23314923818da78b7bb013f0",
+            "returned_model": "google/gemma-4-31b-it",
+            "usage": {
+              "completion_tokens": 75,
+              "prompt_tokens": 2489,
+              "total_tokens": 2564
+            }
+          },
+          {
+            "cost": null,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "4786c003-e190-4b33-ae30-8b8e26fbba30",
+                "u": 0.4725852272727272,
+                "v": 0.5324074074074073
+              },
+              "pixel_candidate": {
+                "area": 33,
+                "bounds": [
+                  0.465625,
+                  0.5,
+                  0.478125,
+                  0.5666666666666667
+                ],
+                "color": "purple",
+                "frame_id": "4786c003-e190-4b33-ae30-8b8e26fbba30",
+                "id": "p0",
+                "u": 0.4725852272727272,
+                "v": 0.5324074074074073
+              },
+              "rationale": "Purple caterpillar detected on tree trunk."
+            },
+            "fallback": false,
+            "id": "753648de-7278-43b6-b938-8d06270f9eb7",
+            "latency": 7.050194417,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "e178e87f-3209-4b22-b9c0-ebacbc91ae27",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": "da3ee8ee9f4442a281b85988c527536a",
+            "returned_model": "google/gemma-4-31b-it",
+            "usage": {
+              "completion_tokens": 74,
+              "prompt_tokens": 2381,
+              "total_tokens": 2455
+            }
+          },
+          {
+            "cost": null,
+            "fallback": false,
+            "id": "e15bd02c-109b-467d-b3a2-7a7f94d8ab54",
+            "latency": 7.806781709000006,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "7822cfca-f01c-4b7e-8a5e-4f1551563910",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": 0.0014173,
+            "decision": {
+              "action": "scan_lidar",
+              "arguments": {
+                "frame_id": "2799248a-a178-496c-9e32-84d061091e07",
+                "span": 0.16,
+                "u": 0.359765625,
+                "v": 0.6555555555555556
+              },
+              "pixel_candidate": {
+                "area": 470,
+                "bounds": [
+                  0.284375,
+                  0.46111111111111114,
+                  0.39375,
+                  0.6666666666666666
+                ],
+                "color": "green",
+                "frame_id": "2799248a-a178-496c-9e32-84d061091e07",
+                "id": "c0",
+                "u": 0.359765625,
+                "v": 0.6555555555555556
+              },
+              "rationale": "Weed root crown visible at the soil line."
+            },
+            "fallback": true,
+            "id": "a5aaed46-d056-4e4f-accf-d06f2a0f9b77",
+            "latency": 4.779275624999997,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "0b220bca-ef59-4688-9077-ccb31d6fa6ff",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561FH2STXQWRJZJMF46ZJWN",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 79,
+              "prompt_tokens": 4066,
+              "total_tokens": 4145
+            }
+          },
+          {
+            "cost": 0.0027047,
+            "decision": {
+              "action": "project_ground",
+              "arguments": {
+                "frame_id": "31fa4cf8-39dc-4587-a5ae-8dd69e51b296",
+                "u": 0.5734375,
+                "v": 0.7726190476190476
+              },
+              "pixel_candidate": {
+                "area": 3341,
+                "bounds": [
+                  0.31875,
+                  0.14444444444444443,
+                  0.634375,
+                  0.7833333333333333
+                ],
+                "color": "green",
+                "frame_id": "31fa4cf8-39dc-4587-a5ae-8dd69e51b296",
+                "id": "c3",
+                "refinement_distance_m": 0.1008,
+                "u": 0.5734375,
+                "v": 0.7726190476190476
+              },
+              "rationale": "Weed root crown visible at the base of the plant."
+            },
+            "fallback": true,
+            "id": "c7bc951f-fcb1-475b-8a1b-7eaf7cb60916",
+            "latency": 3.970956749999999,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "6c6e7d49-7e99-430a-b872-9613b4ff3b48",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561FQK28M654CRWDZK10RYH",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 68,
+              "prompt_tokens": 8449,
+              "total_tokens": 8517
+            }
+          },
+          {
+            "cost": 0.0026105,
+            "decision": {
+              "action": "stop",
+              "arguments": {
+                "frame_id": "120f12c5-9d83-4119-a840-5f22f1a0678f"
+              },
+              "rationale": "No weed root crown is visible, only the robot arm and a plant leaf."
+            },
+            "fallback": true,
+            "id": "e733cf93-7fb1-42c3-8e79-1d868a7197a9",
+            "latency": 4.401138332999977,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "c824ac06-52c7-4741-8519-b53112ff52d2",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561FWREKPGSKE9BGZEK5230",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 68,
+              "prompt_tokens": 8135,
+              "total_tokens": 8203
+            }
+          }
+        ],
+        "tokens": 25884
+      },
+      "storage_timing": {
+        "artifact": {
+          "calls": 38,
+          "max_seconds": 4.539082125000007,
+          "seconds": 28.51121083500007
+        },
+        "commit": {
+          "calls": 71,
+          "max_seconds": 1.6622545829999922,
+          "seconds": 31.60619525500003
+        },
+        "metadata": {
+          "calls": 16,
+          "max_seconds": 1.2207932499999998,
+          "seconds": 6.991644997999984
+        }
+      }
+    },
+    "W2": {
+      "id": "fce3d194-c1e7-4262-9988-b41e84a37a73",
+      "phase": "extraction",
+      "status": "paused",
+      "feedback": "Selected ground ray world point: [14.52031, 0.08, 13.41723]. Use x,z with tool-center y=0.13 only if RGB confirms the weed root crown.",
+      "inference": {
+        "calls": 11,
+        "cost": null,
+        "failed_calls": 3,
+        "latency_seconds": 86.21092408299995,
+        "pending_calls": 0,
+        "results": [
+          {
+            "cost": null,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "fc1615f7-0381-46e7-b85b-2077e974fb5e",
+                "u": 0.5169602272727273,
+                "v": 0.6763131313131313
+              },
+              "pixel_candidate": {
+                "area": 55,
+                "bounds": [
+                  0.509375,
+                  0.6277777777777778,
+                  0.525,
+                  0.7277777777777777
+                ],
+                "color": "purple",
+                "frame_id": "fc1615f7-0381-46e7-b85b-2077e974fb5e",
+                "id": "p0",
+                "u": 0.5169602272727273,
+                "v": 0.6763131313131313
+              },
+              "rationale": "Purple caterpillar detected on tree trunk."
+            },
+            "fallback": false,
+            "id": "14a14c79-ee96-4c67-97b9-a4451ba25f1c",
+            "latency": 7.065177915999982,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "156c55ef-3c12-492f-b12a-24f22253d64e",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": "05ee4c01d923480a9d83b70cda276f4f",
+            "returned_model": "google/gemma-4-31b-it",
+            "usage": {
+              "completion_tokens": 75,
+              "prompt_tokens": 2440,
+              "total_tokens": 2515
+            }
+          },
+          {
+            "cost": null,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "763ee74f-bec5-4a29-b763-cdf166e550f6",
+                "u": 0.4711588541666667,
+                "v": 0.5185185185185185
+              },
+              "pixel_candidate": {
+                "area": 48,
+                "bounds": [
+                  0.4625,
+                  0.4722222222222222,
+                  0.478125,
+                  0.5666666666666667
+                ],
+                "color": "purple",
+                "frame_id": "763ee74f-bec5-4a29-b763-cdf166e550f6",
+                "id": "p0",
+                "u": 0.4711588541666667,
+                "v": 0.5185185185185185
+              },
+              "rationale": "Purple caterpillar detected on tree trunk."
+            },
+            "fallback": false,
+            "id": "2a422f05-8d63-49f1-ab61-e220beaa601f",
+            "latency": 7.534826124999995,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "0a4c5375-f6e0-41c0-aef9-3eb6c4466220",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": "2dbf4658d37445d0bc8210c73a84be4b",
+            "returned_model": "google/gemma-4-31b-it",
+            "usage": {
+              "completion_tokens": 72,
+              "prompt_tokens": 2320,
+              "total_tokens": 2392
+            }
+          },
+          {
+            "cost": null,
+            "fallback": false,
+            "id": "6459bbe4-ef83-44b9-ad57-7d096c0a2a86",
+            "latency": 7.606998874999988,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "54b255cf-2146-47fb-b909-99b3a18a18d9",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": 0.0016187,
+            "decision": {
+              "action": "scan_lidar",
+              "arguments": {
+                "frame_id": "2c05fb10-d0a2-4cb9-9c69-801f425164fe",
+                "span": 0.16,
+                "u": 0.596875,
+                "v": 0.5694444444444444
+              },
+              "pixel_candidate": {
+                "area": 449,
+                "bounds": [
+                  0.571875,
+                  0.14444444444444443,
+                  0.634375,
+                  0.5777777777777777
+                ],
+                "color": "green",
+                "frame_id": "2c05fb10-d0a2-4cb9-9c69-801f425164fe",
+                "id": "c5",
+                "u": 0.596875,
+                "v": 0.5694444444444444
+              },
+              "rationale": "Weed root crown where it meets soil"
+            },
+            "fallback": true,
+            "id": "e0ac954b-5a4d-4f61-bda6-ee1087d9d4a1",
+            "latency": 4.629736959000013,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "aac64b8e-eef4-416e-99b1-44e6db358e5e",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561J0M8VD0YSVD4WP8D2FA3",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 74,
+              "prompt_tokens": 4779,
+              "total_tokens": 4853
+            }
+          },
+          {
+            "cost": 0.0023625,
+            "decision": {
+              "action": "project_ground",
+              "arguments": {
+                "frame_id": "6b11c9bb-f618-4a0d-9f2e-8a55dcfb94c4",
+                "u": 0.49,
+                "v": 0.67
+              },
+              "rationale": "Weed root crown visible at the base of the stem."
+            },
+            "fallback": true,
+            "id": "c0ce537b-db35-495b-8ea1-660bff10fba2",
+            "latency": 4.587205374999996,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "9b4bac85-5fd7-4c27-b50e-95a58e9e96d3",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561J722FF9XP3X94J9C0PM7",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 78,
+              "prompt_tokens": 7225,
+              "total_tokens": 7303
+            }
+          },
+          {
+            "cost": 0.0024389,
+            "decision": {
+              "action": "assess_alignment",
+              "arguments": {
+                "depth_consistent": true,
+                "evidence": "The weed stem is clearly visible between the fingers, and the depth appears consistent.",
+                "frame_id": "ccf37228-159f-49ed-a15c-a19818db378e",
+                "stem_between_fingers": true
+              },
+              "rationale": "The weed stem is between the fingers and the depth is consistent."
+            },
+            "fallback": true,
+            "id": "b3a964cc-3ce7-42a0-9465-08b5435a1501",
+            "latency": 3.770800874999992,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "52cfbf18-ca19-485e-bbf7-a18323767b4b",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561JC8AZ16ZA78F196HWF2G",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 98,
+              "prompt_tokens": 7313,
+              "total_tokens": 7411
+            }
+          },
+          {
+            "cost": 0.0026273,
+            "decision": {
+              "action": "scan_lidar",
+              "arguments": {
+                "frame_id": "f26c7278-2fdb-4036-b059-8c4f6478ec3d",
+                "span": 0.16,
+                "u": 0.596875,
+                "v": 0.5694444444444444
+              },
+              "pixel_candidate": {
+                "area": 449,
+                "bounds": [
+                  0.571875,
+                  0.14444444444444443,
+                  0.634375,
+                  0.5777777777777777
+                ],
+                "color": "green",
+                "frame_id": "f26c7278-2fdb-4036-b059-8c4f6478ec3d",
+                "id": "c5",
+                "u": 0.596875,
+                "v": 0.5694444444444444
+              },
+              "rationale": "Weed root crown at soil level"
+            },
+            "fallback": true,
+            "id": "c5a6d93a-dc0f-4e43-a1d7-548268483279",
+            "latency": 4.4558102090000204,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "1f6bf0a8-8427-443a-824b-8f630e639740",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561JKCXFDG0Z278Y3WJDEC5",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 74,
+              "prompt_tokens": 8141,
+              "total_tokens": 8215
+            }
+          },
+          {
+            "cost": 0.0025396,
+            "decision": {
+              "action": "project_ground",
+              "arguments": {
+                "frame_id": "27a49d6f-6394-42b2-8887-f344a2d52253",
+                "u": 0.596875,
+                "v": 0.5694444444444444
+              },
+              "rationale": "Weed root crown visible between robot fingers"
+            },
+            "fallback": true,
+            "id": "dffa3b05-cbb5-4bdc-90f9-4c106041fd11",
+            "latency": 4.808935541000011,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "d27184c6-7a8b-4083-8700-eb40c6f21240",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561JRY44MW3Q0MWQSFM85MR",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 94,
+              "prompt_tokens": 7682,
+              "total_tokens": 7776
+            }
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "f083ff44-ea7e-4b7e-925a-6a155cd3efcb",
+            "latency": 14.516508291999997,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "a96cdf99-0e6d-4ada-931e-76778fc696d6",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "588d1dee-3ec0-4a64-9ff6-d83fa4f0b0f8",
+            "latency": 15.87967249999997,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "1ad8ccd1-5f57-44d3-907e-61fdd03c908a",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": 0.0026616,
+            "decision": {
+              "action": "project_ground",
+              "arguments": {
+                "frame_id": "20086442-c23a-4d63-8d0c-dfc651985c95",
+                "u": 0.596875,
+                "v": 0.5694444444444444
+              },
+              "rationale": "Weed root crown visible at the center of the image"
+            },
+            "fallback": true,
+            "id": "539b60fc-e612-497c-bb24-ca49925302ad",
+            "latency": 11.355251415999987,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "99561a3e-68db-406b-8704-99a8f101e5db",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561M2Y7VETX0AR3TP3T8GAG",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 96,
+              "prompt_tokens": 8072,
+              "total_tokens": 8168
+            }
+          }
+        ],
+        "tokens": 48633
+      },
+      "storage_timing": {
+        "artifact": {
+          "calls": 34,
+          "max_seconds": 10.575759707999993,
+          "seconds": 41.250192957999985
+        },
+        "commit": {
+          "calls": 50,
+          "max_seconds": 10.036121749999978,
+          "seconds": 36.83725203999998
+        },
+        "metadata": {
+          "calls": 18,
+          "max_seconds": 13.530596250000002,
+          "seconds": 26.857981789999997
+        }
+      }
+    },
+    "W3": {
+      "id": "f76dffe6-23f2-4054-ba52-ba061b4eed7f",
+      "phase": "extraction",
+      "status": "aborted",
+      "feedback": "Selected ground ray world point: [2.62356, 0.08, 13.93114]. Use x,z with tool-center y=0.13 only if RGB confirms the weed root crown.",
+      "inference": {
+        "calls": 5,
+        "cost": null,
+        "failed_calls": 1,
+        "latency_seconds": 27.261594126000006,
+        "pending_calls": 0,
+        "results": [
+          {
+            "cost": null,
+            "fallback": false,
+            "id": "57622b13-770e-49f8-aca3-49d9a34dfdcb",
+            "latency": 8.269794832999999,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "f7bbb62d-2b8b-4658-a514-ec14187bdc86",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": 0.001304,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "ea2f3861-b05a-4bd2-87c9-2d18c7091f1d",
+                "u": 0.5171336206896552,
+                "v": 0.6777777777777778
+              },
+              "pixel_candidate": {
+                "area": 58,
+                "bounds": [
+                  0.509375,
+                  0.6277777777777778,
+                  0.525,
+                  0.7277777777777777
+                ],
+                "color": "purple",
+                "frame_id": "ea2f3861-b05a-4bd2-87c9-2d18c7091f1d",
+                "id": "p0",
+                "u": 0.5171336206896552,
+                "v": 0.6777777777777778
+              },
+              "rationale": "Visible purple caterpillar"
+            },
+            "fallback": true,
+            "id": "405a7b71-7f28-4b48-bc55-adafbe756c4a",
+            "latency": 5.592787250000001,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "4c222414-cfb2-4f64-bbe7-d999b95c6b12",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561D4NRQ8K3PK8HNAPKPT4M",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 62,
+              "prompt_tokens": 3830,
+              "total_tokens": 3892
+            }
+          },
+          {
+            "cost": 0.0012686,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "b47dabe1-28a2-4fc8-8404-5743e159c851",
+                "u": 0.4711588541666667,
+                "v": 0.5185185185185185
+              },
+              "pixel_candidate": {
+                "area": 48,
+                "bounds": [
+                  0.4625,
+                  0.4722222222222222,
+                  0.478125,
+                  0.5666666666666667
+                ],
+                "color": "purple",
+                "frame_id": "b47dabe1-28a2-4fc8-8404-5743e159c851",
+                "id": "p0",
+                "u": 0.4711588541666667,
+                "v": 0.5185185185185185
+              },
+              "rationale": "visible elongated purple caterpillar"
+            },
+            "fallback": true,
+            "id": "12e46a1e-9679-44a9-8659-e4fa1f99178b",
+            "latency": 4.258830749999994,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "5e2d0420-4d31-4b52-9f79-5c064b3e0715",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561DA6R1AC3P8J0X6BC8E8Q",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 62,
+              "prompt_tokens": 3712,
+              "total_tokens": 3774
+            }
+          },
+          {
+            "cost": 0.001488,
+            "decision": {
+              "action": "scan_lidar",
+              "arguments": {
+                "frame_id": "d8165f6b-dc83-4a92-b3c1-2e0263f629d5",
+                "span": 0.16,
+                "u": 0.2506696428571428,
+                "v": 0.6345238095238095
+              },
+              "pixel_candidate": {
+                "area": 7,
+                "bounds": [
+                  0.24375,
+                  0.6277777777777778,
+                  0.25625,
+                  0.6444444444444445
+                ],
+                "color": "yellow-green",
+                "frame_id": "d8165f6b-dc83-4a92-b3c1-2e0263f629d5",
+                "id": "c0",
+                "u": 0.2506696428571428,
+                "v": 0.6345238095238095
+              },
+              "rationale": "Weed root crown"
+            },
+            "fallback": true,
+            "id": "6aa55d77-b799-4a1c-896c-6c8e353ce59e",
+            "latency": 5.483191959000003,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "5d3219ce-59ba-47e0-85d0-0c5b159927b2",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561DGFQ2JNVZKP5019QVS2E",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 72,
+              "prompt_tokens": 4360,
+              "total_tokens": 4432
+            }
+          },
+          {
+            "cost": 0.002871,
+            "decision": {
+              "action": "stop",
+              "arguments": {
+                "frame_id": "ef7dbdeb-7aed-4b41-b84a-2bcf2242ac29"
+              },
+              "rationale": "No weed is visible, only clover which must be preserved."
+            },
+            "fallback": true,
+            "id": "66c83f1c-12da-4875-8cd2-4b2b6fcb0205",
+            "latency": 3.6569893340000093,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "8476a2ff-97d5-4796-b0f8-b9266596dc45",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561DPXR8036V15RD741HF9A",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 57,
+              "prompt_tokens": 9095,
+              "total_tokens": 9152
+            }
+          }
+        ],
+        "tokens": 21250
+      },
+      "storage_timing": {
+        "artifact": {
+          "calls": 37,
+          "max_seconds": 5.696785792,
+          "seconds": 36.39026374899997
+        },
+        "commit": {
+          "calls": 62,
+          "max_seconds": 1.7845255410000007,
+          "seconds": 26.46001012400004
+        },
+        "metadata": {
+          "calls": 18,
+          "max_seconds": 1.2337619999999987,
+          "seconds": 8.50342474899999
+        }
+      }
+    },
+    "W4": {
+      "id": "a964b71f-3f56-4792-958d-312bc1df2f90",
+      "phase": "extraction",
+      "status": "aborted",
+      "feedback": "Selected ground ray world point: [-6.03592, 0.08, 13.90775]. Use x,z with tool-center y=0.13 only if RGB confirms the weed root crown.",
+      "inference": {
+        "calls": 6,
+        "cost": null,
+        "failed_calls": 1,
+        "latency_seconds": 36.807672583999995,
+        "pending_calls": 0,
+        "results": [
+          {
+            "cost": null,
+            "fallback": false,
+            "id": "f5e09fb5-22f9-4394-a5ca-bd5e1478a617",
+            "latency": 11.455616249999999,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "a0d0cb02-9e47-4611-883e-833bdc2d8e98",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": 0.0013175,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "4ac04a3a-4ba5-4932-9803-2ef05b4c6458",
+                "u": 0.5170797413793103,
+                "v": 0.6767241379310345
+              },
+              "pixel_candidate": {
+                "area": 58,
+                "bounds": [
+                  0.509375,
+                  0.6277777777777778,
+                  0.525,
+                  0.7277777777777777
+                ],
+                "color": "purple",
+                "frame_id": "4ac04a3a-4ba5-4932-9803-2ef05b4c6458",
+                "id": "p0",
+                "u": 0.5170797413793103,
+                "v": 0.6767241379310345
+              },
+              "rationale": "Visible purple caterpillar on tree trunk."
+            },
+            "fallback": true,
+            "id": "afab61df-ded4-419d-8117-e5ae00be5914",
+            "latency": 5.8916421670000005,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "fb979305-2b13-4079-bedf-c5b4c5c56edf",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561D89EYK0AE892N7Q1E88D",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 65,
+              "prompt_tokens": 3850,
+              "total_tokens": 3915
+            }
+          },
+          {
+            "cost": 0.001294,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "b30c7527-ef5b-4d0c-a669-13a4cc9948d4",
+                "u": 0.4711588541666667,
+                "v": 0.5185185185185185
+              },
+              "pixel_candidate": {
+                "area": 48,
+                "bounds": [
+                  0.4625,
+                  0.4722222222222222,
+                  0.478125,
+                  0.5666666666666667
+                ],
+                "color": "purple",
+                "frame_id": "b30c7527-ef5b-4d0c-a669-13a4cc9948d4",
+                "id": "p0",
+                "u": 0.4711588541666667,
+                "v": 0.5185185185185185
+              },
+              "rationale": "Visible elongated purple caterpillar on tree trunk."
+            },
+            "fallback": true,
+            "id": "41f391f8-6fcf-4595-b870-367f1573a333",
+            "latency": 6.698713374999997,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "3226fa12-ff7b-4641-9728-5dbb22186085",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561DEXRS9MFTPW5JETBNC3R",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 67,
+              "prompt_tokens": 3755,
+              "total_tokens": 3822
+            }
+          },
+          {
+            "cost": 0.0015132,
+            "decision": {
+              "action": "scan_lidar",
+              "arguments": {
+                "frame_id": "f8963e4b-0370-4d5e-ac4b-13ffc170105d",
+                "span": 0.16,
+                "u": 0.8261160714285714,
+                "v": 0.6765873015873016
+              },
+              "pixel_candidate": {
+                "area": 7,
+                "bounds": [
+                  0.81875,
+                  0.6722222222222223,
+                  0.834375,
+                  0.6833333333333333
+                ],
+                "color": "yellow-green",
+                "frame_id": "f8963e4b-0370-4d5e-ac4b-13ffc170105d",
+                "id": "c1",
+                "u": 0.8261160714285714,
+                "v": 0.6765873015873016
+              },
+              "rationale": "Weed root crown where it meets soil"
+            },
+            "fallback": true,
+            "id": "46c7c48f-9f6a-40e0-871d-957e1654f65b",
+            "latency": 4.836754541999994,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "0de713e8-ebae-4ec3-86ed-b21ad0df5816",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561DP2J4NKK967CS58F0SSC",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 75,
+              "prompt_tokens": 4419,
+              "total_tokens": 4494
+            }
+          },
+          {
+            "cost": 0.0026654,
+            "decision": {
+              "action": "project_ground",
+              "arguments": {
+                "frame_id": "81f5e010-47fd-4624-bb18-d6ecdf5f4d8f",
+                "u": 0.4509943181818182,
+                "v": 0.6896464646464646
+              },
+              "pixel_candidate": {
+                "area": 24,
+                "bounds": [
+                  0.440625,
+                  0.6611111111111111,
+                  0.459375,
+                  0.7
+                ],
+                "color": "yellow-green",
+                "frame_id": "81f5e010-47fd-4624-bb18-d6ecdf5f4d8f",
+                "id": "c1",
+                "refinement_distance_m": 0.0794,
+                "u": 0.4509943181818182,
+                "v": 0.6896464646464646
+              },
+              "rationale": "The lower edge of candidate c1 appears to be the root crown of the weed."
+            },
+            "fallback": true,
+            "id": "c1ee7a08-7c27-4d50-abda-8de595f5109f",
+            "latency": 4.153426417000006,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "27966490-7b71-4d1b-ad0c-55df5c802624",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561DWYNDZH5CMS426FRXM7R",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 74,
+              "prompt_tokens": 8268,
+              "total_tokens": 8342
+            }
+          },
+          {
+            "cost": 0.0026111,
+            "decision": {
+              "action": "stop",
+              "arguments": {
+                "frame_id": "3b7e4a78-d78d-4f89-a78a-927d0e65f55b"
+              },
+              "rationale": "No weed root crown is visible, only leaves and robot parts."
+            },
+            "fallback": true,
+            "id": "11b1d141-43a8-436e-bf57-fb3548f56fa1",
+            "latency": 3.7715198329999993,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "6e314eb2-591d-454e-bfe4-b628e44b14a3",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561E2CN8H13A15FG6VT142G",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 65,
+              "prompt_tokens": 8162,
+              "total_tokens": 8227
+            }
+          }
+        ],
+        "tokens": 28800
+      },
+      "storage_timing": {
+        "artifact": {
+          "calls": 40,
+          "max_seconds": 8.486214333000007,
+          "seconds": 37.17206275300005
+        },
+        "commit": {
+          "calls": 72,
+          "max_seconds": 1.2752105419999964,
+          "seconds": 27.660514958000007
+        },
+        "metadata": {
+          "calls": 18,
+          "max_seconds": 1.2272207919999971,
+          "seconds": 8.316870961000003
+        }
+      }
+    },
+    "W5": {
+      "id": "614d156d-2de9-4a19-aa33-a54ef36503ec",
+      "phase": "extraction",
+      "status": "aborted",
+      "feedback": "Selected ground ray world point: [-14.88096, 0.08, 13.77931]. Use x,z with tool-center y=0.13 only if RGB confirms the weed root crown.",
+      "inference": {
+        "calls": 5,
+        "cost": null,
+        "failed_calls": 1,
+        "latency_seconds": 32.74663891700003,
+        "pending_calls": 0,
+        "results": [
+          {
+            "cost": null,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "b39decd6-3e81-437a-8a71-65974bbc8321",
+                "u": 0.5170850409836065,
+                "v": 0.6786429872495446
+              },
+              "pixel_candidate": {
+                "area": 61,
+                "bounds": [
+                  0.509375,
+                  0.6277777777777778,
+                  0.525,
+                  0.7277777777777777
+                ],
+                "color": "purple",
+                "frame_id": "b39decd6-3e81-437a-8a71-65974bbc8321",
+                "id": "p0",
+                "u": 0.5170850409836065,
+                "v": 0.6786429872495446
+              },
+              "rationale": "Purple caterpillar identified at p0."
+            },
+            "fallback": false,
+            "id": "c97ab21b-3d7a-46a5-8f68-ab42628638bf",
+            "latency": 8.348382708000003,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "ff01f0c9-af60-41e5-83c3-6df6d4a82dfa",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": "995c976d57664a2cae0a3ba4e6997b74",
+            "returned_model": "google/gemma-4-31b-it",
+            "usage": {
+              "completion_tokens": 73,
+              "prompt_tokens": 2383,
+              "total_tokens": 2456
+            }
+          },
+          {
+            "cost": null,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "85732831-4d9f-4d68-8707-15114a865fa0",
+                "u": 0.4711588541666667,
+                "v": 0.5185185185185185
+              },
+              "pixel_candidate": {
+                "area": 48,
+                "bounds": [
+                  0.4625,
+                  0.4722222222222222,
+                  0.478125,
+                  0.5666666666666667
+                ],
+                "color": "purple",
+                "frame_id": "85732831-4d9f-4d68-8707-15114a865fa0",
+                "id": "p0",
+                "u": 0.4711588541666667,
+                "v": 0.5185185185185185
+              },
+              "rationale": "Purple caterpillar detected on tree trunk."
+            },
+            "fallback": false,
+            "id": "23b625ef-28d1-4e8d-b047-24982be8e582",
+            "latency": 7.381179166999999,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "a1d5ee94-1e4f-41b3-a082-5e86319154b9",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": "2de8d3bae7e745e19fe5105a587a7aaf",
+            "returned_model": "google/gemma-4-31b-it",
+            "usage": {
+              "completion_tokens": 76,
+              "prompt_tokens": 2278,
+              "total_tokens": 2354
+            }
+          },
+          {
+            "cost": null,
+            "fallback": false,
+            "id": "a363a52c-6e80-428a-bd22-16a7587914fe",
+            "latency": 8.66199862500001,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "c7cb6fd8-a639-44d9-8d8c-2899a09d51bc",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": 0.0015925,
+            "decision": {
+              "action": "scan_lidar",
+              "arguments": {
+                "frame_id": "b1a0ce6d-8957-45e5-99ab-6a39f93e09ec",
+                "span": 0.16,
+                "u": 0.2520833333333333,
+                "v": 0.6083333333333333
+              },
+              "pixel_candidate": {
+                "area": 6,
+                "bounds": [
+                  0.246875,
+                  0.6,
+                  0.25625,
+                  0.6166666666666667
+                ],
+                "color": "yellow-green",
+                "frame_id": "b1a0ce6d-8957-45e5-99ab-6a39f93e09ec",
+                "id": "c0",
+                "u": 0.2520833333333333,
+                "v": 0.6083333333333333
+              },
+              "rationale": "Weed root crown"
+            },
+            "fallback": true,
+            "id": "d355484b-14ef-41a0-a0ef-1dfdda179968",
+            "latency": 3.876878583000007,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "5c03fafd-f708-43e0-b63b-955fad02fbae",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561FN70HF6K6V6YX5S7EJZV",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 70,
+              "prompt_tokens": 4725,
+              "total_tokens": 4795
+            }
+          },
+          {
+            "cost": 0.0029865,
+            "decision": {
+              "action": "stop",
+              "arguments": {
+                "frame_id": "d6a5ac63-493a-4898-9825-c9e78ae2ecdb"
+              },
+              "rationale": "No weed root crown is visible; only clover is present."
+            },
+            "fallback": true,
+            "id": "152df0cc-58e9-40e0-8b8e-9d11d6904f42",
+            "latency": 4.478199834000009,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "61049811-46d2-45e7-ab9e-c846be989a94",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561FVANBGGS246S7WJ7MQ4Z",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 60,
+              "prompt_tokens": 9455,
+              "total_tokens": 9515
+            }
+          }
+        ],
+        "tokens": 19120
+      },
+      "storage_timing": {
+        "artifact": {
+          "calls": 41,
+          "max_seconds": 8.84373395899999,
+          "seconds": 45.897844964
+        },
+        "commit": {
+          "calls": 64,
+          "max_seconds": 1.2282277079999915,
+          "seconds": 29.177582628999886
+        },
+        "metadata": {
+          "calls": 20,
+          "max_seconds": 0.9654794589999938,
+          "seconds": 8.000306289999997
+        }
+      }
+    }
+  },
+  "passed": false
+}

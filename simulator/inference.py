@@ -72,7 +72,7 @@ def parse_response(response,tool_name='choose_action',allowed_actions=None):
             if not isinstance(reason,str) or len(reason)>1200 or action not in allowed_actions:raise ValueError()
             # Fields the model left at their empty defaults are not arguments.
             parsed=dict(action=action,arguments={k:v for k,v in parsed.items() if v not in ('',None)},rationale=reason)
-        elif tool_name in ('remove_pest','next_stage','stop','scan_lidar','project_ground','assess_alignment'):
+        elif tool_name in ('remove_pest','next_stage','stop','scan_lidar','project_ground','assess_alignment','move_arm'):
             if not isinstance(parsed,dict):raise ValueError()
             reason=parsed.pop('reason',None)
             parsed=dict(action=tool_name,arguments=parsed,rationale=reason)
@@ -135,7 +135,7 @@ class Adapter:
                 message=choice.get('message') if isinstance(choice,dict) else None
                 calls=message.get('tool_calls') if isinstance(message,dict) else None
                 function=calls[0].get('function') if isinstance(calls,list) and len(calls)==1 and isinstance(calls[0],dict) else None
-                if not isinstance(function,dict) or function.get('name') not in observation['available_actions']:
+                if not isinstance(function,dict) or function.get('name') not in {t['function']['name'] for t in body['tools']}:
                     raise InferenceError('Provider returned an invalid vision action')
                 name=calls[0]['function']['name']
                 decision=parse_response(response,name)
@@ -145,6 +145,16 @@ class Adapter:
                     if candidate is None:raise InferenceError('Unknown pixel candidate')
                     decision['arguments'].update(u=candidate['u'],v=candidate['v'])
                     decision['pixel_candidate']=dict(frame_id=observation['frame']['id'],**candidate)
+                if name=='move_arm' and decision['arguments'].get('pose')!=observation.get('viewpoint_pose'):
+                    raise InferenceError('Unknown observation viewpoint')
+                region=observation.get('refinement_region')
+                if name=='project_ground' and region:
+                    from .camera import project_ground
+                    try:
+                        p=project_ground(observation['frame']['camera'],decision['arguments']['u'],decision['arguments']['v'])
+                        center=region['center']
+                        if math.hypot(p[0]-center['x'],p[2]-center['z'])>=region['radius_m']:raise ValueError()
+                    except (KeyError,TypeError,ValueError):raise InferenceError('Target outside current refinement region') from None
                 # Fast tools use their names as the action, rather than an enum
                 # inside one catch-all tool. Validate their exact typed fields.
             else:decision=parse_response(response,tool_name,allowed_actions)
@@ -215,8 +225,9 @@ def build_request(observation,image=None,prompt=PROMPT,model=None,max_tokens=Non
     if fast:
         required={'remove_pest':['u','v'],'next_stage':[],'stop':[],
                   'scan_lidar':['u','v','span'],'project_ground':['u','v'],
-                  'assess_alignment':['stem_between_fingers','depth_consistent','evidence']}
-        descriptions={'remove_pest':'Remove a visible caterpillar. Never target a red ladybird.',
+                  'assess_alignment':['stem_between_fingers','depth_consistent','evidence'],'move_arm':['pose']}
+        descriptions={'move_arm':'Change to the supplied observation viewpoint when the root or fingers are occluded. This is not a grasp target.',
+                      'remove_pest':'Remove a visible caterpillar. Never target a red ladybird.',
                       'next_stage':'Request independent stage verification when no pests are visible.',
                       'stop':'Stop if no safe visual decision is possible.',
                       'scan_lidar':'Scan around the visible weed ROOT CROWN where it meets soil. Use span 0.16.',
@@ -224,10 +235,13 @@ def build_request(observation,image=None,prompt=PROMPT,model=None,max_tokens=Non
                       'assess_alignment':'Assess current RGB: both finger faces and central weed stem must be visible. Set booleans honestly.'}
         schema=[]
         for name in observation['available_actions']:
+            if name=='project_ground' and observation.get('refinement_region') and not observation.get('pixel_candidates'):continue
             fields={k:ARGUMENT_FIELDS[k] for k in ['frame_id',*required[name]]}
             if name in ('remove_pest','scan_lidar','project_ground') and observation.get('pixel_candidates'):
                 fields.pop('u');fields.pop('v')
                 fields['candidate_id']=dict(type='string',enum=[c['id'] for c in observation['pixel_candidates']],description='ID of the RGB component centered on a visible caterpillar; preserve red ladybirds.' if name=='remove_pest' else 'ID of the RGB component whose lower edge is the visible WEED ROOT CROWN. Components are unclassified; avoid fingers, clover and leaf tips. Confirm against RGB.')
+            # Gemini supports string enums, not array-valued enums. Validate the exact pose on return.
+            if name=='move_arm':fields['pose']=dict(ARGUMENT_FIELDS['pose'],description='Use exactly this observation pose: '+json.dumps(observation['viewpoint_pose']))
             fields['reason']=dict(type='string')
             schema.append(dict(type='function',function=dict(name=name,description=descriptions[name],parameters=dict(type='object',properties=fields,required=list(fields),additionalProperties=False))))
         body.update(tools=schema,tool_choice='required')

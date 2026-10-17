@@ -1,0 +1,1846 @@
+{
+  "session_id": "fb041959-347c-4689-9646-297c3bd4544c",
+  "controller": "ultra_fast",
+  "seed": 7,
+  "wall_budget_seconds": 360,
+  "status": "failed",
+  "checks": {
+    "all_workers_used": true,
+    "care_verified": false,
+    "inventory": true,
+    "reserve": true,
+    "returned": false,
+    "trees_complete": false
+  },
+  "measured_wall_seconds": 77.034118084,
+  "active_wall_seconds": 76.693300333,
+  "timing_scope": "Reset through terminal outcome",
+  "inference": {
+    "calls": 35,
+    "cost": null,
+    "failed_calls": 20,
+    "latency_seconds": 217.225268416,
+    "pending_calls": 0,
+    "results": [],
+    "tokens": 62485
+  },
+  "config": {
+    "arena": "orchard",
+    "capture_training_inputs": true,
+    "care_controller": "ultra_fast",
+    "code_hash": "2741a767f5abe2a9011e1535038527c41b061c0b6bffd8dc34a16a29004f1745",
+    "engine": "crusoe",
+    "fallback": {
+      "after_failures": 1,
+      "engine": "gemini",
+      "inference_timeout": 15,
+      "models": {
+        "orchestrator": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "planner": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "retriever": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+        "treatment": "google/gemini-2.5-flash",
+        "verifier": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "worker": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
+      },
+      "provider_base": "https://ai-gateway.vercel.sh/v1"
+    },
+    "inference_timeout": 6,
+    "max_tokens": 512,
+    "mode": "vision",
+    "models": {
+      "orchestrator": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "planner": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "retriever": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "treatment": "google/gemma-4-31b-it",
+      "verifier": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "worker": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
+    },
+    "provider_base": "https://api.inference.crusoecloud.com/v1",
+    "speed": 16,
+    "treatment_code_hash": "e24e8332ae980bd3f47bba64e965b57d58842cfeeb65973ec5873dd657621618",
+    "trial": null
+  },
+  "assignments": {
+    "0": {
+      "session_id": "1b74fdf4-1295-4e29-8353-919dca54cdd9",
+      "status": "blocked",
+      "vehicle": "W1"
+    },
+    "1": {
+      "session_id": "35840276-9733-487b-9b50-8614e31cd3de",
+      "status": "blocked",
+      "vehicle": "W2"
+    },
+    "2": {
+      "session_id": "fc8afc17-85a9-40ff-8c5c-38ddd29c7b96",
+      "status": "blocked",
+      "vehicle": "W3"
+    },
+    "3": {
+      "session_id": "09ca8664-a558-46aa-baba-18e75f221601",
+      "status": "blocked",
+      "vehicle": "W4"
+    },
+    "4": {
+      "session_id": "d8e36bf2-7d4a-4562-9dde-d684c8c05541",
+      "status": "blocked",
+      "vehicle": "W5"
+    }
+  },
+  "background_sync": {
+    "pending_operations": 331,
+    "recovery_errors": {},
+    "sessions": {
+      "0054a525-332e-4e3e-9ade-fa25299a6451": {
+        "cloud_committed_sequence": 201,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 201,
+        "synced": true
+      },
+      "02d09ab3-3a10-45c9-9097-04e1aea26055": {
+        "cloud_committed_sequence": 443,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 443,
+        "synced": true
+      },
+      "08530f17-5f37-4488-bcd9-ddcebb4efc08": {
+        "cloud_committed_sequence": 170,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 170,
+        "synced": true
+      },
+      "09ca8664-a558-46aa-baba-18e75f221601": {
+        "cloud_committed_sequence": 58,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 64,
+        "queued_sequence": 200,
+        "synced": false
+      },
+      "10507b29-264d-4296-ad90-2312c81ddb3b": {
+        "cloud_committed_sequence": 365,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 365,
+        "synced": true
+      },
+      "150dace5-d14b-49e1-8d52-b8928c50f5d3": {
+        "cloud_committed_sequence": 405,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 405,
+        "synced": true
+      },
+      "17c5a3a8-a358-4992-8796-81129cb74af5": {
+        "cloud_committed_sequence": 193,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 193,
+        "synced": true
+      },
+      "1b74fdf4-1295-4e29-8353-919dca54cdd9": {
+        "cloud_committed_sequence": 91,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 58,
+        "queued_sequence": 220,
+        "synced": false
+      },
+      "1d0ede06-dc7e-4861-91d4-82fbe7c8f980": {
+        "cloud_committed_sequence": 168,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 168,
+        "synced": true
+      },
+      "20e50776-eaa3-4208-a984-cc2d827b2311": {
+        "cloud_committed_sequence": 314,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 314,
+        "synced": true
+      },
+      "290813f2-63f4-4dd2-8759-4d5d6c6a3384": {
+        "cloud_committed_sequence": 1085,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 1085,
+        "synced": true
+      },
+      "2a2b99c3-5f2b-4ec0-aa55-f1285ae51df6": {
+        "cloud_committed_sequence": 200,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 200,
+        "synced": true
+      },
+      "2ba39659-1ee6-4902-99af-e305c75906cf": {
+        "cloud_committed_sequence": 222,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 222,
+        "synced": true
+      },
+      "30274e73-eca5-4874-84f4-5f03f9f2b4e3": {
+        "cloud_committed_sequence": 234,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 234,
+        "synced": true
+      },
+      "32546315-fcdb-4c48-9305-47dcc83f9aa2": {
+        "cloud_committed_sequence": 251,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 251,
+        "synced": true
+      },
+      "35840276-9733-487b-9b50-8614e31cd3de": {
+        "cloud_committed_sequence": 97,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 48,
+        "queued_sequence": 201,
+        "synced": false
+      },
+      "3beca442-74e0-4d53-82dd-0192d6e721a4": {
+        "cloud_committed_sequence": 285,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 285,
+        "synced": true
+      },
+      "3ea727be-bfad-4ce4-b597-3b0d34b71bc2": {
+        "cloud_committed_sequence": 440,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 440,
+        "synced": true
+      },
+      "3f374501-d997-4d7b-8804-9582f5758342": {
+        "cloud_committed_sequence": 266,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 266,
+        "synced": true
+      },
+      "461aeaf1-35d7-4d32-b508-ffdcdff1d5eb": {
+        "cloud_committed_sequence": 264,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 264,
+        "synced": true
+      },
+      "4e26f3cd-978b-456c-a40b-75c478aa5f87": {
+        "cloud_committed_sequence": 193,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 193,
+        "synced": true
+      },
+      "5326559a-dcf7-460c-be5d-34fd432b2ab4": {
+        "cloud_committed_sequence": 161,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 161,
+        "synced": true
+      },
+      "55c4eb03-250e-4e53-9d9a-de9f29672454": {
+        "cloud_committed_sequence": 301,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 301,
+        "synced": true
+      },
+      "585c0425-bd3f-4736-be24-9e956e97cba4": {
+        "cloud_committed_sequence": 254,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 254,
+        "synced": true
+      },
+      "59190eeb-a199-4ca7-ab0c-c81c96e44c88": {
+        "cloud_committed_sequence": 257,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 257,
+        "synced": true
+      },
+      "614d156d-2de9-4a19-aa33-a54ef36503ec": {
+        "cloud_committed_sequence": 179,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 179,
+        "synced": true
+      },
+      "66c64dfc-d0cf-4bc4-989d-db907cd27be6": {
+        "cloud_committed_sequence": 1052,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 1052,
+        "synced": true
+      },
+      "67f6b375-23df-4819-a111-502764596971": {
+        "cloud_committed_sequence": 299,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 299,
+        "synced": true
+      },
+      "6e950d2b-ee15-4d9b-abea-16ff4f4cf1aa": {
+        "cloud_committed_sequence": 319,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 319,
+        "synced": true
+      },
+      "73fe8d2c-fd9f-419e-b8ad-9771aa939197": {
+        "cloud_committed_sequence": 160,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 160,
+        "synced": true
+      },
+      "7425b426-dc8a-4071-8a03-e3bf3be65f35": {
+        "cloud_committed_sequence": 161,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 161,
+        "synced": true
+      },
+      "7dfa7886-f52c-47ab-bd61-84b7cfe2cdb6": {
+        "cloud_committed_sequence": 1075,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 1075,
+        "synced": true
+      },
+      "821bbf82-2e1d-4f3f-ba75-934c98ae7e0b": {
+        "cloud_committed_sequence": 231,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 231,
+        "synced": true
+      },
+      "8458b3de-4c46-4ab0-b822-3a8121d16fd7": {
+        "cloud_committed_sequence": 265,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 265,
+        "synced": true
+      },
+      "8697bfd8-d5b7-4f2c-8c8c-7acfec996ed0": {
+        "cloud_committed_sequence": 299,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 299,
+        "synced": true
+      },
+      "8994a396-02f6-40e2-9c72-09c76d9b8ada": {
+        "cloud_committed_sequence": 1119,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 1119,
+        "synced": true
+      },
+      "8f164245-39b9-4190-9430-f4bac8a8bf3e": {
+        "cloud_committed_sequence": 162,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 162,
+        "synced": true
+      },
+      "96be5d94-4366-4704-b7f4-9edde2d1686d": {
+        "cloud_committed_sequence": 261,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 261,
+        "synced": true
+      },
+      "a02911b3-6d41-4b07-935f-2fd354d8cb0d": {
+        "cloud_committed_sequence": 301,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 301,
+        "synced": true
+      },
+      "a964b71f-3f56-4792-958d-312bc1df2f90": {
+        "cloud_committed_sequence": 202,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 202,
+        "synced": true
+      },
+      "aaecd397-0cb2-48a5-baaa-222ee99c9db3": {
+        "cloud_committed_sequence": 326,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 326,
+        "synced": true
+      },
+      "b5355537-15d5-4b9d-af3d-06c423ab82fd": {
+        "cloud_committed_sequence": 305,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 305,
+        "synced": true
+      },
+      "b60cc81b-7d5a-4301-b7fc-6d14e4493237": {
+        "cloud_committed_sequence": 315,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 315,
+        "synced": true
+      },
+      "c4e88c62-c2d4-4590-aee3-d2c34b5558aa": {
+        "cloud_committed_sequence": 175,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 175,
+        "synced": true
+      },
+      "d190c728-65a6-42f1-825d-66db915e422e": {
+        "cloud_committed_sequence": 262,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 262,
+        "synced": true
+      },
+      "d2c29209-0e84-45bc-8d4b-6b3e5b8f74be": {
+        "cloud_committed_sequence": 1088,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 1088,
+        "synced": true
+      },
+      "d5b56715-d957-400d-a60d-c01c345e24ec": {
+        "cloud_committed_sequence": 174,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 174,
+        "synced": true
+      },
+      "d8e36bf2-7d4a-4562-9dde-d684c8c05541": {
+        "cloud_committed_sequence": 100,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 48,
+        "queued_sequence": 205,
+        "synced": false
+      },
+      "de1f2cfd-2196-4244-b9c0-27144d8bbce3": {
+        "cloud_committed_sequence": 1552,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 1552,
+        "synced": true
+      },
+      "e04e1f2e-5657-4bc8-84b6-8f7b9bf5a52c": {
+        "cloud_committed_sequence": 261,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 261,
+        "synced": true
+      },
+      "e2d2c009-c54d-4ec7-b8bc-e670c27e86ec": {
+        "cloud_committed_sequence": 266,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 266,
+        "synced": true
+      },
+      "f6ba1a09-0a7b-4eab-ad9e-90dd56c65871": {
+        "cloud_committed_sequence": 209,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 209,
+        "synced": true
+      },
+      "f76dffe6-23f2-4054-ba52-ba061b4eed7f": {
+        "cloud_committed_sequence": 174,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 174,
+        "synced": true
+      },
+      "f81762d3-dbc5-406b-bb87-d5cbbf4e6dff": {
+        "cloud_committed_sequence": 329,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 329,
+        "synced": true
+      },
+      "fb041959-347c-4689-9646-297c3bd4544c": {
+        "cloud_committed_sequence": 426,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 3,
+        "queued_sequence": 443,
+        "synced": false
+      },
+      "fc8afc17-85a9-40ff-8c5c-38ddd29c7b96": {
+        "cloud_committed_sequence": 35,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 82,
+        "queued_sequence": 202,
+        "synced": false
+      },
+      "fce3d194-c1e7-4262-9988-b41e84a37a73": {
+        "cloud_committed_sequence": 414,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 28,
+        "queued_sequence": 470,
+        "synced": false
+      }
+    },
+    "synced": false
+  },
+  "milestones": [
+    {
+      "seconds": 9.9,
+      "worker": "W1",
+      "session_id": "1b74fdf4-1295-4e29-8353-919dca54cdd9",
+      "phase": "travel",
+      "status": "running"
+    },
+    {
+      "seconds": 9.9,
+      "worker": "W2",
+      "session_id": "35840276-9733-487b-9b50-8614e31cd3de",
+      "phase": "travel",
+      "status": "running"
+    },
+    {
+      "seconds": 9.9,
+      "worker": "W3",
+      "session_id": "fc8afc17-85a9-40ff-8c5c-38ddd29c7b96",
+      "phase": "travel",
+      "status": "running"
+    },
+    {
+      "seconds": 9.9,
+      "worker": "W4",
+      "session_id": "09ca8664-a558-46aa-baba-18e75f221601",
+      "phase": "travel",
+      "status": "running"
+    },
+    {
+      "seconds": 9.9,
+      "worker": "W5",
+      "session_id": "d8e36bf2-7d4a-4562-9dde-d684c8c05541",
+      "phase": "travel",
+      "status": "running"
+    },
+    {
+      "seconds": 10.93,
+      "worker": "W1",
+      "session_id": "1b74fdf4-1295-4e29-8353-919dca54cdd9",
+      "phase": "inspection",
+      "status": "running"
+    },
+    {
+      "seconds": 10.93,
+      "worker": "W2",
+      "session_id": "35840276-9733-487b-9b50-8614e31cd3de",
+      "phase": "inspection",
+      "status": "running"
+    },
+    {
+      "seconds": 12.17,
+      "worker": "W1",
+      "session_id": "1b74fdf4-1295-4e29-8353-919dca54cdd9",
+      "phase": "irrigation",
+      "status": "running"
+    },
+    {
+      "seconds": 12.17,
+      "worker": "W2",
+      "session_id": "35840276-9733-487b-9b50-8614e31cd3de",
+      "phase": "irrigation",
+      "status": "running"
+    },
+    {
+      "seconds": 12.17,
+      "worker": "W3",
+      "session_id": "fc8afc17-85a9-40ff-8c5c-38ddd29c7b96",
+      "phase": "irrigation",
+      "status": "running"
+    },
+    {
+      "seconds": 12.17,
+      "worker": "W4",
+      "session_id": "09ca8664-a558-46aa-baba-18e75f221601",
+      "phase": "inspection",
+      "status": "running"
+    },
+    {
+      "seconds": 12.17,
+      "worker": "W5",
+      "session_id": "d8e36bf2-7d4a-4562-9dde-d684c8c05541",
+      "phase": "inspection",
+      "status": "running"
+    },
+    {
+      "seconds": 13.23,
+      "worker": "W4",
+      "session_id": "09ca8664-a558-46aa-baba-18e75f221601",
+      "phase": "irrigation",
+      "status": "running"
+    },
+    {
+      "seconds": 13.23,
+      "worker": "W5",
+      "session_id": "d8e36bf2-7d4a-4562-9dde-d684c8c05541",
+      "phase": "irrigation",
+      "status": "running"
+    },
+    {
+      "seconds": 15.47,
+      "worker": "W1",
+      "session_id": "1b74fdf4-1295-4e29-8353-919dca54cdd9",
+      "phase": "fertilizer",
+      "status": "running"
+    },
+    {
+      "seconds": 15.47,
+      "worker": "W2",
+      "session_id": "35840276-9733-487b-9b50-8614e31cd3de",
+      "phase": "fertilizer",
+      "status": "running"
+    },
+    {
+      "seconds": 16.63,
+      "worker": "W3",
+      "session_id": "fc8afc17-85a9-40ff-8c5c-38ddd29c7b96",
+      "phase": "fertilizer",
+      "status": "running"
+    },
+    {
+      "seconds": 18.15,
+      "worker": "W1",
+      "session_id": "1b74fdf4-1295-4e29-8353-919dca54cdd9",
+      "phase": "pests",
+      "status": "running"
+    },
+    {
+      "seconds": 18.15,
+      "worker": "W2",
+      "session_id": "35840276-9733-487b-9b50-8614e31cd3de",
+      "phase": "pests",
+      "status": "running"
+    },
+    {
+      "seconds": 18.15,
+      "worker": "W4",
+      "session_id": "09ca8664-a558-46aa-baba-18e75f221601",
+      "phase": "fertilizer",
+      "status": "running"
+    },
+    {
+      "seconds": 18.15,
+      "worker": "W5",
+      "session_id": "d8e36bf2-7d4a-4562-9dde-d684c8c05541",
+      "phase": "fertilizer",
+      "status": "running"
+    },
+    {
+      "seconds": 19.3,
+      "worker": "W3",
+      "session_id": "fc8afc17-85a9-40ff-8c5c-38ddd29c7b96",
+      "phase": "pests",
+      "status": "running"
+    },
+    {
+      "seconds": 20.81,
+      "worker": "W4",
+      "session_id": "09ca8664-a558-46aa-baba-18e75f221601",
+      "phase": "pests",
+      "status": "running"
+    },
+    {
+      "seconds": 20.81,
+      "worker": "W5",
+      "session_id": "d8e36bf2-7d4a-4562-9dde-d684c8c05541",
+      "phase": "pests",
+      "status": "running"
+    },
+    {
+      "seconds": 40.11,
+      "worker": "W3",
+      "session_id": "fc8afc17-85a9-40ff-8c5c-38ddd29c7b96",
+      "phase": "extraction",
+      "status": "running"
+    },
+    {
+      "seconds": 40.11,
+      "worker": "W4",
+      "session_id": "09ca8664-a558-46aa-baba-18e75f221601",
+      "phase": "extraction",
+      "status": "running"
+    },
+    {
+      "seconds": 48.26,
+      "worker": "W5",
+      "session_id": "d8e36bf2-7d4a-4562-9dde-d684c8c05541",
+      "phase": "extraction",
+      "status": "running"
+    },
+    {
+      "seconds": 50.78,
+      "worker": "W2",
+      "session_id": "35840276-9733-487b-9b50-8614e31cd3de",
+      "phase": "extraction",
+      "status": "running"
+    },
+    {
+      "seconds": 52.23,
+      "worker": "W1",
+      "session_id": "1b74fdf4-1295-4e29-8353-919dca54cdd9",
+      "phase": "extraction",
+      "status": "running"
+    },
+    {
+      "seconds": 69.97,
+      "worker": "W2",
+      "session_id": "35840276-9733-487b-9b50-8614e31cd3de",
+      "phase": "extraction",
+      "status": "blocked"
+    },
+    {
+      "seconds": 69.97,
+      "worker": "W4",
+      "session_id": "09ca8664-a558-46aa-baba-18e75f221601",
+      "phase": "extraction",
+      "status": "blocked"
+    },
+    {
+      "seconds": 71.11,
+      "worker": "W3",
+      "session_id": "fc8afc17-85a9-40ff-8c5c-38ddd29c7b96",
+      "phase": "extraction",
+      "status": "blocked"
+    },
+    {
+      "seconds": 71.11,
+      "worker": "W5",
+      "session_id": "d8e36bf2-7d4a-4562-9dde-d684c8c05541",
+      "phase": "extraction",
+      "status": "blocked"
+    },
+    {
+      "seconds": 77.03,
+      "worker": "W1",
+      "session_id": "1b74fdf4-1295-4e29-8353-919dca54cdd9",
+      "phase": "extraction",
+      "status": "blocked"
+    }
+  ],
+  "workers": {
+    "W1": {
+      "id": "1b74fdf4-1295-4e29-8353-919dca54cdd9",
+      "phase": "extraction",
+      "status": "blocked",
+      "feedback": "gateway HTTP 400; no fallback performed",
+      "inference": {
+        "calls": 7,
+        "cost": null,
+        "failed_calls": 4,
+        "latency_seconds": 50.59315358300001,
+        "pending_calls": 0,
+        "results": [
+          {
+            "cost": null,
+            "fallback": false,
+            "id": "4f1a4661-86d2-44d2-aa97-825b0e65012b",
+            "latency": 9.059532916999999,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "db7bf7fc-179c-4ef6-bc1c-af434a581fa1",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": 0.0013837,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "b8882133-a5d2-40ab-a14b-2575b00d2ef3",
+                "u": 0.5171336206896552,
+                "v": 0.6777777777777778
+              },
+              "pixel_candidate": {
+                "area": 58,
+                "bounds": [
+                  0.509375,
+                  0.6277777777777778,
+                  0.525,
+                  0.7277777777777777
+                ],
+                "color": "purple",
+                "frame_id": "b8882133-a5d2-40ab-a14b-2575b00d2ef3",
+                "id": "p0",
+                "u": 0.5171336206896552,
+                "v": 0.6777777777777778
+              },
+              "rationale": "Remove visible purple caterpillar."
+            },
+            "fallback": true,
+            "id": "8640393b-581b-43e4-a663-706c1e2f4c18",
+            "latency": 7.348852041999997,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "94ec494e-77ee-478e-824d-99c7b238d2e7",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561X7WRAYNJG2SGQ2G0FMCM",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 64,
+              "prompt_tokens": 4079,
+              "total_tokens": 4143
+            }
+          },
+          {
+            "cost": 0.0013562,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "58e7766d-dbb6-4953-b460-d993dac502a3",
+                "u": 0.4724375,
+                "v": 0.5243333333333333
+              },
+              "pixel_candidate": {
+                "area": 25,
+                "bounds": [
+                  0.465625,
+                  0.5,
+                  0.478125,
+                  0.55
+                ],
+                "color": "purple",
+                "frame_id": "58e7766d-dbb6-4953-b460-d993dac502a3",
+                "id": "p0",
+                "u": 0.4724375,
+                "v": 0.5243333333333333
+              },
+              "rationale": "Visible purple caterpillar on tree trunk."
+            },
+            "fallback": true,
+            "id": "b476caf7-a76a-4e09-92aa-500d8f56a484",
+            "latency": 12.762202583000004,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "01b0685d-aff8-46cf-a68f-98be26b8d0b4",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561XJY7Y059K1GPRJVVJR9A",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 65,
+              "prompt_tokens": 3979,
+              "total_tokens": 4044
+            }
+          },
+          {
+            "cost": 0.0015183,
+            "decision": {
+              "action": "scan_lidar",
+              "arguments": {
+                "frame_id": "50fd2137-019e-4a5f-8e66-4fedfc2b703a",
+                "span": 0.16,
+                "u": 0.6023026315789474,
+                "v": 0.7725146198830409
+              },
+              "pixel_candidate": {
+                "area": 921,
+                "bounds": [
+                  0.525,
+                  0.5722222222222222,
+                  0.70625,
+                  0.7833333333333333
+                ],
+                "color": "green",
+                "frame_id": "50fd2137-019e-4a5f-8e66-4fedfc2b703a",
+                "id": "c3",
+                "u": 0.6023026315789474,
+                "v": 0.7725146198830409
+              },
+              "rationale": "Weed root crown at soil level"
+            },
+            "fallback": true,
+            "id": "256b4487-3940-4c6d-86dd-4216f34896fc",
+            "latency": 10.704838832999997,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "da8003cf-91d6-4767-81eb-3b56aaadca5a",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561Y21QWH4RHPC3JV8ZQ0YJ",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 72,
+              "prompt_tokens": 4461,
+              "total_tokens": 4533
+            }
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "b53f7bee-98cb-4ee6-8760-9bee26739649",
+            "latency": 2.471644000000012,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "d5af0b24-8d5e-4463-9bab-1a76cb073d83",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "54694a80-19b2-4f66-a4e1-bfa9930df30a",
+            "latency": 3.1290670000000063,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "3113bcb3-c122-40bb-a4de-0544f317822c",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "ba1f92f4-dc90-4d59-866e-bbd588c10d9d",
+            "latency": 5.1170162079999955,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "d0caeed5-958a-40b3-b400-a3ca64c99bbc",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          }
+        ],
+        "tokens": 12720
+      },
+      "storage_timing": {
+        "artifact": {
+          "calls": 25,
+          "max_seconds": 8.266135416000012,
+          "seconds": 33.92184779200001
+        },
+        "commit": {
+          "calls": 35,
+          "max_seconds": 6.6797512089999955,
+          "seconds": 25.789324751000027
+        },
+        "metadata": {
+          "calls": 16,
+          "max_seconds": 2.773049291999996,
+          "seconds": 11.923618042999976
+        }
+      }
+    },
+    "W2": {
+      "id": "35840276-9733-487b-9b50-8614e31cd3de",
+      "phase": "extraction",
+      "status": "blocked",
+      "feedback": "gateway HTTP 400; no fallback performed",
+      "inference": {
+        "calls": 7,
+        "cost": null,
+        "failed_calls": 4,
+        "latency_seconds": 42.685695332,
+        "pending_calls": 0,
+        "results": [
+          {
+            "cost": null,
+            "fallback": false,
+            "id": "33e9a7f6-ed7c-466c-9785-c10f414fb1c2",
+            "latency": 9.040133458,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "70ecc8e1-302b-429e-9445-ffa0605e9ada",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": 0.0013233,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "98d7365d-e3b7-408d-a42b-4af0e0315f15",
+                "u": 0.5170230263157894,
+                "v": 0.6771442495126705
+              },
+              "pixel_candidate": {
+                "area": 57,
+                "bounds": [
+                  0.509375,
+                  0.6277777777777778,
+                  0.525,
+                  0.7277777777777777
+                ],
+                "color": "purple",
+                "frame_id": "98d7365d-e3b7-408d-a42b-4af0e0315f15",
+                "id": "p0",
+                "u": 0.5170230263157894,
+                "v": 0.6771442495126705
+              },
+              "rationale": "Visible purple caterpillar"
+            },
+            "fallback": true,
+            "id": "b5ae19cd-e9d8-4d97-adfe-f997cd0e469b",
+            "latency": 8.088442958000002,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "99ea826c-9ed9-47cd-aabd-099d6880d334",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561X7ZZQVKWWF6A6MJX663B",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 63,
+              "prompt_tokens": 3886,
+              "total_tokens": 3949
+            }
+          },
+          {
+            "cost": 0.0012738,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "d2ab2cd0-5223-46ac-bea5-f18b4bf0b7fe",
+                "u": 0.4711588541666667,
+                "v": 0.5185185185185185
+              },
+              "pixel_candidate": {
+                "area": 48,
+                "bounds": [
+                  0.4625,
+                  0.4722222222222222,
+                  0.478125,
+                  0.5666666666666667
+                ],
+                "color": "purple",
+                "frame_id": "d2ab2cd0-5223-46ac-bea5-f18b4bf0b7fe",
+                "id": "p0",
+                "u": 0.4711588541666667,
+                "v": 0.5185185185185185
+              },
+              "rationale": "visible purple caterpillar"
+            },
+            "fallback": true,
+            "id": "03f56f4d-ab4d-4af9-ab24-499aba49cd06",
+            "latency": 11.258612000000007,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "2692d4fc-4052-432a-b3af-2fe07c2462c4",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561XE2XWKF4TGESRCE8JC7B",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 57,
+              "prompt_tokens": 3771,
+              "total_tokens": 3828
+            }
+          },
+          {
+            "cost": 0.0016462,
+            "decision": {
+              "action": "scan_lidar",
+              "arguments": {
+                "frame_id": "7b1f8a96-6a59-4b6f-81a6-1a4fbd89f223",
+                "span": 0.16,
+                "u": 0.6625,
+                "v": 0.7361111111111112
+              },
+              "pixel_candidate": {
+                "area": 11,
+                "bounds": [
+                  0.659375,
+                  0.7055555555555556,
+                  0.665625,
+                  0.7444444444444445
+                ],
+                "color": "yellow-green",
+                "frame_id": "7b1f8a96-6a59-4b6f-81a6-1a4fbd89f223",
+                "id": "c0",
+                "u": 0.6625,
+                "v": 0.7361111111111112
+              },
+              "rationale": "Weed root crown visible at lower edge of c0"
+            },
+            "fallback": true,
+            "id": "6445f95b-015e-48e2-96ce-dae77be5e3e5",
+            "latency": 5.080649915999999,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "79664898-67fd-4a21-80f6-ff97dd298a8c",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561XTNGMQ4BCKN5YD65D1VP",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 79,
+              "prompt_tokens": 4829,
+              "total_tokens": 4908
+            }
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "a0bd9933-9a7e-4516-a5a3-d2f5d4f2d1a5",
+            "latency": 3.337906042,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "75e3c72c-6897-4d23-aa7f-b67613c8fdf0",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "0a3731c4-2826-4c68-a34a-5bf13066ca29",
+            "latency": 3.4955325829999992,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "24ca1b96-3ffc-48d1-a05f-77565ed6da5c",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "c9d5fb16-88eb-459f-bb28-3d0558ff5be0",
+            "latency": 2.3844183749999956,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "0af681dc-fcbe-4ccd-aae1-31530a36135e",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          }
+        ],
+        "tokens": 12685
+      },
+      "storage_timing": {
+        "artifact": {
+          "calls": 25,
+          "max_seconds": 4.922516250000001,
+          "seconds": 33.72656329100003
+        },
+        "commit": {
+          "calls": 35,
+          "max_seconds": 3.2014944160000027,
+          "seconds": 25.010070416999994
+        },
+        "metadata": {
+          "calls": 15,
+          "max_seconds": 2.547101542,
+          "seconds": 9.956180333999988
+        }
+      }
+    },
+    "W3": {
+      "id": "fc8afc17-85a9-40ff-8c5c-38ddd29c7b96",
+      "phase": "extraction",
+      "status": "blocked",
+      "feedback": "gateway HTTP 400; no fallback performed",
+      "inference": {
+        "calls": 7,
+        "cost": null,
+        "failed_calls": 4,
+        "latency_seconds": 42.58329712500001,
+        "pending_calls": 0,
+        "results": [
+          {
+            "cost": null,
+            "fallback": false,
+            "id": "06b10f56-fdb4-4a9b-a4c3-a643bd596d55",
+            "latency": 3.7479999589999977,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "a46aea8e-5032-4004-b3bf-3675f58525fa",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": 0.0013212,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "0cbe2cc6-bc46-4892-ad45-043a3679a21f",
+                "u": 0.5171336206896552,
+                "v": 0.6777777777777778
+              },
+              "pixel_candidate": {
+                "area": 58,
+                "bounds": [
+                  0.509375,
+                  0.6277777777777778,
+                  0.525,
+                  0.7277777777777777
+                ],
+                "color": "purple",
+                "frame_id": "0cbe2cc6-bc46-4892-ad45-043a3679a21f",
+                "id": "p0",
+                "u": 0.5171336206896552,
+                "v": 0.6777777777777778
+              },
+              "rationale": "Visible purple caterpillar"
+            },
+            "fallback": true,
+            "id": "da987838-3395-4000-bdbb-d87e4ace4ba6",
+            "latency": 7.641621458000003,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "fc9fc85c-708d-4371-94a5-ce4658bd1e5d",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561X1D2T7K26F21QH24CQ32",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 60,
+              "prompt_tokens": 3904,
+              "total_tokens": 3964
+            }
+          },
+          {
+            "cost": 0.0012907,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "d8764ef8-3ffd-4969-bed7-af9f36eac88e",
+                "u": 0.4711588541666667,
+                "v": 0.5185185185185185
+              },
+              "pixel_candidate": {
+                "area": 48,
+                "bounds": [
+                  0.4625,
+                  0.4722222222222222,
+                  0.478125,
+                  0.5666666666666667
+                ],
+                "color": "purple",
+                "frame_id": "d8764ef8-3ffd-4969-bed7-af9f36eac88e",
+                "id": "p0",
+                "u": 0.4711588541666667,
+                "v": 0.5185185185185185
+              },
+              "rationale": "Visible purple caterpillar on tree trunk."
+            },
+            "fallback": true,
+            "id": "00d13ed4-0590-44fe-8bba-a73f43423573",
+            "latency": 5.995531624999998,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "f71d6720-b5ae-4750-b668-f7937b93a5d7",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561X9K6NDXET8M9N2WQ02MT",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 61,
+              "prompt_tokens": 3794,
+              "total_tokens": 3855
+            }
+          },
+          {
+            "cost": 0.001521,
+            "decision": {
+              "action": "scan_lidar",
+              "arguments": {
+                "frame_id": "5c7e8800-db58-44e5-b7a6-8a9a43a60b15",
+                "span": 0.16,
+                "u": 0.52421875,
+                "v": 0.5972222222222222
+              },
+              "pixel_candidate": {
+                "area": 4,
+                "bounds": [
+                  0.521875,
+                  0.5888888888888889,
+                  0.528125,
+                  0.6055555555555555
+                ],
+                "color": "yellow-green",
+                "frame_id": "5c7e8800-db58-44e5-b7a6-8a9a43a60b15",
+                "id": "c2",
+                "u": 0.52421875,
+                "v": 0.5972222222222222
+              },
+              "rationale": "Weed root crown at soil level"
+            },
+            "fallback": true,
+            "id": "53acb8f7-7800-467d-90eb-670e1c48ab4f",
+            "latency": 11.773207500000005,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "02530f70-1ffa-4a45-a7a7-289fb8fcaa98",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561XQC23NFSF05XR50ME6Y7",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 75,
+              "prompt_tokens": 4445,
+              "total_tokens": 4520
+            }
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "5ebbf999-6929-475f-a051-c27b82ef06ef",
+            "latency": 6.932464499999995,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "6c95b8a5-6c0a-4938-aad7-4dd2765a5346",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "d8623634-36da-44a0-a8b9-b9be5bf38b34",
+            "latency": 3.639812667000001,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "a859494f-66ef-46c6-9367-105119388791",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "6e18c1f9-91f0-4d7f-94a8-520ad287d117",
+            "latency": 2.8526594160000087,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "42da8a49-d76b-4d44-8fd8-a30bfb4104e5",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          }
+        ],
+        "tokens": 12339
+      },
+      "storage_timing": {
+        "artifact": {
+          "calls": 13,
+          "max_seconds": 6.234793415999995,
+          "seconds": 14.429976457999999
+        },
+        "commit": {
+          "calls": 14,
+          "max_seconds": 2.668593290999997,
+          "seconds": 12.405176165999997
+        },
+        "metadata": {
+          "calls": 10,
+          "max_seconds": 1.274732457999999,
+          "seconds": 5.8646276230000005
+        }
+      }
+    },
+    "W4": {
+      "id": "09ca8664-a558-46aa-baba-18e75f221601",
+      "phase": "extraction",
+      "status": "blocked",
+      "feedback": "gateway HTTP 400; no fallback performed",
+      "inference": {
+        "calls": 7,
+        "cost": null,
+        "failed_calls": 4,
+        "latency_seconds": 39.85074491699999,
+        "pending_calls": 0,
+        "results": [
+          {
+            "cost": null,
+            "fallback": false,
+            "id": "eb22f28f-aa11-4390-b0a5-f2a1e09983f3",
+            "latency": 3.365403999999998,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "04626c84-2fad-41be-86d2-401c6567cfe5",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": 0.0013366,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "1775ee30-e5fc-4f04-a688-57c9e75e780a",
+                "u": 0.5170797413793103,
+                "v": 0.6767241379310345
+              },
+              "pixel_candidate": {
+                "area": 58,
+                "bounds": [
+                  0.509375,
+                  0.6277777777777778,
+                  0.525,
+                  0.7277777777777777
+                ],
+                "color": "purple",
+                "frame_id": "1775ee30-e5fc-4f04-a688-57c9e75e780a",
+                "id": "p0",
+                "u": 0.5170797413793103,
+                "v": 0.6767241379310345
+              },
+              "rationale": "Visible elongated purple caterpillar on tree trunk."
+            },
+            "fallback": true,
+            "id": "1c839932-47ea-45ad-a5f1-01e144e13018",
+            "latency": 6.584360707999998,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "b41cd8cb-d0d2-4dc0-8491-a754a25ecdd0",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561X0ZNNWE6R66KYH77GMEP",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 67,
+              "prompt_tokens": 3897,
+              "total_tokens": 3964
+            }
+          },
+          {
+            "cost": 0.0012931,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "b2652509-822f-4029-8610-6dd2c2faec48",
+                "u": 0.4711588541666667,
+                "v": 0.5185185185185185
+              },
+              "pixel_candidate": {
+                "area": 48,
+                "bounds": [
+                  0.4625,
+                  0.4722222222222222,
+                  0.478125,
+                  0.5666666666666667
+                ],
+                "color": "purple",
+                "frame_id": "b2652509-822f-4029-8610-6dd2c2faec48",
+                "id": "p0",
+                "u": 0.4711588541666667,
+                "v": 0.5185185185185185
+              },
+              "rationale": "visible purple caterpillar"
+            },
+            "fallback": true,
+            "id": "b44e18ee-a89c-4911-8aab-f10af4785257",
+            "latency": 6.187028708,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "a38b3e65-3e81-46a1-bf28-fdc6701cecf2",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561X9HNS413P25M9172AVKH",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 61,
+              "prompt_tokens": 3802,
+              "total_tokens": 3863
+            }
+          },
+          {
+            "cost": 0.0015288,
+            "decision": {
+              "action": "scan_lidar",
+              "arguments": {
+                "frame_id": "c07b8b1d-f60d-4ab3-839c-0d6f016f63f1",
+                "span": 0.16,
+                "u": 0.24799107142857144,
+                "v": 0.640079365079365
+              },
+              "pixel_candidate": {
+                "area": 9,
+                "bounds": [
+                  0.240625,
+                  0.6277777777777778,
+                  0.25625,
+                  0.65
+                ],
+                "color": "yellow-green",
+                "frame_id": "c07b8b1d-f60d-4ab3-839c-0d6f016f63f1",
+                "id": "c0",
+                "u": 0.24799107142857144,
+                "v": 0.640079365079365
+              },
+              "rationale": "Weed root crown at soil level"
+            },
+            "fallback": true,
+            "id": "f4b5b5db-1b17-40c9-8b08-1987b2d9a133",
+            "latency": 11.743850167000005,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "4a532220-cd17-4a81-bf4e-f730f1e2d263",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561XQ7F815AXSRDRH95QXV8",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 75,
+              "prompt_tokens": 4471,
+              "total_tokens": 4546
+            }
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "a1453ada-0376-4ee2-a91b-692e0899a31f",
+            "latency": 6.242795375,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "9c1e7fed-2370-45a7-91f5-a4ae271d8075",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "719e8f1d-47d4-47c3-962b-d8afa2f37c7c",
+            "latency": 3.671520166999997,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "6d1718f0-3b26-4666-9678-2c3fa24f6888",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "1988aaf0-5748-42a0-aab5-627dbd49e45c",
+            "latency": 2.0557857919999947,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "c5fceb75-95e6-4c74-84f0-8622ee40f2a4",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          }
+        ],
+        "tokens": 12373
+      },
+      "storage_timing": {
+        "artifact": {
+          "calls": 24,
+          "max_seconds": 8.893005792000004,
+          "seconds": 44.402276624
+        },
+        "commit": {
+          "calls": 22,
+          "max_seconds": 2.6513217919999974,
+          "seconds": 17.319122540999967
+        },
+        "metadata": {
+          "calls": 14,
+          "max_seconds": 1.2792103749999981,
+          "seconds": 6.846787541999998
+        }
+      }
+    },
+    "W5": {
+      "id": "d8e36bf2-7d4a-4562-9dde-d684c8c05541",
+      "phase": "extraction",
+      "status": "blocked",
+      "feedback": "gateway HTTP 400; no fallback performed",
+      "inference": {
+        "calls": 7,
+        "cost": null,
+        "failed_calls": 4,
+        "latency_seconds": 41.51237745900002,
+        "pending_calls": 0,
+        "results": [
+          {
+            "cost": null,
+            "fallback": false,
+            "id": "3446e2d4-59b6-4a3e-93e9-d01f9a7d88e8",
+            "latency": 8.3451545,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "8abebc91-b74a-4b0a-b8f9-bf5fde072bac",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": 0.0013547,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "10b88408-47d3-4eed-93e4-414e00dfa32c",
+                "u": 0.5171336206896552,
+                "v": 0.6777777777777778
+              },
+              "pixel_candidate": {
+                "area": 58,
+                "bounds": [
+                  0.509375,
+                  0.6277777777777778,
+                  0.525,
+                  0.7277777777777777
+                ],
+                "color": "purple",
+                "frame_id": "10b88408-47d3-4eed-93e4-414e00dfa32c",
+                "id": "p0",
+                "u": 0.5171336206896552,
+                "v": 0.6777777777777778
+              },
+              "rationale": "Visible purple caterpillar on tree trunk."
+            },
+            "fallback": true,
+            "id": "85fb40a5-f393-4e30-ac09-4ce62de72a53",
+            "latency": 7.0833455,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "0650b5f3-32fb-4ea9-8bac-173bf0600712",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561X8NCCRRZ5Y9ND9V6CWPN",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 65,
+              "prompt_tokens": 3974,
+              "total_tokens": 4039
+            }
+          },
+          {
+            "cost": 0.001326,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "232d69ab-49c5-4131-8583-5462ab3512c3",
+                "u": 0.47078125000000004,
+                "v": 0.5106944444444445
+              },
+              "pixel_candidate": {
+                "area": 40,
+                "bounds": [
+                  0.4625,
+                  0.4722222222222222,
+                  0.478125,
+                  0.55
+                ],
+                "color": "purple",
+                "frame_id": "232d69ab-49c5-4131-8583-5462ab3512c3",
+                "id": "p0",
+                "u": 0.47078125000000004,
+                "v": 0.5106944444444445
+              },
+              "rationale": "Visible purple caterpillar on tree trunk."
+            },
+            "fallback": true,
+            "id": "fec9e027-a69f-44e4-9f1c-47248b8d9a52",
+            "latency": 9.156370292000005,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "fcf7d07b-9fe0-4c5c-a50a-02b2a435f421",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561XE3E9BF3JTK3JMS4XA2A",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 66,
+              "prompt_tokens": 3870,
+              "total_tokens": 3936
+            }
+          },
+          {
+            "cost": 0.0014807,
+            "decision": {
+              "action": "scan_lidar",
+              "arguments": {
+                "frame_id": "9d63cecb-068a-444e-94d5-8a8d633bda90",
+                "span": 0.16,
+                "u": 0.7991319444444445,
+                "v": 0.6435185185185185
+              },
+              "pixel_candidate": {
+                "area": 23,
+                "bounds": [
+                  0.778125,
+                  0.6222222222222222,
+                  0.809375,
+                  0.6555555555555556
+                ],
+                "color": "yellow-green",
+                "frame_id": "9d63cecb-068a-444e-94d5-8a8d633bda90",
+                "id": "c0",
+                "u": 0.7991319444444445,
+                "v": 0.6435185185185185
+              },
+              "rationale": "Weed root crown where it meets soil"
+            },
+            "fallback": true,
+            "id": "d974a850-7c9c-4b92-9842-4180cb9ab714",
+            "latency": 7.513509124999999,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "3b60d525-02e9-40b9-95ef-a7dda94a528b",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M561XSV2409C324W9NHMBDJ8",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 74,
+              "prompt_tokens": 4319,
+              "total_tokens": 4393
+            }
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "c3087c9e-0f3f-44a5-bcbe-03a1501fe9af",
+            "latency": 3.024137959000001,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "4886a755-3e67-4640-915f-58e7a271bd51",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "b71274ee-7697-4e1e-a293-db836401fb1b",
+            "latency": 3.4696374580000082,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "1dbab8b6-aea6-4cc5-b7d3-8c730c3c579a",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": null,
+            "fallback": true,
+            "id": "42c36570-12da-4d89-8937-d46b0cdd1193",
+            "latency": 2.920222625000008,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "96794a94-1b97-4d03-8cd8-f868cb9b86b2",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          }
+        ],
+        "tokens": 12368
+      },
+      "storage_timing": {
+        "artifact": {
+          "calls": 25,
+          "max_seconds": 9.091214749999992,
+          "seconds": 30.603510209999975
+        },
+        "commit": {
+          "calls": 37,
+          "max_seconds": 3.767137915999996,
+          "seconds": 29.659724920999977
+        },
+        "metadata": {
+          "calls": 16,
+          "max_seconds": 1.2676155000000016,
+          "seconds": 8.07039550100001
+        }
+      }
+    }
+  },
+  "passed": false
+}

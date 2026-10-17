@@ -182,7 +182,7 @@ class FleetCareRuntime(Runtime):
         return child
 
     def step(self,elapsed):
-        if self.active_wall>(180 if self.config.get('care_controller')=='ultra_fast' else self.world.contract['wall_limit']):
+        if self.active_wall>self.world.contract['wall_limit']:
             self.pause('blocked');self.world.feedback='Fleet wall budget exhausted';self.persist();return
         self.launch_reserved()
         if self.storage_error:return

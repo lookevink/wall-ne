@@ -36,7 +36,7 @@ class Runtime:
             self.config.setdefault('inference_timeout',6)
             self.config.setdefault('max_tokens',512)
             if self.config['engine']=='crusoe' and not explicit_fallback:
-                self.config['fallback']=dict(after_failures=1,engine='gemini',provider_base=Adapter('gemini').base,
+                self.config['fallback']=dict(after_failures=1,engine='gemini',provider_base=Adapter('gemini').base,inference_timeout=15,
                     models={**self.config['models'],'treatment':'google/gemini-2.5-flash'})
         if self.config.get('care_controller')=='ultra_fast' and isinstance(self.repository,Repository):
             self.repository=BackgroundRepository(self.repository)
@@ -162,7 +162,8 @@ class Runtime:
         config=self.config['fallback'] if self.provider_routes.get(role,{}).get('fallback') else self.config
         adapter=Adapter(config['engine'],role)
         adapter.model=config['models'][role];adapter.base=config['provider_base']
-        if 'inference_timeout' in self.config:adapter.timeout=self.config['inference_timeout']
+        timeout=config.get('inference_timeout',self.config.get('inference_timeout'))
+        if timeout is not None:adapter.timeout=timeout
         if 'max_tokens' in self.config:adapter.max_tokens=self.config['max_tokens']
         return adapter
 

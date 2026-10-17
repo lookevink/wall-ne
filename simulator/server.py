@@ -187,7 +187,12 @@ class App:
                 mode='vision' if mission in ('weeding','full_care') else body.get('mode','demo')
                 if mission=='watering' and mode not in ('demo','live'): raise ValueError('invalid fleet mode')
                 conditions=season.conditions() if season and season.day else None
-                if mission=='full_care':world=FleetCareWorld(seed,body.get('tree_count',10),conditions=conditions)
+                if mission=='full_care':
+                    world=FleetCareWorld(seed,body.get('tree_count',10),conditions=conditions)
+                    wall_seconds=body.get('wall_seconds',world.contract['wall_limit'])
+                    if type(wall_seconds) not in (int,float) or not 30<=wall_seconds<=5400:raise ValueError('wall_seconds must be 30..5400')
+                    world.contract['wall_limit']=wall_seconds
+                    world.contract_hash=digest(world.contract)
                 elif mission=='weeding':world=OrchardManipulation(conditions[0]['weed']['specimen_seed'],growth=conditions[0]['weed']) if conditions else OrchardManipulation(seed)
                 else:world=Mission(seed)
                 if conditions:world.season=season.record()
