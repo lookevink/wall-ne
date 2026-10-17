@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch,Mock
 from simulator.orchard_manipulation import OrchardManipulation
 from simulator.treatment_runtime import TreatmentRuntime
 from simulator.arm import ik,trajectory
@@ -45,4 +45,14 @@ class OrchardManipulationTests(unittest.TestCase):
             runtime=TreatmentRuntime(OrchardManipulation(),config=dict(mode='vision',engine='crusoe'))
         for method in (runtime.accept_frame,runtime.accept_depth):
             with self.assertRaisesRegex(ValueError,'orchard sensor'):method(dict(arena='laboratory'))
+        runtime.executor.shutdown(wait=False)
+
+    def test_cross_arena_restore_rejected_before_lease_or_world_mutation(self):
+        with patch('threading.Thread.start'):
+            runtime=TreatmentRuntime(OrchardManipulation(),config=dict(mode='vision',engine='crusoe',arena='orchard'))
+        world=runtime.world;repo=Mock()
+        repo.read.return_value=[dict(kind='arm',status='paused',metadata=dict(configuration=dict(mode='vision',engine='crusoe')))]
+        runtime.repository=repo
+        with self.assertRaisesRegex(ValueError,'different arena'):runtime.restore('lab-session')
+        repo.lease.assert_not_called();repo.restore.assert_not_called();self.assertIs(runtime.world,world)
         runtime.executor.shutdown(wait=False)

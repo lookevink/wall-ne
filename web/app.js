@@ -28,12 +28,12 @@ function updateFleet(vehicles){
     row.querySelector('.robot-name').textContent=v.role==='retriever'?'Recovery unit':v.lifecycle==='spare'?'Reserve worker':'Orchard worker';
     row.querySelector('.battery-value').textContent=`${v.battery.toFixed(0)}%`;row.querySelector('.bar i').style.width=`${v.battery}%`;
     const telemetry=state.telemetry[v.id],age=telemetry?Math.max(0,(Date.now()-Date.parse(telemetry.wall_utc))/1000):null;
-    row.querySelector('.robot-detail').textContent=`${v.lifecycle} · ${v.action?.kind||'standby'} · ${v.water.toFixed(0)} water${telemetry?` · heartbeat ${age.toFixed(1)}s${age>5?' (stale)':''} · ${telemetry.waiting_reason||'no wait'} · progress r${telemetry.last_progress_revision}${telemetry.fault?' · '+telemetry.fault:''}`:''}`;
+    row.querySelector('.robot-detail').textContent=`${v.lifecycle} · ${v.action?.kind||'standby'} · ${v.water.toFixed(0)} water${telemetry?(state.status==='running'?` · heartbeat ${age.toFixed(1)}s${age>5?' (stale)':''} · ${telemetry.waiting_reason||'no wait'} · progress r${telemetry.last_progress_revision}${telemetry.fault?' · '+telemetry.fault:''}`:` · ${state.status}`):''}`;
   }
 }
 async function poll(){
   try{
-    state=await api('/api/state');if($('notice').textContent==='Failed to fetch')notice('');view?.update(state);feeds?.update(state);
+    state=await api('/api/state');if(['Failed to fetch','stale capture request','stale or superseded scan frame'].includes($('notice').textContent))notice('');view?.update(state);feeds?.update(state);
     $('status').textContent=state.status.replaceAll('_',' ');$('status').classList.toggle('error',['failed','blocked','storage_blocked'].includes(state.status));
     const arm=state.arena==='orchard',vehicles=Object.values(state.vehicles);
     if(currentSession!==state.id){currentSession=state.id;lastFrame=null;lastDepth=null;$('mission').value=arm?'weeding':'watering';$('mission').onchange();$('seed').value=state.seed;}
@@ -41,7 +41,7 @@ async function poll(){
     $('inspected-label').textContent=arm?'Extracted':'Inspected';$('watered-label').textContent=arm?'Collected':'Watered';$('inspected-total').textContent=arm?'/ 1':'/ 36';
     if(arm){$('inspected').textContent=Number(state.extracted);$('watered').textContent=Number(state.deposited);$('critical-total').textContent='/ 1';}
     else{const zones=Object.values(state.zones),critical=zones.filter(z=>z.initial<=state.contract.critical);$('inspected').textContent=zones.filter(z=>z.inspected_at!==null).length;$('watered').textContent=critical.filter(z=>z.moisture>=65-1e-6).length;$('critical-total').textContent=`/ ${critical.length}`;}
-    $('arm-feedback').hidden=!arm;$('arm-feedback').textContent=arm?`W1 · ${state.phase} · ${state.feedback} · ${state.load.toFixed(1)} N load`:'';
+    $('arm-feedback').hidden=!arm;$('arm-feedback').textContent=arm?`W1 · ${state.phase} · ${state.status==='completed'?'Extraction, collection and return verified':state.feedback} · ${state.load.toFixed(1)} N load`:'';
     $('breakdown').disabled=$('false-claim').disabled=arm;
     $('clock').textContent=`${String(Math.floor(state.time/60)).padStart(2,'0')}:${String(Math.floor(state.time%60)).padStart(2,'0')}`;$('minimum').textContent=Math.min(...vehicles.map(v=>v.minimum_battery)).toFixed(1);
     checks(state.checks);journal(state.events);updateFleet(vehicles);

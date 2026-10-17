@@ -5,7 +5,6 @@ import {spawnSync} from 'node:child_process';
 import * as THREE from 'three';
 import {planting} from '../web/orchard-layout.js';
 import {OrchardArm} from '../web/orchard-arm.js';
-import {orchard} from '../web/orchard-trees.js';
 test('physics tree positions match the rendered orchard planting',()=>{
  const physics=JSON.parse(readFileSync(new URL('../simulator/orchard_trees.json',import.meta.url)));
  assert.deepEqual(physics,planting().map(({row,column,position})=>({row,column,position})));
@@ -27,11 +26,12 @@ print(json.dumps(w.snapshot()))`],{encoding:'utf8'});
  arm.update(extracted);assert.equal(arm.garden.targets.weed0.position.y,state.observations.tool_pose.position[1]-.08);
  arm.update(state);assert.equal(arm.garden.targets.weed0.position.y,0);assert.equal(arm.garden.targets.weed0.visible,true);
 });
-test('orchard sensor mode disables shader displacement and camera-dependent fruit culling',()=>{
+test('orchard sensor mode disables shader displacement and camera-dependent fruit culling',async()=>{
  const previous=globalThis.document;
  const ctx=new Proxy({createLinearGradient:()=>({addColorStop(){}})},{get:(o,k)=>o[k]||(()=>{})});
- globalThis.document={createElement:()=>({getContext:()=>ctx})};
+ globalThis.document={createElement:()=>({getContext:()=>ctx}),createElementNS:()=>({addEventListener(){},removeEventListener(){}})};
  try{
+  const {orchard}=await import('../web/orchard-trees.js');
   const trees=orchard(new THREE.Scene());trees.sensorMode(true);trees.wind(5,false);
   const shader={uniforms:{},vertexShader:'#include <begin_vertex>'};trees.leaves[0].material.onBeforeCompile(shader);
   assert.equal(shader.uniforms.orchardWind.value,0);

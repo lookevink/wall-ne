@@ -8,4 +8,6 @@
 
 `arm.py` provides analytic six-joint FK/IK and sampled swept-link collision checks. `manipulation.py` adds measured grip/load, side-slip, root resistance, extraction and release-in-bin rules. These are explicit kinematic simulation rules, not a rigid-body or hardware model.
 
+`orchard_manipulation.py` specializes those mechanics for W1 in the main orchard: one durable state owns apron navigation, the world-coordinate plant inventory, arm motion, collection and return. The main runtime selects this mission by default; fleet watering is separately selectable. `orchard-arm.js` attaches the sensor-visible manipulator and plants to the existing `FleetScene`. Camera RGB and LiDAR use that scene, with shader displacement disabled and stable fruit visibility. Saved arena identity prevents restoring a laboratory checkpoint into an orchard runtime. New live arm scripts and evaluation campaigns target `/`, while calibration fixtures remain in the laboratory.
+
 `inference.py` sends one required tool call per request outside the simulation lock. Only the validated command seam mutates the world. `review.py` filters evidence and applies the fixed promotion metric; `evaluation.py` runs finite paired sessions under a frozen manifest. SQL additionally protects immutable prompt contents and activation requirements.
