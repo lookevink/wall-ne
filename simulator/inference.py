@@ -50,6 +50,11 @@ class Adapter:
             default='nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B' if role=='treatment' else 'nvidia/Nemotron-3-Super-120B-A12B' if role in ('orchestrator','verifier','planner','reviewer') else 'nvidia/Nemotron-3-Nano-30B-A3B'
             env='CRUSOE_VISION_MODEL' if role=='treatment' else 'CRUSOE_ORCHESTRATOR_MODEL' if role in ('orchestrator','verifier','planner','reviewer') else 'CRUSOE_WORKER_MODEL'
             self.model=os.getenv(env,os.getenv(env.lower(),default))
+            # Canonical IDs returned by this provider's /models inventory (2026-10-17).
+            self.model={
+                'nvidia/Nemotron-3-Super-120B-A12B':'nvidia/NVIDIA-Nemotron-3-Super-120B-A12B',
+                'nvidia/Nemotron-3-Nano-30B-A3B':'nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B',
+            }.get(self.model,self.model)
         else:
             self.base=os.getenv('AI_GATEWAY_BASE_URL','https://ai-gateway.vercel.sh/v1'); self.key=os.getenv('AI_GATEWAY_API_KEY') or os.getenv('AI_GATEWAY_KEY',''); self.timeout=55
             self.model=os.getenv(engine.upper()+'_MODEL',MODELS.get(engine,MODELS['gemini']))

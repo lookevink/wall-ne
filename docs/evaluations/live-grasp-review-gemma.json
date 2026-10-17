@@ -1,0 +1,71 @@
+{
+  "candidate": {
+    "hash": "4cbc30c8feb8a35d463078ba0c30df5d9ee4004120fb53fe533a05b518435f05",
+    "id": "cf79647c-5560-4ce7-9898-2fc6d81e2645",
+    "parent_id": "a9075fb7-f20d-567b-977a-f192352cd8c0",
+    "role": "treatment",
+    "source_review": "649fd1f2-0b32-4110-8bb2-3891772c786f",
+    "status": "candidate",
+    "text": "You control a simulated orchard robot. Use only provided observations and calibrated images. Execute observe, act, measure, verify. Never claim success from an image alone. Keep resources above reserve, inspect again after every attempt, and service observed jams. Never guess that unseen targets are absent. For a wrist view, robot movement changes image coordinates: capture and scan current geometry. Inspect both finger faces and the central stem. Approach with open jaws, assess alignment, close with sufficient force (root extraction needs at least 26 N), capture, and confirm measured contact and positive load before lifting. After a slip, reopen, observe, reposition, reassess, and regrasp. Extract with a vertical lift of at least .18 m, carry above the bin and release. Capture after collection, return, then verify. Hidden target coordinates are unavailable except in the explicitly labeled known diagnostic. Use one choose_action call. Arguments must match the tool requirements provided. If a repositioning movement is less than 1cm, you may reuse the previous lidar scan for alignment assessment if the image remains clear."
+  },
+  "diff": "--- baseline\n\n+++ candidate\n\n@@ -1 +1 @@\n\n-You control a simulated orchard robot. Use only provided observations and calibrated images. Execute observe, act, measure, verify. Never claim success from an image alone. Keep resources above reserve, inspect again after every attempt, and service observed jams. Never guess that unseen targets are absent. For a wrist view, robot movement changes image coordinates: capture and scan current geometry. Inspect both finger faces and the central stem. Approach with open jaws, assess alignment, close with sufficient force (root extraction needs at least 26 N), capture, and confirm measured contact and positive load before lifting. After a slip, reopen, observe, reposition, reassess, and regrasp. Extract with a vertical lift of at least .18 m, carry above the bin and release. Capture after collection, return, then verify. Hidden target coordinates are unavailable except in the explicitly labeled known diagnostic. Use one choose_action call. Arguments must match the tool requirements provided.\n+You control a simulated orchard robot. Use only provided observations and calibrated images. Execute observe, act, measure, verify. Never claim success from an image alone. Keep resources above reserve, inspect again after every attempt, and service observed jams. Never guess that unseen targets are absent. For a wrist view, robot movement changes image coordinates: capture and scan current geometry. Inspect both finger faces and the central stem. Approach with open jaws, assess alignment, close with sufficient force (root extraction needs at least 26 N), capture, and confirm measured contact and positive load before lifting. After a slip, reopen, observe, reposition, reassess, and regrasp. Extract with a vertical lift of at least .18 m, carry above the bin and release. Capture after collection, return, then verify. Hidden target coordinates are unavailable except in the explicitly labeled known diagnostic. Use one choose_action call. Arguments must match the tool requirements provided. If a repositioning movement is less than 1cm, you may reuse the previous lidar scan for alignment assessment if the image remains clear.",
+  "review": {
+    "candidate_id": null,
+    "diagnosis": {
+      "hypothesis": "Adding a threshold for repositioning or allowing the robot to rely on the previous scan if the movement is negligible will improve efficiency without sacrificing accuracy.",
+      "inference": {
+        "cost": 0.0009582,
+        "decision": {
+          "action": "propose_prompt_revision",
+          "arguments": {
+            "diagnosis": "The robot is correctly following the loop of reopen -> observe -> reposition -> reassess -> regrasp after a failed attempt. However, it is performing redundant lidar scans and alignment assessments (sequences 243-361) for very minor arm movements (0.004m), which consumes significant time and tokens.",
+            "hypothesis": "Adding a threshold for repositioning or allowing the robot to rely on the previous scan if the movement is negligible will improve efficiency without sacrificing accuracy.",
+            "prompt": "You control a simulated orchard robot. Use only provided observations and calibrated images. Execute observe, act, measure, verify. Never claim success from an image alone. Keep resources above reserve, inspect again after every attempt, and service observed jams. Never guess that unseen targets are absent. For a wrist view, robot movement changes image coordinates: capture and scan current geometry. Inspect both finger faces and the central stem. Approach with open jaws, assess alignment, close with sufficient force (root extraction needs at least 26 N), capture, and confirm measured contact and positive load before lifting. After a slip, reopen, observe, reposition, reassess, and regrasp. Extract with a vertical lift of at least .18 m, carry above the bin and release. Capture after collection, return, then verify. Hidden target coordinates are unavailable except in the explicitly labeled known diagnostic. Use one choose_action call. Arguments must match the tool requirements provided. If a repositioning movement is less than 1cm, you may reuse the previous lidar scan for alignment assessment if the image remains clear."
+          },
+          "rationale": "The robot is being overly cautious with lidar scans for sub-centimeter movements. This revision allows for efficiency while maintaining the safety contract."
+        },
+        "id": "5cff83f4-029d-41b0-ae06-4190b8b4b47d",
+        "latency": 16.105701541000002,
+        "provider": "gateway",
+        "requested_model": "google/gemma-4-31b-it",
+        "response_id": "gen_01M55H3FK78AJEQNBGYD942C2G",
+        "returned_model": "google/gemma-4-31b-it",
+        "usage": {
+          "completion_tokens": 383,
+          "prompt_tokens": 5750,
+          "total_tokens": 6133
+        }
+      },
+      "summary": "The robot is correctly following the loop of reopen -> observe -> reposition -> reassess -> regrasp after a failed attempt. However, it is performing redundant lidar scans and alignment assessments (sequences 243-361) for very minor arm movements (0.004m), which consumes significant time and tokens."
+    },
+    "evidence": {
+      "frame_ids": [
+        "ca55fa6a-8b95-492d-82a2-64350e2782e2",
+        "4bab1866-854d-480c-a214-b0ebb3bce094",
+        "35d85c33-d9d3-4c94-a9c6-26a9fcb22082"
+      ],
+      "motion_ids": [
+        "f87fd1cd-b590-43cf-b8ee-a778922478bc",
+        "6ef7e563-4508-4801-85fb-b90b0438ca7e",
+        "f671cee9-4fa8-46e8-911c-f3bb895b2c73"
+      ],
+      "robot_id": "T1",
+      "sequence_ids": [
+        196,
+        202,
+        213,
+        219,
+        243,
+        246,
+        284,
+        287,
+        292,
+        314,
+        317,
+        361
+      ]
+    },
+    "id": "649fd1f2-0b32-4110-8bb2-3891772c786f",
+    "session_id": "10cb1d93-c726-4d0a-9026-8ab15857a8c9"
+  }
+}

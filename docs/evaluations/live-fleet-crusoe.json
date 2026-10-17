@@ -1,0 +1,16 @@
+{
+  "session_id": "d52e6f2f-3228-4d29-a02f-d1c86ea813f3",
+  "status": "blocked",
+  "checks": {
+    "battery": true,
+    "contract": true,
+    "coverage": false,
+    "critical_water": false,
+    "idle": true,
+    "returned": true
+  },
+  "calls": 3,
+  "cost": null,
+  "wall_seconds": 7.511907625000001,
+  "injected_two_failures": false
+}

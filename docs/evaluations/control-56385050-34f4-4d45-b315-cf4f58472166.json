@@ -1,0 +1,20 @@
+{
+  "session_id": "56385050-34f4-4d45-b315-cf4f58472166",
+  "seed": 7,
+  "engine": "nemotron",
+  "trial": "baseline",
+  "status": "blocked",
+  "checks": {
+    "battery": true,
+    "collected": false,
+    "extracted": false,
+    "images": false,
+    "inventory": true,
+    "preserved": true,
+    "returned": false
+  },
+  "calls": 51,
+  "cost": 0.028548159999999996,
+  "wall_seconds": 172.965200542,
+  "selection": "browser UI"
+}

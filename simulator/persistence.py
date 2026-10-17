@@ -115,8 +115,15 @@ class Repository:
         if table not in ('sessions','events','actions','checkpoints','artifacts','robot_sessions','reviews','prompt_versions','evaluations','prompt_activations','evaluation_campaigns'): raise ValueError('invalid table')
         return self.request('GET','/rest/v1/'+table+'?'+query)
 
-    def sessions(self):
-        return self.read('sessions','select=*&order=started_at.desc&limit=50')
+    def sessions(self,before=None,before_id=None):
+        query='select=*&order=started_at.desc,id.desc&limit=50'
+        if before:
+            from datetime import datetime
+            import uuid
+            stamp=datetime.fromisoformat(before.replace('Z','+00:00')).isoformat()
+            ident=str(uuid.UUID(before_id))
+            query+='&or=(started_at.lt.'+urllib.parse.quote(stamp,safe=':-.')+',and(started_at.eq.'+urllib.parse.quote(stamp,safe=':-.')+',id.lt.'+ident+'))'
+        return self.read('sessions',query)
 
     def checkpoint_record(self,session):
         rows=self.read('checkpoints',f'session_id=eq.{session}&order=sequence.desc&limit=1')

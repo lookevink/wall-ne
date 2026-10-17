@@ -1,0 +1,24 @@
+{
+  "session_id": "c8d5624e-4cf5-4d6b-a631-435b00380a27",
+  "status": "aborted",
+  "checks": {
+    "battery": true,
+    "contract": true,
+    "coverage": false,
+    "critical_water": false,
+    "idle": true,
+    "returned": false
+  },
+  "models": {
+    "orchestrator": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+    "planner": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+    "retriever": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "treatment": "nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B",
+    "verifier": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+    "worker": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
+  },
+  "calls": 34,
+  "cost": null,
+  "wall_seconds": 183.88168025000002,
+  "injected_two_failures": true
+}

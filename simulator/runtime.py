@@ -19,7 +19,7 @@ class Runtime:
         self.config.setdefault('trial',getattr(self.world,'trial',None))
         self.committed=0; self.epoch=0; self.persisted=False; self.storage_error=None; self.pending=None
         self.telemetry=Telemetry(); self.controller=DemoController(); self.executor=concurrent.futures.ThreadPoolExecutor(max_workers=7)
-        self.futures={}; self.inference=[]; self.failures={}; self.waiting=None; self.closed=False; self.last_commit=0; self.active_wall=0
+        self.futures={}; self.inference=[]; self.failures={}; self.retry_after={}; self.waiting=None; self.closed=False; self.last_commit=0; self.active_wall=0
         self.thread=threading.Thread(target=self.loop,daemon=True); self.thread.start()
 
     def persist(self):
@@ -130,16 +130,18 @@ class Runtime:
             except InferenceError as exc:
                 if exc.metrics: self.inference.append(exc.metrics)
                 self.failures[robot]=self.failures.get(robot,0)+1; self.world.event('inference_error',robot,error=str(exc))
+                self.retry_after[robot]=time.monotonic()+min(8,2**self.failures[robot])
                 if self.failures[robot]>=3: self.world.status='blocked'
                 self.persist()
         obs=self.world.observations()
+        obs['telemetry']=copy.deepcopy(self.telemetry.latest)
         # Deterministic feasible option enumeration constrains role calls, but does not choose for a model.
         if not getattr(self.world,'planned',False):
-            if 'planner' not in self.futures and self.world.status=='running':
+            if 'planner' not in self.futures and self.world.status=='running' and now>=self.retry_after.get('planner',0):
                 self.futures['planner']=(self.world.id,self.executor.submit(self.adapter('planner').call,dict(role='contract planner',observation=obs,instruction='Use choose_action action accept_contract with arguments {} to pin this fixed valid contract. You cannot weaken coverage, reserve, deadlines or acceptance checks.'),None,getattr(self.world,'prompt_texts',{}).get('planner',PROMPT)))
             return
         if all(self.world.verify().values()):
-            if 'verifier' not in self.futures and self.world.status=='running':
+            if 'verifier' not in self.futures and self.world.status=='running' and now>=self.retry_after.get('verifier',0):
                 self.futures['verifier']=(self.world.id,self.executor.submit(self.adapter('verifier').call,dict(role='independent verifier explanation',observation=obs,checks=self.world.verify(),instruction='Explain the independent checks concisely; use choose_action action verify with arguments {}. Code determines success.'),None,getattr(self.world,'prompt_texts',{}).get('verifier',PROMPT)))
             return
         candidates=self.controller.decisions(obs)
@@ -147,7 +149,7 @@ class Runtime:
         for robot,action,args in candidates: grouped.setdefault(robot,[]).append(dict(action=action,arguments=args))
         if all(self.world.verify().values()): grouped['orchestrator']=[dict(action='claim_complete',arguments={})]
         for robot,options in grouped.items():
-            if robot in self.futures or self.world.status!='running': continue
+            if robot in self.futures or self.world.status!='running' or now<self.retry_after.get(robot,0): continue
             role='orchestrator' if robot=='orchestrator' else 'retriever' if robot=='R1' else 'worker'
             permitted=dict(observation=obs,role=role,robot=robot,feasible_options=options)
             future=self.executor.submit(self.adapter(role).call,permitted,None,getattr(self.world,'prompt_texts',{}).get(role,PROMPT))
@@ -176,7 +178,8 @@ class Runtime:
                         self.step(elapsed)
                     else: self.collect_inactive_calls()
                     if self.persisted and self.world.status not in TERMINAL and now-self.telemetry.last_heartbeat>=1:
-                        self.telemetry.sample(self.world,self.epoch,True,self.waiting)
+                        waiting={robot:'inference_wait' for robot in self.futures} if self.world.kind=='fleet' else self.waiting
+                        self.telemetry.sample(self.world,self.epoch,True,waiting)
                     if self.persisted and self.world.seq>self.committed and now-self.last_commit>=.5: self.persist()
                 except (ValueError,StorageError,InferenceError) as exc:
                     if hasattr(self.world,'feedback'): self.world.feedback=str(exc)

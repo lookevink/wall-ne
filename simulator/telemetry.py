@@ -18,9 +18,14 @@ class Telemetry:
         for key,v in self.robots(world).items():
             self.sequences[key]=self.sequences.get(key,0)+1
             envelope=dict(schema_version=1,session_id=world.id,robot_id=key,resume_epoch=epoch,sequence=self.sequences[key],wall_utc=utc(),elapsed=now-self.started,sim_time=world.time,revision=world.revision,prompt_version=world.prompt_versions,action_id=(v.get('action') or {}).get('id'),task_id=(v.get('action') or {}).get('zone'))
-            health=dict(envelope,position=v['position'],battery=v['battery'],reserve=20,water=v.get('water'),lifecycle=v['lifecycle'],waiting_reason=waiting,fault=v.get('fault'),last_progress_revision=world.revision)
+            reason=waiting.get(key) if isinstance(waiting,dict) else waiting
+            health=dict(envelope,position=v['position'],battery=v['battery'],reserve=20,water=v.get('water'),lifecycle=v['lifecycle'],waiting_reason=reason if not v.get('action') else None,fault=v.get('fault'),last_progress_revision=world.revision)
             if world.kind=='arm':
                 health.update(joints=world.joints,tool_pose=world.tool_pose(),opening=world.opening,force=world.force,contact=world.holding,load=world.load,holding=world.holding,extracted=world.extracted,deposited=world.deposited,collision=world.collision)
+            previous=self.latest.get(key)
+            changed=not previous or any(health.get(field)!=previous.get(field) for field in ('position','lifecycle','action_id','water','joints','opening','force','holding','extracted','deposited'))
+            health['last_progress_revision']=world.revision if changed else previous['last_progress_revision']
+            health['last_progress_sim_time']=world.time if changed else previous.get('last_progress_sim_time',world.time)
             self.latest[key]=copy.deepcopy(health)
             self.motion.append(copy.deepcopy(health))
             if heartbeat: world.event('heartbeat',key,telemetry=copy.deepcopy(health))

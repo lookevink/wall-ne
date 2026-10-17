@@ -1,0 +1,22 @@
+[
+  {
+    "export_error": null,
+    "session_id": "8a9a9ba4-8383-4712-8a7d-9c3c31fb6eb1",
+    "engine": "gemini",
+    "trial": "wrist",
+    "seed": 7,
+    "status": "blocked",
+    "checks": {
+      "battery": true,
+      "collected": false,
+      "extracted": false,
+      "images": false,
+      "inventory": true,
+      "preserved": true,
+      "returned": false
+    },
+    "calls": 11,
+    "cost": 0.6041139999999999,
+    "wall_seconds": 257.070410958
+  }
+]

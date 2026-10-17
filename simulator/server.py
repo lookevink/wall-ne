@@ -55,8 +55,8 @@ class App:
             config=dict(mode=mode,engine=engine,speed=speed,**({'prompt_version':body['prompt_version']} if body.get('prompt_version') else {}))
             if body.get('campaign_id'): config['campaign_id']=body['campaign_id']
             if body.get('model_pins'): config.update(models=body['model_pins'],provider_base=body['provider_base'])
-            import hashlib
-            config['code_hash']=digest({str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for folder in ('simulator','web') for p in sorted((ROOT/folder).glob('*')) if p.suffix in ('.py','.js','.html','.css')})
+            from .common import implementation_hash
+            config['code_hash']=implementation_hash()
             runtime=(TreatmentRuntime if treatment else Runtime)(world,self.repository,config)
             if treatment: self.treatment=runtime
             else: self.fleet=runtime
@@ -109,7 +109,7 @@ class Handler(BaseHTTPRequestHandler):
                 raw=app.treatment.frame_bytes.get(path.rsplit('/',1)[1])
                 if raw is None: raise ValueError('unknown frame; use saved session artifact')
                 return self.send(raw,content_type='image/png')
-            if path=='/api/sessions': return self.send(app.repository.sessions())
+            if path=='/api/sessions': return self.send(app.repository.sessions(query.get('before',[None])[0],query.get('before_id',[None])[0]))
             if path.startswith('/api/sessions/'):
                 return self.session_get(path,query)
             if path in ('/api/reviews','/api/prompt-versions','/api/evaluations','/api/evaluation-campaigns'):
@@ -145,7 +145,10 @@ class Handler(BaseHTTPRequestHandler):
             filters=f'session_id=eq.{sid}&sequence=gt.{max(0,after)}&order=sequence&limit=100'
             if robot in ('W1','W2','W3','W4','W5','R1','T1'): filters+=f'&robot_id=eq.{robot}'
             return self.send(repo.read('events',filters))
-        if resource=='robots': return self.send(repo.read('robot_sessions',f'session_id=eq.{sid}&limit=10'))
+        if resource=='robots':
+            if len(parts)!=6 or parts[5]!='telemetry' or parts[4] not in ('W1','W2','W3','W4','W5','R1','T1'): raise ValueError('unknown robot telemetry route')
+            after=max(0,int(query.get('after',['0'])[0]))
+            return self.send(repo.read('events',f'session_id=eq.{sid}&robot_id=eq.{parts[4]}&type=eq.heartbeat&sequence=gt.{after}&order=sequence&limit=100'))
         if resource in ('motions','artifacts'):
             after=max(0,int(query.get('after',['0'])[0]))
             after_id=query.get('after_id',[''])[0]

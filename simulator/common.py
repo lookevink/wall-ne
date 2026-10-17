@@ -28,6 +28,10 @@ def canonical(value):
 def digest(value):
     return hashlib.sha256(canonical(value).encode()).hexdigest()
 
+def implementation_hash():
+    root=Path(__file__).resolve().parent.parent
+    return digest({str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for folder in ('simulator','web') for p in sorted((root/folder).glob('*')) if p.suffix in ('.py','.js','.html','.css')})
+
 def finite(value, low=-math.inf, high=math.inf):
     if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or not low <= value <= high:
         raise ValueError('number outside permitted range')

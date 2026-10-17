@@ -1,0 +1,22 @@
+{
+  "session_id": "2fa57c90-7f40-49f0-bf7c-49b1d73aa31f",
+  "seed": 0,
+  "status": "completed",
+  "checks": {
+    "battery": true,
+    "delivery": true,
+    "fertilizer": true,
+    "images": true,
+    "inventory": true,
+    "measured": true,
+    "moisture": true,
+    "pests": true,
+    "preserved": true,
+    "returned": true,
+    "weeds": true
+  },
+  "feedback": "Independent checks: {'moisture': True, 'delivery': True, 'measured': True, 'images': True, 'battery': True, 'returned': True, 'weeds': True, 'fertilizer': True, 'pests': True, 'inventory': True, 'preserved': True}",
+  "injected_fault": "nozzle clog",
+  "mode": "offline PNG heuristic",
+  "frames": 21
+}

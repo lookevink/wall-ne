@@ -96,6 +96,7 @@ class TreatmentRuntime(Runtime):
             if self.consecutive_invalid>=3: w.status='blocked'; w.feedback='Three rejected actions without physical progress'
             self.persist(); return
         entry=self.futures.get('T1')
+        if not entry and time.monotonic()<self.retry_after.get('T1',0): self.waiting='inference_backoff';return
         if entry:
             session,future=entry
             if not future.done(): self.waiting='inference_wait'; return
@@ -110,6 +111,7 @@ class TreatmentRuntime(Runtime):
             except InferenceError as exc:
                 if exc.metrics: self.inference.append(exc.metrics)
                 self.failures['T1']=self.failures.get('T1',0)+1; w.event('inference_error','T1',error=str(exc))
+                self.retry_after['T1']=time.monotonic()+min(8,2**self.failures['T1'])
                 if self.failures['T1']>=3: w.status='blocked'; w.feedback=str(exc)
             self.persist(); return
         obs=w.observations(); obs['tool_arguments']={k:TOOL_HELP[k] for k in w.allowed_actions() if k in TOOL_HELP}

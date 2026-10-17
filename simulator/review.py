@@ -4,10 +4,14 @@ from .common import uid,digest
 
 
 def permitted_evidence(events,limit=100):
+    import copy
     result=[]
     for e in events[-limit:]:
         if e['type'] in ('slip','contact','extraction','deposit','verification','rejected','inference_error','completed','decision','observation','depth'):
-            result.append({k:e[k] for k in ('sequence','type','robot_id','payload') if k in e})
+            item=copy.deepcopy({k:e[k] for k in ('sequence','type','robot_id','payload') if k in e})
+            if e['type']=='depth' and 'scan' in item['payload']:
+                scan=item['payload']['scan'];scan['measured_hits']=sum(p is not None for p in scan.pop('points',[]))
+            result.append(item)
     return result
 
 
@@ -49,7 +53,7 @@ class ReviewService:
         return dict(candidate=candidate,diff='\n'.join(difflib.unified_diff(parent[0]['text'].splitlines(),text.splitlines(),fromfile='baseline',tofile='candidate')))
 
     def review_session(self,session_id,engine='crusoe',robot_id=None,after=0):
-        from .inference import Adapter
+        from .inference import Adapter,InferenceError
         sessions=self.repository.read('sessions',f'id=eq.{session_id}&limit=1')
         if not sessions or sessions[0]['status']=='running': raise ValueError('terminal or explicit paused review boundary required')
         boundary=max(0,int(after))
@@ -84,10 +88,18 @@ class ReviewService:
             for sample in json.loads(gzip.decompress(raw)):
                 if 'load' in sample: load_history.append({k:sample[k] for k in ('sim_time','revision','force','load','holding','opening')})
         obs['bounded_load_history']=load_history[::max(1,len(load_history)//40)][:40]
-        response=Adapter(engine,'reviewer').call(obs,image=image,prompt='You review recorded simulation outcomes. Distinguish observed evidence from hypotheses. Do not change physical rules. Propose one bounded prompt revision using the required tool.')
+        evidence_record=dict(sequence_ids=[e['sequence'] for e in evidence],robot_id=robot_id,frame_ids=obs['frame_artifact_ids'],motion_ids=[m['id'] for m in motions])
+        try: response=Adapter(engine,'reviewer').call(obs,image=image,prompt='You review recorded simulation outcomes. Distinguish observed evidence from hypotheses. Do not change physical rules. Propose one bounded prompt revision using the required tool.')
+        except InferenceError as exc:
+            review=dict(id=uid(),session_id=session_id,evidence=evidence_record,diagnosis=dict(summary=str(exc),status='inference_failed',inference=exc.metrics),candidate_id=None)
+            self.repository.request('POST','/rest/v1/reviews',review)
+            return dict(review=review,candidate=None,diff='No candidate produced; failed review retained.')
         decision=response['decision'];args=decision['arguments']
-        if decision['action']!='propose_prompt_revision' or not all(isinstance(args.get(k),str) for k in ('diagnosis','hypothesis','prompt')): raise ValueError('invalid review proposal')
-        review=dict(id=uid(),session_id=session_id,evidence=dict(sequence_ids=[e['sequence'] for e in evidence],robot_id=robot_id,frame_ids=obs['frame_artifact_ids'],motion_ids=[m['id'] for m in motions]),diagnosis=dict(summary=args['diagnosis'][:3000],hypothesis=args['hypothesis'][:2000],inference=response),candidate_id=None)
+        if decision['action']!='propose_prompt_revision' or not all(isinstance(args.get(k),str) for k in ('diagnosis','hypothesis','prompt')):
+            review=dict(id=uid(),session_id=session_id,evidence=evidence_record,diagnosis=dict(summary='Invalid review proposal; no candidate created',status='invalid_proposal',inference=response),candidate_id=None)
+            self.repository.request('POST','/rest/v1/reviews',review)
+            return dict(review=review,candidate=None,diff='No candidate produced; invalid proposal retained.')
+        review=dict(id=uid(),session_id=session_id,evidence=evidence_record,diagnosis=dict(summary=args['diagnosis'][:3000],hypothesis=args['hypothesis'][:2000],inference=response),candidate_id=None)
         self.repository.request('POST','/rest/v1/reviews',review)
         candidate=self.create_candidate(role,parent_id,args['prompt'],review['id'],review['evidence']['sequence_ids'])
         return dict(review=review,**candidate)

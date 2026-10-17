@@ -1,0 +1,61 @@
+{
+  "candidate": null,
+  "diff": "No candidate produced; failed review retained.",
+  "review": {
+    "candidate_id": null,
+    "diagnosis": {
+      "inference": {
+        "cost": 0.063318,
+        "id": "d5ea978c-bafe-434e-9a24-ad3bfad3ed6f",
+        "latency": 39.848162083000005,
+        "provider": "gateway",
+        "requested_model": "google/gemini-3.1-pro-preview",
+        "response_id": null,
+        "response_summary": [
+          {
+            "finish_reason": "length",
+            "tool_names": []
+          }
+        ],
+        "returned_model": null,
+        "status": "failed",
+        "usage": {
+          "completion_tokens": 3930,
+          "prompt_tokens": 8079,
+          "total_tokens": 12009
+        }
+      },
+      "status": "inference_failed",
+      "summary": "Provider returned an invalid single tool call"
+    },
+    "evidence": {
+      "frame_ids": [
+        "ca55fa6a-8b95-492d-82a2-64350e2782e2",
+        "4bab1866-854d-480c-a214-b0ebb3bce094",
+        "35d85c33-d9d3-4c94-a9c6-26a9fcb22082"
+      ],
+      "motion_ids": [
+        "f87fd1cd-b590-43cf-b8ee-a778922478bc",
+        "6ef7e563-4508-4801-85fb-b90b0438ca7e",
+        "f671cee9-4fa8-46e8-911c-f3bb895b2c73"
+      ],
+      "robot_id": "T1",
+      "sequence_ids": [
+        196,
+        202,
+        213,
+        219,
+        243,
+        246,
+        284,
+        287,
+        292,
+        314,
+        317,
+        361
+      ]
+    },
+    "id": "19dc7ed6-717e-4416-af0d-44a4c099ec51",
+    "session_id": "10cb1d93-c726-4d0a-9026-8ab15857a8c9"
+  }
+}
