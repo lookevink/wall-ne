@@ -125,7 +125,35 @@ class FleetCareRuntime(Runtime):
         child=TreatmentRuntime(world,self.repository,config);child.navigation_gate=threading.Event()
         return child
 
+    def launch_fast_reserved(self):
+        reserved=[(i,a) for i,a in self.world.assignments.items() if a['status']=='reserved']
+        if not reserved:return
+        children=[(i,a,self.make_child(int(i),a['vehicle'])) for i,a in reserved]
+        def prepare(item):
+            child=item[2]
+            with child.lock:
+                if not child.persist():raise ValueError('worker session persistence failed: '+str(child.storage_error))
+                child.operator_snapshot=child.snapshot()
+        try:
+            # Register the shared immutable prompt before parallel creation.
+            prepare(children[0])
+            list(self.executor.map(prepare,children[1:]))
+            for i,a,child in children:
+                a.update(session_id=child.world.id,status='assigned')
+                self.world.worker_sessions[child.world.id]=dict(task_index=int(i),worker=a['vehicle'])
+                old=self.children.get(a['vehicle'])
+                if old:old.close()
+                self.children[a['vehicle']]=child
+                self.world.event('worker_dispatched',a['vehicle'],task_index=int(i),session_id=child.world.id)
+            # No worker can execute until all parent links are durable.
+            if not self.persist():return
+            list(self.executor.map(lambda item:item[2].start(),children))
+        except Exception:
+            for _,_,child in children:child.close()
+            raise
+
     def launch_reserved(self):
+        if self.config.get('care_controller')=='ultra_fast':return self.launch_fast_reserved()
         for i,a in self.world.assignments.items():
             if a['status']!='reserved':continue
             child=self.make_child(int(i),a['vehicle'])
@@ -139,6 +167,7 @@ class FleetCareRuntime(Runtime):
             self.children[a['vehicle']]=child
             self.world.event('worker_dispatched',a['vehicle'],task_index=int(i),session_id=child.world.id)
             if not self.persist():return
+            child.operator_snapshot=child.snapshot()
             child.start()
 
     def accept_frame(self,body):return self.sensor_worker(body).accept_frame(body)
@@ -149,7 +178,7 @@ class FleetCareRuntime(Runtime):
         return child
 
     def step(self,elapsed):
-        if self.active_wall>self.world.contract['wall_limit']:
+        if self.active_wall>(180 if self.config.get('care_controller')=='ultra_fast' else self.world.contract['wall_limit']):
             self.pause('blocked');self.world.feedback='Fleet wall budget exhausted';self.persist();return
         self.launch_reserved()
         if self.storage_error:return
@@ -163,6 +192,17 @@ class FleetCareRuntime(Runtime):
             self.world.event('run_finished',successful=succeeded,attempted=len(self.world.assignments),total=len(self.world.tasks))
             self.persist();return
         self.coordinate_traffic()
+        if self.config.get('care_controller')=='ultra_fast':
+            # Assign independent workers in one scheduling pass. Exclusive
+            # ownership, traffic gates and fleet completion remain authoritative.
+            changed=False
+            while self.world.options():
+                changed=True;option=self.world.options()[0]
+                self.world.command(uid(),'orchestrator',option['action'],**option['arguments'])
+            if all(self.world.verify().values()):
+                changed=True;self.world.command(uid(),'orchestrator','claim_complete')
+            if changed:self.persist()
+            return
         entry=self.futures.get('orchestrator')
         if entry:
             session,future=entry
@@ -191,10 +231,11 @@ class FleetCareRuntime(Runtime):
         self.world.time=self.active_wall
         total_cost=sum(r.get('cost') or 0 for r in self.inference)
         for worker,child in self.children.items():
-            with child.lock:
+            total_cost+=sum(r.get('cost') or 0 for r in list(child.inference))
+            if not child.lock.acquire(blocking=False):continue
+            try:
                 w=child.world;self.world.vehicles[worker]=copy.deepcopy(w.robot)
                 assignment=next(a for a in self.world.assignments.values() if a.get('session_id')==w.id)
-                total_cost+=sum(r.get('cost') or 0 for r in child.inference)
                 if child.storage_error:
                     self.pause('blocked');self.world.feedback=f'{worker}: storage failure';self.persist();return
                 if w.status in TERMINAL and assignment['status']!=w.status:
@@ -204,6 +245,7 @@ class FleetCareRuntime(Runtime):
                     if w.status!='completed':
                         self.world.feedback=f'{worker} stopped: {w.feedback}. Healthy workers continue.'
                     self.persist()
+            finally:child.lock.release()
         # Completed workers that have a newer assignment are counted from durable results.
         active={c.world.id for c in self.children.values()}
         total_cost+=sum(r.get('cost') or 0 for sid,result in self.world.results.items() if sid not in active for r in result['inference'])
@@ -234,15 +276,21 @@ class FleetCareRuntime(Runtime):
 
     def snapshot(self):
         with self.lock:
-            state=super().snapshot();workers={worker:child.snapshot() for worker,child in self.children.items()}
+            state=super().snapshot();workers={}
+            for worker,child in self.children.items():
+                if child.lock.acquire(blocking=False):
+                    try:child.operator_snapshot=child.snapshot()
+                    finally:child.lock.release()
+                cached=getattr(child,'operator_snapshot',None)
+                if cached is not None:workers[worker]=copy.deepcopy(cached)
             state['care_workers']=workers;state['navigation_owner']=self.navigation_owner
             for worker,s in workers.items():state['vehicles'][worker]=s['robot'];state['telemetry'].update(s['telemetry'])
             all_results=list(self.inference)
-            active={s['id'] for s in workers.values()}
+            active={c.world.id for c in self.children.values()}
             for sid,result in self.world.results.items():
                 if sid not in active:all_results+=result['inference']
-            for child in self.children.values():all_results+=child.inference
-            state['inference'].update(calls=len(all_results),pending_calls=len(self.futures)+sum(s['inference']['pending_calls'] for s in workers.values()),failed_calls=sum(r.get('status') in ('failed','interrupted_unknown') for r in all_results),tokens=sum(r.get('usage',{}).get('total_tokens',0) for r in all_results),cost=sum(r['cost'] for r in all_results) if all_results and all(r.get('cost') is not None for r in all_results) else None)
+            for child in self.children.values():all_results+=list(child.inference)
+            state['inference'].update(latency_seconds=sum(r.get('latency',0) for r in all_results),calls=len(all_results),pending_calls=len(self.futures)+sum(s['inference']['pending_calls'] for s in workers.values()),failed_calls=sum(r.get('status') in ('failed','interrupted_unknown') for r in all_results),tokens=sum(r.get('usage',{}).get('total_tokens',0) for r in all_results),cost=sum(r['cost'] for r in all_results) if all_results and all(r.get('cost') is not None for r in all_results) else None)
             inventory=dict(id=state['id'],seed=state['seed'],trial='precision',weeds=[],protected=[],pests=[],beneficial=[])
             for i,task in enumerate(self.world.tasks):
                 a=self.world.assignments.get(str(i),{});child=workers.get(a.get('vehicle'))

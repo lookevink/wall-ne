@@ -33,13 +33,13 @@ class Telemetry:
             health['last_progress_revision']=world.revision if changed else previous['last_progress_revision']
             health['last_progress_sim_time']=world.time if changed else previous.get('last_progress_sim_time',world.time)
             self.latest[key]=copy.deepcopy(health)
-            self.motion.append(copy.deepcopy(health))
+            if not heartbeat:self.motion.append(copy.deepcopy(health))
             if heartbeat:
                 world.event('heartbeat',key,telemetry=copy.deepcopy(health))
                 rows=self.history.setdefault(key,[]); rows.append(copy.deepcopy(health)); del rows[:-HISTORY]
         if heartbeat: self.last_heartbeat=now
 
-    def flush(self,repo,world):
+    def flush(self,repo,world,executor=None):
         if not self.motion: return []
         chunks=[]
         # Never bridge gaps by inventing movement samples.
@@ -50,8 +50,9 @@ class Telemetry:
                 chunks.append(current); current=[]; start=sample['sim_time']
             current.append(sample)
         if current: chunks.append(current)
-        artifacts=[repo.artifact(world.id,None,'movement',chunk,dict(units=UNITS,start=chunk[0]['sim_time'],end=chunk[-1]['sim_time'],samples=len(chunk))) for chunk in chunks]
-        return artifacts
+        def upload(chunk):
+            return repo.artifact(world.id,None,'movement',chunk,dict(units=UNITS,start=chunk[0]['sim_time'],end=chunk[-1]['sim_time'],samples=len(chunk)))
+        return list(executor.map(upload,chunks)) if executor and len(chunks)>1 else [upload(chunk) for chunk in chunks]
 
     def note_command(self,robot,accepted):
         # Consecutive rejections without an accepted command are the loop signal; physics progress resets nothing here.

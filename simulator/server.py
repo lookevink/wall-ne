@@ -4,6 +4,7 @@ import copy
 import gzip
 import json
 import mimetypes
+import os
 import pathlib
 import threading
 import time
@@ -53,10 +54,11 @@ class App:
         if recover_season: threading.Thread(target=self.recover_season,daemon=True).start()
 
     def day_plan(self,body):
-        plan=dict(self.plan,**{k:body[k] for k in ('mission','mode','speed') if k in body})
+        plan=dict(self.plan,**{k:body[k] for k in ('mission','mode','speed','care_controller') if k in body})
         if plan['mission'] not in ('weeding','watering','full_care'): raise ValueError('unknown orchard mission')
         if plan['speed'] not in (1,4,8,16): raise ValueError('speed must be 1/4/8/16')
         if plan['mission']=='watering' and plan['mode'] not in ('demo','live'): raise ValueError('invalid fleet mode')
+        if plan.get('care_controller','standard') not in ('standard','ultra_fast'):raise ValueError('invalid care controller')
         return plan
 
     def day_outcomes(self,runtime):
@@ -185,6 +187,9 @@ class App:
             if engine not in ('crusoe','nemotron','gemma','gemini'): raise ValueError('invalid inference engine')
             speed=body.get('speed',4 if treatment else 8)
             if speed not in (1,4,8,16): raise ValueError('speed must be 1/4/8/16')
+            care_controller=body.get('care_controller',os.getenv('WALLNE_CARE_CONTROLLER','standard'))
+            if care_controller not in ('standard','ultra_fast'):raise ValueError('invalid care controller')
+            if care_controller=='ultra_fast' and getattr(world,'mission_type',None)!='fleet_care':care_controller='standard'
             old=self.treatment if treatment else self.fleet
             if old.persisted:
                 if old.storage_error: raise ValueError('recover storage before replacing a session')
@@ -192,6 +197,7 @@ class App:
                 if old.storage_error: raise ValueError('session replacement paused by storage failure')
             old.close()
             config=dict(mode=mode,engine=engine,speed=speed,**({'prompt_version':body['prompt_version']} if body.get('prompt_version') else {}))
+            config['care_controller']=care_controller
             if body.get('campaign_id'): config['campaign_id']=body['campaign_id']
             if body.get('model_pins'): config.update(models=body['model_pins'],provider_base=body['provider_base'])
             from .common import implementation_hash,treatment_implementation_hash
@@ -405,8 +411,8 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     load_env(ROOT/'.env')
-    parser=argparse.ArgumentParser(); parser.add_argument('--port',type=int,default=8765); args=parser.parse_args()
-    server=ThreadingHTTPServer(('127.0.0.1',args.port),Handler); server.daemon_threads=True; server.app=App()
+    parser=argparse.ArgumentParser(); parser.add_argument('--port',type=int,default=8765); parser.add_argument('--no-recover',action='store_true'); args=parser.parse_args()
+    server=ThreadingHTTPServer(('127.0.0.1',args.port),Handler); server.daemon_threads=True; server.app=App(recover_season=not args.no_recover)
     print(f'Wall-ne: http://127.0.0.1:{args.port}',flush=True)
     try: server.serve_forever()
     except KeyboardInterrupt: pass

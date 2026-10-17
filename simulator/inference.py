@@ -72,6 +72,10 @@ def parse_response(response,tool_name='choose_action',allowed_actions=None):
             if not isinstance(reason,str) or len(reason)>1200 or action not in allowed_actions:raise ValueError()
             # Fields the model left at their empty defaults are not arguments.
             parsed=dict(action=action,arguments={k:v for k,v in parsed.items() if v not in ('',None)},rationale=reason)
+        elif tool_name in ('remove_pest','next_stage','stop','scan_lidar','project_ground','assess_alignment'):
+            if not isinstance(parsed,dict):raise ValueError()
+            reason=parsed.pop('reason',None)
+            parsed=dict(action=tool_name,arguments=parsed,rationale=reason)
         if not isinstance(parsed,dict) or set(parsed)-{'action','arguments','rationale'} or not isinstance(parsed.get('action'),str) or not isinstance(parsed.get('arguments'),dict): raise ValueError()
         if 'rationale' in parsed and (not isinstance(parsed['rationale'],str) or len(parsed['rationale'])>1200): raise ValueError()
         return parsed
@@ -116,7 +120,27 @@ class Adapter:
             fields.update({k:dict(type='number') for k in ('x','y','z','rx','ry','rz')})
             fields.update(action=dict(type='string',enum=observation['available_actions']),reason=dict(type='string'))
             schema=[dict(type='function',function=dict(name=tool_name,description='Execute one available action. scan_lidar and project_ground REQUIRE normalized image u,v and current frame_id. project_ground selects the visible root/soil junction, not a leaf. move_arm requires x,y,z in WORLD METERS. Optional rx,ry,rz default to zero (gripper straight DOWN). set_gripper requires opening and force. Assess/confirm require current frame_id and evidence.',parameters=dict(type='object',properties=fields,required=['action','reason','frame_id'] if observation.get('care_progress') else ['action','reason'],additionalProperties=False)))]
-        body=dict(model=self.model,messages=[dict(role='system',content=prompt),dict(role='user',content=content)],tools=schema,tool_choice='required' if flat or fleet else {'type':'function','function':{'name':tool_name}},temperature=.1,max_tokens=int(budget('MAX_TOKENS')))
+        body=dict(model=self.model,messages=[dict(role='system',content=prompt),dict(role='user',content=content)],tools=schema,tool_choice='required' if flat or fleet else {'type':'function','function':{'name':tool_name}},temperature=.1,max_tokens=int(getattr(self,'max_tokens',budget('MAX_TOKENS'))))
+        fast=observation.get('controller')=='ultra_fast'
+        if fast:
+            required={'remove_pest':['u','v'],'next_stage':[],'stop':[],
+                      'scan_lidar':['u','v','span'],'project_ground':['u','v'],
+                      'assess_alignment':['stem_between_fingers','depth_consistent','evidence']}
+            descriptions={'remove_pest':'Remove a visible caterpillar. Never target a red ladybird.',
+                          'next_stage':'Request independent stage verification when no pests are visible.',
+                          'stop':'Stop if no safe visual decision is possible.',
+                          'scan_lidar':'Scan around the visible weed ROOT CROWN where it meets soil. Use span 0.16.',
+                          'project_ground':'Project the visible weed ROOT/SOIL junction. Never select a leaf or the previous pixel coordinates after camera motion.',
+                          'assess_alignment':'Assess current RGB: both finger faces and central weed stem must be visible. Set booleans honestly.'}
+            schema=[]
+            for name in observation['available_actions']:
+                fields={k:ARGUMENT_FIELDS[k] for k in ['frame_id',*required[name]]}
+                if name in ('scan_lidar','project_ground') and observation.get('pixel_candidates'):
+                    fields.pop('u');fields.pop('v')
+                    fields['candidate_id']=dict(type='string',description='ID of the RGB component whose lower edge is the visible WEED ROOT CROWN. Components are unclassified; avoid fingers, clover and leaf tips. Read pixel_candidates and confirm against RGB.')
+                fields['reason']=dict(type='string')
+                schema.append(dict(type='function',function=dict(name=name,description=descriptions[name],parameters=dict(type='object',properties=fields,required=list(fields),additionalProperties=False))))
+            body.update(tools=schema,tool_choice='required')
         if flat or fleet: body['parallel_tool_calls']=False
         request=urllib.request.Request(self.base.rstrip('/')+'/chat/completions',data=canonical(body).encode(),headers={'Authorization':'Bearer '+self.key,'Content-Type':'application/json'},method='POST')
         started=time.monotonic(); response=None
@@ -135,7 +159,21 @@ class Adapter:
         cost=reported_cost(usage)
         try:
             if not envelope_valid:raise InferenceError('Provider returned an invalid response envelope')
-            decision=parse_response(response,tool_name,observation.get('available_actions'))
+            if fast:
+                calls=response.get('choices',[{}])[0].get('message',{}).get('tool_calls',[])
+                if len(calls)!=1 or calls[0].get('function',{}).get('name') not in observation['available_actions']:
+                    raise InferenceError('Provider returned an invalid vision action')
+                name=calls[0]['function']['name']
+                decision=parse_response(response,name)
+                if 'candidate_id' in decision['arguments']:
+                    ident=decision['arguments'].pop('candidate_id')
+                    candidate=next((c for c in observation.get('pixel_candidates',[]) if c['id']==ident),None)
+                    if candidate is None:raise InferenceError('Unknown pixel candidate')
+                    decision['arguments'].update(u=candidate['u'],v=candidate['v'])
+                    decision['pixel_candidate']=dict(frame_id=observation['frame']['id'],**candidate)
+                # Fast tools use their names as the action, rather than an enum
+                # inside one catch-all tool. Validate their exact typed fields.
+            else:decision=parse_response(response,tool_name,observation.get('available_actions'))
         except InferenceError as exc:
             exc.metrics=self.failed_metrics(started);exc.metrics['usage']={k:v for k,v in usage.items() if k in ('prompt_tokens','completion_tokens','total_tokens') and type(v) is int and v>=0}
             exc.metrics.update(cost=cost,response_id=response.get('id'),returned_model=response.get('model'))

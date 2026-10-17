@@ -57,10 +57,11 @@ def decode(raw):
         previous=row
     return w,h,pixels
 
-def components(pixels,kind):
+def components(pixels,kind,include_bounds=False):
     # No target IDs, positions or render segmentation are available to this detector.
     def match(r,g,b):
         if kind=='basin': return b>90 and b>r*1.45 and b>g*1.15
+        if kind=='vegetation': return g>45 and g>r*1.25 and g>b*1.2
         if kind=='weed': return g>35 and g>r*1.3 and g>b*1.25 and g<125
         if kind=='pest': return r>45 and b>45 and b>g*1.25 and r>g*1.25 and r<180
         return False
@@ -79,8 +80,10 @@ def components(pixels,kind):
         if len(group)<4: continue
         # Weed root is approximated at the bottom center of the visible component.
         low=max(y for x,y in group)
-        points=[p for p in group if p[1]>=low-2] if kind=='weed' else group
-        groups.append(dict(u=sum(x*2+1 for x,y in points)/len(points)/640,v=sum(y*2+1 for x,y in points)/len(points)/360,area=len(group)))
+        points=[p for p in group if p[1]>=low-2] if kind in ('weed','vegetation') else group
+        component=dict(u=sum(x*2+1 for x,y in points)/len(points)/640,v=sum(y*2+1 for x,y in points)/len(points)/360,area=len(group))
+        if include_bounds:component['bounds']=[min(x for x,y in group)*2/640,min(y for x,y in group)*2/360,(max(x for x,y in group)*2+2)/640,(low*2+2)/360]
+        groups.append(component)
     return sorted(groups,key=lambda g:-g['area'])
 
 

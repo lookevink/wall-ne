@@ -9,7 +9,7 @@ const workerFrames=new Map(),workerDepths=new Map(),workerScenes=new Map();
 const decisionCanvas=document.createElement('canvas');decisionCanvas.width=640;decisionCanvas.height=360;
 try{view=new FleetScene($('viewport'));feeds=new RoverViews(view,$('feeds'));}catch(e){notice(`Renderer unavailable: ${e.message}`);}
 // Agents are always on: a new day or season starts its mission immediately; Pause holds the mission and the clock.
-const plan=()=>({mission:$('mission').value,mode:$('mode').value,speed:Number($('speed').value)});
+const plan=()=>({mission:$('mission').value,mode:$('mode').value,speed:Number($('speed').value),care_controller:$('care-controller').value});
 button('next-day',()=>api('/api/next-day',plan()));
 button('new-season',()=>api('/api/season',{...plan(),seed:Number($('seed').value)}).then(()=>$('orchard-menu').close()));
 button('pause',()=>api(state?.status==='running'?'/api/pause':'/api/start',{}));
@@ -25,7 +25,7 @@ button('export',()=>download(state,`wall-ne-${state.id}.json`));
 button('camera-pause',()=>{view.paused=!view.paused;$('camera-pause').textContent=view.paused?'Resume cameras':'Pause cameras';});
 button('wind',()=>{view.windEnabled=!view.windEnabled;$('wind').textContent=`Wind ${view.windEnabled?'on':'off'}`;});
 $('wind').textContent=`Wind ${view?.windEnabled?'on':'off'}`;
-$('mission').onchange=()=>{$('mode').disabled=$('mission').value!=='watering';};$('mission').onchange();
+$('mission').onchange=()=>{$('mode').disabled=$('mission').value!=='watering';$('care-controller').disabled=$('mission').value!=='full_care';};$('mission').onchange();
 const workerFaults=document.createElement('div');workerFaults.className='small-buttons';workerFaults.setAttribute('aria-label','Individual worker breakdowns');
 for(const id of ['W1','W2','W3','W4','W5']){const control=document.createElement('button');control.textContent=`Break ${id}`;control.dataset.breakdownWorker=id;control.disabled=true;control.onclick=()=>api('/api/breakdown',{robots:[id]}).catch(error=>notice(error.message));workerFaults.append(control);}
 $('breakdown').parentElement.after(workerFaults);
@@ -105,7 +105,7 @@ async function poll(){
     state=await api('/api/state');if(['Failed to fetch','stale capture request','stale or superseded scan frame'].includes($('notice').textContent))notice('');view?.update(state);feeds?.update(state);
     $('status').textContent=state.status.replaceAll('_',' ');$('status').classList.toggle('error',['failed','blocked','storage_blocked'].includes(state.status));
     const arm=state.arena==='orchard',care=['full_care','fleet_care'].includes(state.mission_type),fleetCare=state.mission_type==='fleet_care',vehicles=Object.values(state.vehicles);
-    if(currentSession!==state.id){currentSession=state.id;lastFrame=null;lastDepth=null;const p=state.epoch?.plan;$('mission').value=p?.mission||(care?'full_care':arm?'weeding':'watering');if(p){$('mode').value=p.mode;$('speed').value=String(p.speed);}$('mission').onchange();$('seed').value=state.epoch?.seed??state.seed;}
+    if(currentSession!==state.id){currentSession=state.id;lastFrame=null;lastDepth=null;const p=state.epoch?.plan;$('mission').value=p?.mission||(care?'full_care':arm?'weeding':'watering');if(p){$('mode').value=p.mode;$('speed').value=String(p.speed);}$('care-controller').value=state.config.care_controller||'standard';$('mission').onchange();$('seed').value=state.epoch?.seed??state.seed;}
     renderEpoch(state.epoch);renderAlmanac(state.epoch);renderSeasonLog(state.epoch);
     if(state.epoch?.notice)notice(state.epoch.notice);
     const terminal=['completed','failed','blocked','aborted'].includes(state.status);
@@ -127,17 +127,20 @@ async function poll(){
     $('inference').textContent=`${arm?`W1 wrist / ${state.provider_routes?.treatment?.fallback?'Gateway fallback':'Crusoe'}`:state.config.mode==='demo'?'Rule-based demo':'Live roles'} · ${state.inference.calls} calls · ${state.inference.tokens} tokens · ${state.inference.cost===null?'cost unknown':'$'+state.inference.cost.toFixed(4)}`;
     if(state.storage.error)notice(state.storage.error);
     if(fleetCare&&view&&state.status==='running'){
+      const deliveries=[];
       for(const [worker,w] of Object.entries(state.care_workers)){
         if(w.status!=='running')continue;
         const req=w.frame_request;
-        if(req&&workerFrames.get(worker)!==req.id){const data=view.armControl.capture(req.camera,decisionCanvas);const frame=await api('/api/frame',{arena:'orchard',worker,mission_id:w.id,request_id:req.id,data_url:data});workerFrames.set(worker,req.id);workerScenes.set(worker,{frameId:frame.id,state});}
+        if(req&&workerFrames.get(worker)!==req.id){const data=view.armControl.capture(req.camera,decisionCanvas);deliveries.push(api('/api/frame',{arena:'orchard',worker,mission_id:w.id,request_id:req.id,data_url:data}).then(frame=>{workerFrames.set(worker,req.id);workerScenes.set(worker,{frameId:frame.id,state});}));}
         const depth=w.depth_request;
         if(depth&&workerDepths.get(worker)!==depth.id){
           const captured=workerScenes.get(worker);if(!captured||captured.frameId!==depth.frame_id)throw new Error('Reload lost the captured fleet scene; pause and resume for fresh observations');
           let points;try{view.update(captured.state);points=view.armControl.depth(depth);}finally{view.update(state);}
-          await api('/api/depth',{arena:'orchard',worker,mission_id:w.id,request_id:depth.id,frame_id:depth.frame_id,revision:depth.revision,points});workerDepths.set(worker,depth.id);
+          deliveries.push(api('/api/depth',{arena:'orchard',worker,mission_id:w.id,request_id:depth.id,frame_id:depth.frame_id,revision:depth.revision,points}).then(()=>workerDepths.set(worker,depth.id)));
         }
       }
+      const outcomes=await Promise.allSettled(deliveries);
+      const failure=outcomes.find(r=>r.status==='rejected');if(failure)throw failure.reason;
     }else if(arm&&view&&state.status==='running'){
       const req=state.frame_request;
       if(req&&lastFrame!==req.id){const data=view.armControl.capture(req.camera,decisionCanvas);await api('/api/frame',{arena:'orchard',mission_id:state.id,request_id:req.id,data_url:data});lastFrame=req.id;}
@@ -145,7 +148,7 @@ async function poll(){
       if(depth&&lastDepth!==depth.id){await api('/api/depth',{arena:'orchard',mission_id:state.id,request_id:depth.id,frame_id:depth.frame_id,revision:depth.revision,points:view.armControl.depth(depth)});lastDepth=depth.id;}
     }
   }catch(e){notice(e.message);}
-  setTimeout(poll,650);
+  setTimeout(poll,state?.config?.care_controller==='ultra_fast'?100:650);
 }
 poll();
 function animate(time){

@@ -15,6 +15,7 @@ class Runtime:
     def __init__(self,world=None,repository=None,config=None):
         self.lock=threading.RLock(); self.world=world or Mission(); self.repository=Repository(repository.url,repository.key) if isinstance(repository,Repository) else repository or Repository()
         self.config=copy.deepcopy(config or dict(mode='demo',engine='crusoe',speed=8))
+        explicit_fallback='fallback' in self.config
         self.config.setdefault('models',{role:Adapter(self.config['engine'],role).model for role in ('planner','orchestrator','worker','retriever','verifier','treatment')})
         self.config.setdefault('provider_base',Adapter(self.config['engine']).base)
         # New Crusoe sessions pin their fallback before the first paid call.
@@ -29,6 +30,12 @@ class Runtime:
                          'nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B':'nvidia/nemotron-3.5-super-vl'}
                 self.config['fallback']=dict(after_failures=2,engine='gemma',provider_base=Adapter('gemma').base,
                     models={role:aliases.get(model,model) for role,model in self.config['models'].items()})
+        if self.config.get('care_controller')=='ultra_fast':
+            self.config.setdefault('inference_timeout',6)
+            self.config.setdefault('max_tokens',512)
+            if self.config['engine']=='crusoe' and not explicit_fallback:
+                self.config['fallback']=dict(after_failures=1,engine='nemotron',provider_base=Adapter('nemotron').base,
+                    models={**self.config['models'],'treatment':Adapter('nemotron').model})
         self.config.setdefault('trial',getattr(self.world,'trial',None))
         self.provider_routes={}
         self.committed=0; self.epoch=0; self.persisted=False; self.storage_error=None; self.pending=None
@@ -53,7 +60,7 @@ class Runtime:
                 self.repository.lease(self.world.id)
             if self.pending is None:
                 self.world.event('checkpoint',status=self.world.status)
-                artifacts=self.telemetry.flush(self.repository,self.world)
+                artifacts=self.telemetry.flush(self.repository,self.world,self.executor if self.config.get('care_controller')=='ultra_fast' else None)
                 artifacts+=getattr(self,'pending_artifacts',[])
                 self.pending=self.repository.batch(self.world,self.committed,list(self.telemetry.latest.values()),artifacts)
             result=self.repository.commit(self.pending)
@@ -142,6 +149,8 @@ class Runtime:
         config=self.config['fallback'] if self.provider_routes.get(role,{}).get('fallback') else self.config
         adapter=Adapter(config['engine'],role)
         adapter.model=config['models'][role];adapter.base=config['provider_base']
+        if 'inference_timeout' in self.config:adapter.timeout=self.config['inference_timeout']
+        if 'max_tokens' in self.config:adapter.max_tokens=self.config['max_tokens']
         return adapter
 
     def dispatch(self,robot,role,observation,image=None):
@@ -352,7 +361,7 @@ class Runtime:
                         waiting={robot:'inference_wait' for robot in self.futures} if self.world.kind=='fleet' else self.waiting
                         self.telemetry.sample(self.world,self.epoch,True,waiting)
                         self.monitor(now)
-                    if self.persisted and self.world.seq>self.committed and now-self.last_commit>=.5: self.persist()
+                    if self.persisted and self.world.seq>self.committed and now-self.last_commit>=(2 if self.config.get('care_controller')=='ultra_fast' else .5): self.persist()
                 except (ValueError,StorageError,InferenceError) as exc:
                     if hasattr(self.world,'feedback'): self.world.feedback=str(exc)
                     self.world.status='blocked'; self.world.event('blocked',error=str(exc)); self.persist()
@@ -373,7 +382,7 @@ class Runtime:
                 rows=ticker.setdefault(robot,[])
                 if len(rows)<10: rows.append(e)
             state['robot_events']={robot:list(reversed(rows)) for robot,rows in ticker.items()}
-            state.update(config=self.config,provider_routes=copy.deepcopy(self.provider_routes),storage=dict(healthy=not self.storage_error,error=self.storage_error,committed_sequence=self.committed),telemetry=self.telemetry.latest,
+            state.update(storage_timing=copy.deepcopy(getattr(self.repository,'timings',{})),config=self.config,provider_routes=copy.deepcopy(self.provider_routes),storage=dict(healthy=not self.storage_error,error=self.storage_error,committed_sequence=self.committed),telemetry=self.telemetry.latest,
                          health=self.telemetry.health(time.monotonic(),self.failures),incidents=dict(open=copy.deepcopy(list(self.telemetry.incidents.values())),recent=copy.deepcopy(self.telemetry.closed[-10:])),escalation=copy.deepcopy(self.escalation),
                          inference=dict(calls=len(self.inference),pending_calls=len(self.futures),latency_seconds=sum(r.get('latency',0) for r in self.inference),failed_calls=sum(r.get('status') in ('failed','interrupted_unknown') for r in self.inference),tokens=sum(r['usage'].get('total_tokens',0) for r in self.inference),cost=sum(r['cost'] for r in self.inference) if self.inference and all(r['cost'] is not None for r in self.inference) else None,results=self.inference[-30:]),waiting=self.waiting)
             if self.storage_error: state['status']='storage_blocked'

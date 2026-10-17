@@ -2,6 +2,7 @@
 import copy
 import http.client
 import threading
+import time
 import gzip
 import hashlib
 import json
@@ -22,8 +23,19 @@ class Repository:
         self.writer=uid()
         self.leases={}
         self.connections=threading.local()
+        self.timings={};self.timing_lock=threading.Lock()
 
     def request(self, method, path, data=None, content_type='application/json'):
+        category='artifact' if path.startswith('/storage/') else 'commit' if path.endswith('/wallne_commit') else 'metadata'
+        started=time.monotonic()
+        try:return self._request(method,path,data,content_type)
+        finally:
+            elapsed=time.monotonic()-started
+            with self.timing_lock:
+                metric=self.timings.setdefault(category,dict(calls=0,seconds=0,max_seconds=0))
+                metric['calls']+=1;metric['seconds']+=elapsed;metric['max_seconds']=max(metric['max_seconds'],elapsed)
+
+    def _request(self, method, path, data=None, content_type='application/json'):
         if not self.url or not self.key: raise StorageError('Supabase backend credentials are missing')
         body=data if isinstance(data,bytes) else canonical(data).encode() if data is not None else None
         headers={'apikey':self.key,'Authorization':'Bearer '+self.key,'Content-Type':content_type,'Prefer':'return=representation'}
@@ -73,6 +85,8 @@ class Repository:
                 if getattr(world,'trial',None)=='precision' and role=='treatment' and not override:
                     from .precision_profile import PROMPT as precision_prompt, FULL_CARE_PROMPT
                     if getattr(world,'mission_type',None)=='full_care':precision_prompt=FULL_CARE_PROMPT
+                    if config.get('care_controller')=='ultra_fast':
+                        from .fast_control import PROMPT as precision_prompt
                     override=str(uuid.uuid5(uuid.NAMESPACE_URL,role+precision_prompt))
                     if not self.read('prompt_versions',f'id=eq.{override}&limit=1'):
                         self.request('POST','/rest/v1/prompt_versions',dict(id=override,role=role,text=precision_prompt,hash=digest(precision_prompt),status='candidate'))

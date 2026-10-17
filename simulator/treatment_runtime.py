@@ -90,7 +90,7 @@ class TreatmentRuntime(Runtime):
         if w.robot['action']:
             if w.robot['action']['kind']=='navigate' and hasattr(self,'navigation_gate') and not self.navigation_gate.is_set():
                 self.waiting='traffic_reservation';return
-            dt=min(elapsed,.5)*4
+            dt=min(elapsed,.5)*self.config.get('speed',4)
             while dt>1e-8:
                 if (w.robot['action'] or {}).get('kind')=='navigate' and hasattr(self,'navigation_gate') and not self.navigation_gate.is_set():
                     self.waiting='traffic_reservation';break
@@ -125,6 +125,18 @@ class TreatmentRuntime(Runtime):
             if self.consecutive_invalid>=3: w.status='blocked'; w.feedback='Three rejected actions without physical progress'
             self.persist(); return
         entry=self.futures.get(self.world.robot['id'])
+        fast=self.config.get('care_controller')=='ultra_fast' and getattr(w,'mission_type',None)=='full_care'
+        if fast and not entry:
+            from .fast_control import automatic_action
+            decision=automatic_action(w.observations())
+            if decision:
+                action,args=decision
+                receipt=w.command(uid(),w.robot['id'],action,**args)
+                w.event('automatic_control',w.robot['id'],action=action,accepted=receipt['accepted'],controller='ultra_fast')
+                if not receipt['accepted']:
+                    w.status='blocked';w.feedback='Bounded controller rejected: '+receipt.get('reason','unknown')
+                elif not w.robot['action']:w.record_control_progress(action)
+                self.persist();return
         if not entry and time.monotonic()<self.retry_after.get(self.world.robot['id'],0): self.waiting='inference_backoff';return
         if entry:
             session,future=entry
@@ -145,13 +157,18 @@ class TreatmentRuntime(Runtime):
                 if exc.metrics: self.inference.append(exc.metrics)
                 self.failures[self.world.robot['id']]=getattr(exc,'provider_failure_count',self.failures.get(self.world.robot['id'],0)+1)
                 w.event('inference_error',self.world.robot['id'],error=str(exc))
-                self.retry_after[self.world.robot['id']]=time.monotonic()+min(8,2**self.failures[self.world.robot['id']])
+                self.retry_after[self.world.robot['id']]=time.monotonic()+(.1 if fast else min(8,2**self.failures[self.world.robot['id']]))
                 if self.failures[self.world.robot['id']]>=3: w.status='blocked'; w.feedback=str(exc)
             self.persist(); return
         obs=w.observations(); obs['tool_arguments']={k:TOOL_HELP[k] for k in w.allowed_actions() if k in TOOL_HELP}
         if w.trial=='precision':
             obs.pop('tool_arguments',None) # The flat schema and wrist instructions define these fields.
         obs['budgets'].update(wall_seconds_remaining=max(0,wall_limit-self.active_wall),reported_dollars_remaining=max(0,cost_limit-sum(r['cost'] or 0 for r in self.inference)),cost_complete=all(r['cost'] is not None for r in self.inference))
+        if fast:
+            from .fast_control import vision_observation,pixel_candidates
+            obs=vision_observation(obs)
+            if w.phase=='extraction' and self.pixels:
+                obs['pixel_candidates']=pixel_candidates(self.pixels,obs)
         images=[self.image]
         obs['input_images']=[dict(index=0,meaning='Full current camera image',frame_id=w.frame['id'])]
         if w.trial!='precision' and self.scan_image and w.scan and w.scan['frame_id']==w.frame['id'] and not obs.get('scan_stale'):
