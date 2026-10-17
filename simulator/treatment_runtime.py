@@ -133,9 +133,11 @@ class TreatmentRuntime(Runtime):
                 action,args=decision
                 receipt=w.command(uid(),w.robot['id'],action,**args)
                 w.event('automatic_control',w.robot['id'],action=action,accepted=receipt['accepted'],controller='ultra_fast')
-                if not receipt['accepted']:
+                expected_probe=(action=='next_stage' and w.phase=='pests' and
+                    receipt.get('reason')=='independent care checks reject stage clearance')
+                if not receipt['accepted'] and not expected_probe:
                     w.status='blocked';w.feedback='Bounded controller rejected: '+receipt.get('reason','unknown')
-                elif not w.robot['action']:w.record_control_progress(action)
+                elif receipt['accepted'] and not w.robot['action']:w.record_control_progress(action)
                 self.persist();return
         if not entry and time.monotonic()<self.retry_after.get(self.world.robot['id'],0): self.waiting='inference_backoff';return
         if entry:
@@ -167,7 +169,7 @@ class TreatmentRuntime(Runtime):
         if fast:
             from .fast_control import vision_observation,pixel_candidates
             obs=vision_observation(obs)
-            if w.phase=='extraction' and self.pixels:
+            if w.phase in ('pests','extraction') and self.pixels:
                 obs['pixel_candidates']=pixel_candidates(self.pixels,obs)
         images=[self.image]
         obs['input_images']=[dict(index=0,meaning='Full current camera image',frame_id=w.frame['id'])]

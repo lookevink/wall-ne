@@ -17,6 +17,7 @@ class FastControlTests(unittest.TestCase):
 
     def act(self,w,action,args):
         r=w.command(uid(),w.robot['id'],action,**args)
+        if action=='next_stage' and r.get('reason')=='independent care checks reject stage clearance':return
         self.assertTrue(r['accepted'],r)
         self.settle(w)
 
@@ -73,7 +74,7 @@ class FastControlTests(unittest.TestCase):
         obs['gripper'].update(holding=True,load=0)
         self.assertIsNone(automatic_action(obs))
 
-    def test_fast_runtime_runs_routine_action_without_model_and_stops_on_bad_motion(self):
+    def test_fast_runtime_runs_routine_action_without_model(self):
         from simulator.treatment_runtime import TreatmentRuntime
         w=OrchardCare(tree_count=1);w.status='running';w.begin();self.settle(w);frame(w)
         with patch('threading.Thread.start'):
@@ -144,3 +145,56 @@ class FastControlTests(unittest.TestCase):
             self.assertEqual(snapshot['care_workers']['W1']['id'],child.world.id)
             self.assertFalse(release.is_set())
         finally:release.set();thread.join()
+
+    def test_pest_clearance_probe_cannot_bypass_checks_or_repeat_on_same_revision(self):
+        from simulator.treatment_runtime import TreatmentRuntime
+        w=OrchardCare(tree_count=1);w.status='running';w.phase='pests';frame(w)
+        with patch('threading.Thread.start'):
+            runtime=TreatmentRuntime(w,config=dict(mode='vision',engine='crusoe',care_controller='ultra_fast'))
+        self.addCleanup(runtime.close)
+        with patch.object(runtime,'persist',return_value=True),patch.object(runtime,'dispatch') as dispatch:
+            runtime.step(.05)
+            self.assertEqual(w.phase,'pests');self.assertEqual(w.status,'running')
+            self.assertIsNone(automatic_action(w.observations()))
+            runtime.step(.05);dispatch.assert_called_once()
+        for pest in w.pests:pest['removed']=True
+        w.revision+=1;frame(w)
+        action,args=automatic_action(w.observations())
+        self.assertEqual(action,'next_stage')
+        self.assertTrue(w.command(uid(),w.robot['id'],action,**args)['accepted'])
+        self.assertEqual(w.phase,'extraction')
+
+    def test_malformed_fast_envelopes_preserve_failed_call_accounting(self):
+        import json
+        from simulator.inference import Adapter,InferenceError
+        class Reply:
+            def __enter__(self):return self
+            def __exit__(self,*args):pass
+            def read(self,*args):return json.dumps(self.body).encode()
+        reply=Reply();a=Adapter('crusoe');a.key='test'
+        obs=dict(controller='ultra_fast',trial='precision',available_actions=['stop'])
+        for choices in ([],None,[None],[{'message':None}],[{'message':{'tool_calls':[None]}}],[{'message':{'tool_calls':[{'function':None}]}}]):
+            reply.body={'choices':choices}
+            with self.subTest(choices=choices),patch('urllib.request.urlopen',return_value=reply):
+                with self.assertRaises(InferenceError) as raised:a.call(obs)
+                self.assertEqual(raised.exception.metrics['status'],'failed')
+
+    def test_rgb_subregion_separates_stem_base_from_broad_leaf(self):
+        from simulator.png import components
+        pixels=bytearray(640*360*4)
+        for x0,x1,y0,y1,rgb in [(300,304,180,240,(74,116,30)),(305,335,200,250,(12,140,51))]:
+            for y in range(y0,y1):
+                for x in range(x0,x1):pixels[(y*640+x)*4:(y*640+x)*4+4]=bytes((*rgb,255))
+        stem=components(pixels,'yellow_green')[0]
+        self.assertLess(abs(stem['u']-302/640),.005)
+        self.assertLess(abs(stem['v']-237/360),.01)
+
+    def test_pest_candidates_use_only_rgb_and_preserve_red_ladybird(self):
+        from simulator.fast_control import pixel_candidates
+        pixels=bytearray(640*360*4)
+        for x0,rgb in [(100,(110,40,110)),(200,(220,25,25))]:
+            for y in range(100,130):
+                for x in range(x0,x0+10):pixels[(y*640+x)*4:(y*640+x)*4+4]=bytes((*rgb,255))
+        candidates=pixel_candidates(pixels,dict(phase='pests'))
+        self.assertEqual(len(candidates),1)
+        self.assertAlmostEqual(candidates[0]['u'],105/640,places=3)

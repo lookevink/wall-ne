@@ -1,0 +1,1136 @@
+{
+  "session_id": "d2c29209-0e84-45bc-8d4b-6b3e5b8f74be",
+  "controller": "ultra_fast",
+  "seed": 7,
+  "status": "blocked",
+  "checks": {
+    "all_workers_used": true,
+    "care_verified": false,
+    "inventory": true,
+    "reserve": true,
+    "returned": false,
+    "trees_complete": false
+  },
+  "measured_wall_seconds": 181.39092695899998,
+  "active_wall_seconds": 180.02706533299997,
+  "timing_scope": "Reset through terminal outcome",
+  "inference": {
+    "calls": 34,
+    "cost": null,
+    "failed_calls": 5,
+    "latency_seconds": 191.275433747,
+    "pending_calls": 0,
+    "results": [],
+    "tokens": 129504
+  },
+  "config": {
+    "arena": "orchard",
+    "care_controller": "ultra_fast",
+    "code_hash": "f543ddc60e5aec7af24f94186349c6131a35022e02f83a15aa3583a788d4d4f0",
+    "engine": "crusoe",
+    "fallback": {
+      "after_failures": 1,
+      "engine": "gemini",
+      "models": {
+        "orchestrator": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "planner": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "retriever": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+        "treatment": "google/gemini-2.5-flash",
+        "verifier": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "worker": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
+      },
+      "provider_base": "https://ai-gateway.vercel.sh/v1"
+    },
+    "inference_timeout": 6,
+    "max_tokens": 512,
+    "mode": "vision",
+    "models": {
+      "orchestrator": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "planner": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "retriever": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "treatment": "google/gemma-4-31b-it",
+      "verifier": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "worker": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
+    },
+    "provider_base": "https://api.inference.crusoecloud.com/v1",
+    "speed": 16,
+    "treatment_code_hash": "d8ec5b06521f12b60a3312c89e714792277532e30db785eb7e5568dd3da62483",
+    "trial": null
+  },
+  "assignments": {
+    "0": {
+      "session_id": "150dace5-d14b-49e1-8d52-b8928c50f5d3",
+      "status": "completed",
+      "vehicle": "W1"
+    },
+    "1": {
+      "session_id": "17c5a3a8-a358-4992-8796-81129cb74af5",
+      "status": "blocked",
+      "vehicle": "W2"
+    },
+    "2": {
+      "session_id": "d5b56715-d957-400d-a60d-c01c345e24ec",
+      "status": "blocked",
+      "vehicle": "W3"
+    },
+    "3": {
+      "session_id": "c4e88c62-c2d4-4590-aee3-d2c34b5558aa",
+      "status": "blocked",
+      "vehicle": "W4"
+    },
+    "4": {
+      "session_id": "aaecd397-0cb2-48a5-baaa-222ee99c9db3",
+      "status": "completed",
+      "vehicle": "W5"
+    },
+    "5": {
+      "session_id": "b60cc81b-7d5a-4301-b7fc-6d14e4493237",
+      "status": "assigned",
+      "vehicle": "W5"
+    },
+    "6": {
+      "session_id": "d190c728-65a6-42f1-825d-66db915e422e",
+      "status": "assigned",
+      "vehicle": "W1"
+    }
+  },
+  "background_sync": {
+    "pending_operations": 16,
+    "recovery_errors": {},
+    "sessions": {
+      "0054a525-332e-4e3e-9ade-fa25299a6451": {
+        "cloud_committed_sequence": 201,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 201,
+        "synced": true
+      },
+      "08530f17-5f37-4488-bcd9-ddcebb4efc08": {
+        "cloud_committed_sequence": 170,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 170,
+        "synced": true
+      },
+      "150dace5-d14b-49e1-8d52-b8928c50f5d3": {
+        "cloud_committed_sequence": 405,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 405,
+        "synced": true
+      },
+      "17c5a3a8-a358-4992-8796-81129cb74af5": {
+        "cloud_committed_sequence": 193,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 193,
+        "synced": true
+      },
+      "20e50776-eaa3-4208-a984-cc2d827b2311": {
+        "cloud_committed_sequence": 314,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 314,
+        "synced": true
+      },
+      "2ba39659-1ee6-4902-99af-e305c75906cf": {
+        "cloud_committed_sequence": 222,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 222,
+        "synced": true
+      },
+      "30274e73-eca5-4874-84f4-5f03f9f2b4e3": {
+        "cloud_committed_sequence": 234,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 234,
+        "synced": true
+      },
+      "3beca442-74e0-4d53-82dd-0192d6e721a4": {
+        "cloud_committed_sequence": 285,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 285,
+        "synced": true
+      },
+      "3ea727be-bfad-4ce4-b597-3b0d34b71bc2": {
+        "cloud_committed_sequence": 440,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 440,
+        "synced": true
+      },
+      "55c4eb03-250e-4e53-9d9a-de9f29672454": {
+        "cloud_committed_sequence": 301,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 301,
+        "synced": true
+      },
+      "59190eeb-a199-4ca7-ab0c-c81c96e44c88": {
+        "cloud_committed_sequence": 257,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 257,
+        "synced": true
+      },
+      "67f6b375-23df-4819-a111-502764596971": {
+        "cloud_committed_sequence": 299,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 299,
+        "synced": true
+      },
+      "6e950d2b-ee15-4d9b-abea-16ff4f4cf1aa": {
+        "cloud_committed_sequence": 319,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 319,
+        "synced": true
+      },
+      "7dfa7886-f52c-47ab-bd61-84b7cfe2cdb6": {
+        "cloud_committed_sequence": 1075,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 1075,
+        "synced": true
+      },
+      "821bbf82-2e1d-4f3f-ba75-934c98ae7e0b": {
+        "cloud_committed_sequence": 231,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 231,
+        "synced": true
+      },
+      "8697bfd8-d5b7-4f2c-8c8c-7acfec996ed0": {
+        "cloud_committed_sequence": 299,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 299,
+        "synced": true
+      },
+      "a02911b3-6d41-4b07-935f-2fd354d8cb0d": {
+        "cloud_committed_sequence": 301,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 301,
+        "synced": true
+      },
+      "aaecd397-0cb2-48a5-baaa-222ee99c9db3": {
+        "cloud_committed_sequence": 326,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 326,
+        "synced": true
+      },
+      "b60cc81b-7d5a-4301-b7fc-6d14e4493237": {
+        "cloud_committed_sequence": 213,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 7,
+        "queued_sequence": 227,
+        "synced": false
+      },
+      "c4e88c62-c2d4-4590-aee3-d2c34b5558aa": {
+        "cloud_committed_sequence": 175,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 175,
+        "synced": true
+      },
+      "d190c728-65a6-42f1-825d-66db915e422e": {
+        "cloud_committed_sequence": 154,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 9,
+        "queued_sequence": 174,
+        "synced": false
+      },
+      "d2c29209-0e84-45bc-8d4b-6b3e5b8f74be": {
+        "cloud_committed_sequence": 1088,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 1088,
+        "synced": true
+      },
+      "d5b56715-d957-400d-a60d-c01c345e24ec": {
+        "cloud_committed_sequence": 174,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 174,
+        "synced": true
+      },
+      "f81762d3-dbc5-406b-bb87-d5cbbf4e6dff": {
+        "cloud_committed_sequence": 329,
+        "error": null,
+        "mode": "background",
+        "pending_operations": 0,
+        "queued_sequence": 329,
+        "synced": true
+      }
+    },
+    "synced": false
+  },
+  "workers": {
+    "W1": {
+      "id": "d190c728-65a6-42f1-825d-66db915e422e",
+      "phase": "extraction",
+      "status": "paused",
+      "feedback": "Selected ground ray world point: [11.01114, 0.08, 14.05313]. Use x,z with tool-center y=0.13 only if RGB confirms the weed root crown.",
+      "inference": {
+        "calls": 4,
+        "cost": null,
+        "failed_calls": 0,
+        "latency_seconds": 23.45270212500003,
+        "pending_calls": 0,
+        "results": [
+          {
+            "cost": null,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "351b4e60-0e0f-46df-885c-7abbcb76b644",
+                "u": 0.5170758928571428,
+                "v": 0.6765873015873016
+              },
+              "pixel_candidate": {
+                "area": 56,
+                "bounds": [
+                  0.509375,
+                  0.6277777777777778,
+                  0.525,
+                  0.7277777777777777
+                ],
+                "color": "purple",
+                "frame_id": "351b4e60-0e0f-46df-885c-7abbcb76b644",
+                "id": "p0",
+                "u": 0.5170758928571428,
+                "v": 0.6765873015873016
+              },
+              "rationale": "Purple caterpillar detected on tree trunk."
+            },
+            "fallback": false,
+            "id": "e0a26371-193b-4307-a857-4298b96a0ba0",
+            "latency": 5.125874041999992,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "64c7be35-9827-4c5d-bb37-d2f25c8e0f5c",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": "e59d87c5377c4a808054480e7ff03177",
+            "returned_model": "google/gemma-4-31b-it",
+            "usage": {
+              "completion_tokens": 73,
+              "prompt_tokens": 2482,
+              "total_tokens": 2555
+            }
+          },
+          {
+            "cost": null,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "7cf880b6-ff5d-496f-bb12-50035677a73c",
+                "u": 0.4725852272727272,
+                "v": 0.5324074074074073
+              },
+              "pixel_candidate": {
+                "area": 33,
+                "bounds": [
+                  0.465625,
+                  0.5,
+                  0.478125,
+                  0.5666666666666667
+                ],
+                "color": "purple",
+                "frame_id": "7cf880b6-ff5d-496f-bb12-50035677a73c",
+                "id": "p0",
+                "u": 0.4725852272727272,
+                "v": 0.5324074074074073
+              },
+              "rationale": "Purple caterpillar identified on tree trunk."
+            },
+            "fallback": false,
+            "id": "385d6f32-2847-4920-8518-4b33d5208899",
+            "latency": 5.564130250000005,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "cf5b96f4-6e56-4b97-9f06-56e577795c16",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": "0e5f4d1373a6438ab68004ed0aa34a54",
+            "returned_model": "google/gemma-4-31b-it",
+            "usage": {
+              "completion_tokens": 74,
+              "prompt_tokens": 2376,
+              "total_tokens": 2450
+            }
+          },
+          {
+            "cost": null,
+            "decision": {
+              "action": "scan_lidar",
+              "arguments": {
+                "frame_id": "391befae-fba0-4e88-8d17-6ace4098ab99",
+                "span": 0.04,
+                "u": 0.6659375,
+                "v": 0.7038888888888889
+              },
+              "pixel_candidate": {
+                "area": 5,
+                "bounds": [
+                  0.6625,
+                  0.6944444444444444,
+                  0.66875,
+                  0.7111111111111111
+                ],
+                "color": "yellow-green",
+                "frame_id": "391befae-fba0-4e88-8d17-6ace4098ab99",
+                "id": "c2",
+                "u": 0.6659375,
+                "v": 0.7038888888888889
+              },
+              "rationale": "Lower edge of upright grass weed root crown."
+            },
+            "fallback": false,
+            "id": "48edb946-b014-4f9b-b66c-5c3be2f22cbc",
+            "latency": 6.8138622080000175,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "2bdd1890-5ae0-443a-ab29-b251f09221f6",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": "a4f01087774b4d8a9809bb02a2e56546",
+            "returned_model": "google/gemma-4-31b-it",
+            "usage": {
+              "completion_tokens": 81,
+              "prompt_tokens": 2938,
+              "total_tokens": 3019
+            }
+          },
+          {
+            "cost": null,
+            "decision": {
+              "action": "project_ground",
+              "arguments": {
+                "frame_id": "e8cbd7bf-9b30-4065-a3c2-89c6d79d27b7",
+                "u": 0.4984375,
+                "v": 0.7291666666666666
+              },
+              "pixel_candidate": {
+                "area": 16,
+                "bounds": [
+                  0.49375,
+                  0.7,
+                  0.50625,
+                  0.7388888888888889
+                ],
+                "color": "yellow-green",
+                "frame_id": "e8cbd7bf-9b30-4065-a3c2-89c6d79d27b7",
+                "id": "c2",
+                "u": 0.4984375,
+                "v": 0.7291666666666666
+              },
+              "rationale": "Candidate c2 is at the root crown of the upright grass weed."
+            },
+            "fallback": false,
+            "id": "d6eae9aa-b3e1-44a8-bcd9-80e424cb6795",
+            "latency": 5.948835625000015,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "93276829-0c21-420e-8722-85e0d13fc6d7",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": "36616f081db84afd98c4c3638a658746",
+            "returned_model": "google/gemma-4-31b-it",
+            "usage": {
+              "completion_tokens": 81,
+              "prompt_tokens": 5708,
+              "total_tokens": 5789
+            }
+          }
+        ],
+        "tokens": 13813
+      },
+      "storage_timing": {
+        "artifact": {
+          "calls": 35,
+          "max_seconds": 4.992649916000005,
+          "seconds": 24.769443997999986
+        },
+        "commit": {
+          "calls": 55,
+          "max_seconds": 0.6948651670000174,
+          "seconds": 15.297601543999974
+        },
+        "metadata": {
+          "calls": 12,
+          "max_seconds": 0.8785332500000038,
+          "seconds": 4.353627081999974
+        }
+      }
+    },
+    "W2": {
+      "id": "17c5a3a8-a358-4992-8796-81129cb74af5",
+      "phase": "extraction",
+      "status": "blocked",
+      "feedback": "depth request timed out after 30 seconds",
+      "inference": {
+        "calls": 3,
+        "cost": null,
+        "failed_calls": 0,
+        "latency_seconds": 20.51545429099999,
+        "pending_calls": 0,
+        "results": [
+          {
+            "cost": null,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "ec9b169c-9764-4da5-b974-cafb73c79c2b",
+                "u": 0.5170230263157894,
+                "v": 0.6771442495126705
+              },
+              "pixel_candidate": {
+                "area": 57,
+                "bounds": [
+                  0.509375,
+                  0.6277777777777778,
+                  0.525,
+                  0.7277777777777777
+                ],
+                "color": "purple",
+                "frame_id": "ec9b169c-9764-4da5-b974-cafb73c79c2b",
+                "id": "p0",
+                "u": 0.5170230263157894,
+                "v": 0.6771442495126705
+              },
+              "rationale": "Purple caterpillar identified at p0."
+            },
+            "fallback": false,
+            "id": "c8b93939-1ada-441f-828d-bd391ea76286",
+            "latency": 7.025339624999994,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "5eedaf9a-c11e-46d6-8f36-ddd79cc9b35a",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": "e09a32f3da13498aafe675c4f34517a5",
+            "returned_model": "google/gemma-4-31b-it",
+            "usage": {
+              "completion_tokens": 73,
+              "prompt_tokens": 2445,
+              "total_tokens": 2518
+            }
+          },
+          {
+            "cost": null,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "1f857c85-f01c-496b-8b70-bd57ef485d97",
+                "u": 0.4711588541666667,
+                "v": 0.5185185185185185
+              },
+              "pixel_candidate": {
+                "area": 48,
+                "bounds": [
+                  0.4625,
+                  0.4722222222222222,
+                  0.478125,
+                  0.5666666666666667
+                ],
+                "color": "purple",
+                "frame_id": "1f857c85-f01c-496b-8b70-bd57ef485d97",
+                "id": "p0",
+                "u": 0.4711588541666667,
+                "v": 0.5185185185185185
+              },
+              "rationale": "Purple caterpillar detected on tree trunk."
+            },
+            "fallback": false,
+            "id": "1c4fc8cf-8709-4178-82c0-a2ade60c72ae",
+            "latency": 7.148873958000003,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "dde6fbf4-d471-486a-99d5-830891790b12",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": "81154d97fcd945c49fa737f385aa2ec5",
+            "returned_model": "google/gemma-4-31b-it",
+            "usage": {
+              "completion_tokens": 75,
+              "prompt_tokens": 2329,
+              "total_tokens": 2404
+            }
+          },
+          {
+            "cost": null,
+            "decision": {
+              "action": "scan_lidar",
+              "arguments": {
+                "frame_id": "79847d50-6779-421a-a96b-2a8414238739",
+                "span": 0.04,
+                "u": 0.6625,
+                "v": 0.7361111111111112
+              },
+              "pixel_candidate": {
+                "area": 11,
+                "bounds": [
+                  0.659375,
+                  0.7055555555555556,
+                  0.665625,
+                  0.7444444444444445
+                ],
+                "color": "yellow-green",
+                "frame_id": "79847d50-6779-421a-a96b-2a8414238739",
+                "id": "c0",
+                "u": 0.6625,
+                "v": 0.7361111111111112
+              },
+              "rationale": "Identifying root crown of weed at c0."
+            },
+            "fallback": false,
+            "id": "a4bc467f-c9bd-42ab-96a3-238a1304da2d",
+            "latency": 6.341240707999994,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "364139d5-c88d-49f1-ad19-10849622eb61",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": "826a36541a3342e8a95cbf7adf369a4d",
+            "returned_model": "google/gemma-4-31b-it",
+            "usage": {
+              "completion_tokens": 88,
+              "prompt_tokens": 3224,
+              "total_tokens": 3312
+            }
+          }
+        ],
+        "tokens": 8234
+      },
+      "storage_timing": {
+        "artifact": {
+          "calls": 26,
+          "max_seconds": 4.264645541,
+          "seconds": 24.53371074599999
+        },
+        "commit": {
+          "calls": 68,
+          "max_seconds": 1.9124488329999991,
+          "seconds": 28.47305075400001
+        },
+        "metadata": {
+          "calls": 18,
+          "max_seconds": 1.9260112079999985,
+          "seconds": 8.180500167000002
+        }
+      }
+    },
+    "W3": {
+      "id": "d5b56715-d957-400d-a60d-c01c345e24ec",
+      "phase": "pests",
+      "status": "blocked",
+      "feedback": "camera request timed out after 30 seconds; keep the mission page open",
+      "inference": {
+        "calls": 3,
+        "cost": null,
+        "failed_calls": 1,
+        "latency_seconds": 13.131536125000004,
+        "pending_calls": 0,
+        "results": [
+          {
+            "cost": null,
+            "fallback": false,
+            "id": "5980a0d8-2c11-46cc-8792-98c124508963",
+            "latency": 4.218756167000002,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "bdb3aa76-2534-4236-83cb-733b719b5aa3",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": 0.0013175,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "4c959cf5-a94c-4317-b5ee-79df140e3c25",
+                "u": 0.5171336206896552,
+                "v": 0.6777777777777778
+              },
+              "pixel_candidate": {
+                "area": 58,
+                "bounds": [
+                  0.509375,
+                  0.6277777777777778,
+                  0.525,
+                  0.7277777777777777
+                ],
+                "color": "purple",
+                "frame_id": "4c959cf5-a94c-4317-b5ee-79df140e3c25",
+                "id": "p0",
+                "u": 0.5171336206896552,
+                "v": 0.6777777777777778
+              },
+              "rationale": "Visible purple caterpillar on tree trunk."
+            },
+            "fallback": true,
+            "id": "977b2abb-a3a2-45b2-9426-979a15524f0f",
+            "latency": 5.69841375,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "52556478-3470-4b7c-8dd5-b449d31b16b1",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M560G94SGRG8KB41VG1ZRDBR",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 65,
+              "prompt_tokens": 3850,
+              "total_tokens": 3915
+            }
+          },
+          {
+            "cost": 0.0012772,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "668e66c2-b112-4045-9d1a-42bbcc41bc7c",
+                "u": 0.4711588541666667,
+                "v": 0.5185185185185185
+              },
+              "pixel_candidate": {
+                "area": 48,
+                "bounds": [
+                  0.4625,
+                  0.4722222222222222,
+                  0.478125,
+                  0.5666666666666667
+                ],
+                "color": "purple",
+                "frame_id": "668e66c2-b112-4045-9d1a-42bbcc41bc7c",
+                "id": "p0",
+                "u": 0.4711588541666667,
+                "v": 0.5185185185185185
+              },
+              "rationale": "visible purple caterpillar"
+            },
+            "fallback": true,
+            "id": "f1d7a9fa-2afe-404a-bc0c-56732590cd81",
+            "latency": 3.2143662080000013,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "455ee134-41d0-465a-8cd7-745b24d423b3",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M560GGTCED830TZ16VX7V2JK",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 61,
+              "prompt_tokens": 3749,
+              "total_tokens": 3810
+            }
+          }
+        ],
+        "tokens": 7725
+      },
+      "storage_timing": {
+        "artifact": {
+          "calls": 26,
+          "max_seconds": 6.1129956250000035,
+          "seconds": 24.593039125999987
+        },
+        "commit": {
+          "calls": 59,
+          "max_seconds": 1.4466402500000015,
+          "seconds": 23.993231664999968
+        },
+        "metadata": {
+          "calls": 16,
+          "max_seconds": 1.4364647080000008,
+          "seconds": 7.702149333000014
+        }
+      }
+    },
+    "W4": {
+      "id": "c4e88c62-c2d4-4590-aee3-d2c34b5558aa",
+      "phase": "pests",
+      "status": "blocked",
+      "feedback": "camera request timed out after 30 seconds; keep the mission page open",
+      "inference": {
+        "calls": 3,
+        "cost": null,
+        "failed_calls": 1,
+        "latency_seconds": 13.150239873999993,
+        "pending_calls": 0,
+        "results": [
+          {
+            "cost": null,
+            "fallback": false,
+            "id": "736664c8-2b13-49da-a0a4-c99fb79a7bea",
+            "latency": 4.191943082999998,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "7c0113d8-e9c0-4ec3-b86e-7cb59278f3b1",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": 0.001306,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "327f4919-f29b-4bfd-bcb9-20ee33baeab3",
+                "u": 0.5170797413793103,
+                "v": 0.6767241379310345
+              },
+              "pixel_candidate": {
+                "area": 58,
+                "bounds": [
+                  0.509375,
+                  0.6277777777777778,
+                  0.525,
+                  0.7277777777777777
+                ],
+                "color": "purple",
+                "frame_id": "327f4919-f29b-4bfd-bcb9-20ee33baeab3",
+                "id": "p0",
+                "u": 0.5170797413793103,
+                "v": 0.6767241379310345
+              },
+              "rationale": "Visible purple caterpillar on tree trunk."
+            },
+            "fallback": true,
+            "id": "7407bd3f-82a6-436b-81d3-32d880ba6aad",
+            "latency": 5.749346207999999,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "9e41286b-479d-4d28-86b8-c78bb33b1a31",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M560G8XMQ60MF1QB4RTXBQ01",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 61,
+              "prompt_tokens": 3845,
+              "total_tokens": 3906
+            }
+          },
+          {
+            "cost": 0.0012906,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "5c4d26e0-594f-4938-892f-47eee0b4c1e8",
+                "u": 0.4711588541666667,
+                "v": 0.5185185185185185
+              },
+              "pixel_candidate": {
+                "area": 48,
+                "bounds": [
+                  0.4625,
+                  0.4722222222222222,
+                  0.478125,
+                  0.5666666666666667
+                ],
+                "color": "purple",
+                "frame_id": "5c4d26e0-594f-4938-892f-47eee0b4c1e8",
+                "id": "p0",
+                "u": 0.4711588541666667,
+                "v": 0.5185185185185185
+              },
+              "rationale": "Visible purple caterpillar on tree trunk."
+            },
+            "fallback": true,
+            "id": "e12ff573-72f7-404f-b5ae-d2bdb5ff5dfc",
+            "latency": 3.2089505829999965,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "1f7c4640-c5c3-4290-8373-d551868cf66d",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M560GGXN0CNX7RZZR3PJ5N34",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 66,
+              "prompt_tokens": 3752,
+              "total_tokens": 3818
+            }
+          }
+        ],
+        "tokens": 7724
+      },
+      "storage_timing": {
+        "artifact": {
+          "calls": 26,
+          "max_seconds": 9.689996707999995,
+          "seconds": 39.80201570999999
+        },
+        "commit": {
+          "calls": 60,
+          "max_seconds": 2.098942082999997,
+          "seconds": 22.07041091499994
+        },
+        "metadata": {
+          "calls": 16,
+          "max_seconds": 1.0128682919999985,
+          "seconds": 5.95998012600001
+        }
+      }
+    },
+    "W5": {
+      "id": "b60cc81b-7d5a-4301-b7fc-6d14e4493237",
+      "phase": "extraction",
+      "status": "paused",
+      "feedback": "Measured contact acknowledged",
+      "inference": {
+        "calls": 6,
+        "cost": null,
+        "failed_calls": 1,
+        "latency_seconds": 35.46597049899998,
+        "pending_calls": 0,
+        "results": [
+          {
+            "cost": null,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "3523ec1a-5065-499a-9aac-75718e784b2f",
+                "u": 0.5171336206896552,
+                "v": 0.6777777777777778
+              },
+              "pixel_candidate": {
+                "area": 58,
+                "bounds": [
+                  0.509375,
+                  0.6277777777777778,
+                  0.525,
+                  0.7277777777777777
+                ],
+                "color": "purple",
+                "frame_id": "3523ec1a-5065-499a-9aac-75718e784b2f",
+                "id": "p0",
+                "u": 0.5171336206896552,
+                "v": 0.6777777777777778
+              },
+              "rationale": "Purple caterpillar identified on tree trunk."
+            },
+            "fallback": false,
+            "id": "6180d837-6ea6-4d31-96ee-035f453089c0",
+            "latency": 5.745137540999991,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "5cef1891-1584-4d1f-946d-35fa9f3af01c",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": "288106cf75a548fbad6b2c49e73fde55",
+            "returned_model": "google/gemma-4-31b-it",
+            "usage": {
+              "completion_tokens": 74,
+              "prompt_tokens": 2531,
+              "total_tokens": 2605
+            }
+          },
+          {
+            "cost": null,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "16bb76d9-729d-4a24-acaf-f4d1a3e688d7",
+                "u": 0.4725852272727272,
+                "v": 0.5324074074074073
+              },
+              "pixel_candidate": {
+                "area": 33,
+                "bounds": [
+                  0.465625,
+                  0.5,
+                  0.478125,
+                  0.5666666666666667
+                ],
+                "color": "purple",
+                "frame_id": "16bb76d9-729d-4a24-acaf-f4d1a3e688d7",
+                "id": "p0",
+                "u": 0.4725852272727272,
+                "v": 0.5324074074074073
+              },
+              "rationale": "Purple caterpillar detected on tree trunk."
+            },
+            "fallback": false,
+            "id": "a1104277-917c-426e-aa90-7b6350d795ef",
+            "latency": 5.362549875000013,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "ed89397c-8e97-42fa-9f70-1753d53f4a99",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": "28e75a6e7e3f4c9a83cdeb33597771ff",
+            "returned_model": "google/gemma-4-31b-it",
+            "usage": {
+              "completion_tokens": 74,
+              "prompt_tokens": 2414,
+              "total_tokens": 2488
+            }
+          },
+          {
+            "cost": null,
+            "decision": {
+              "action": "scan_lidar",
+              "arguments": {
+                "frame_id": "2d5dce8d-68af-4378-87fb-0676d55815d0",
+                "span": 0.04,
+                "u": 0.359765625,
+                "v": 0.6555555555555556
+              },
+              "pixel_candidate": {
+                "area": 470,
+                "bounds": [
+                  0.284375,
+                  0.46111111111111114,
+                  0.39375,
+                  0.6666666666666666
+                ],
+                "color": "green",
+                "frame_id": "2d5dce8d-68af-4378-87fb-0676d55815d0",
+                "id": "c0",
+                "u": 0.359765625,
+                "v": 0.6555555555555556
+              },
+              "rationale": "Identifying root crown of upright weed for extraction."
+            },
+            "fallback": false,
+            "id": "abb5ed22-9645-480f-bcd8-9a3bf764a166",
+            "latency": 6.616153333,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "1ecd6c71-c330-4621-81b6-21cae66aa3d4",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": "e6bea4466b9a4215b3e7c99ab4db65be",
+            "returned_model": "google/gemma-4-31b-it",
+            "usage": {
+              "completion_tokens": 85,
+              "prompt_tokens": 2485,
+              "total_tokens": 2570
+            }
+          },
+          {
+            "cost": null,
+            "decision": {
+              "action": "project_ground",
+              "arguments": {
+                "frame_id": "00a14201-259d-4be6-a3d3-b636c656a185",
+                "u": 0.4792410714285714,
+                "v": 0.6845238095238095
+              },
+              "pixel_candidate": {
+                "area": 20,
+                "bounds": [
+                  0.471875,
+                  0.6555555555555556,
+                  0.484375,
+                  0.6944444444444444
+                ],
+                "color": "yellow-green",
+                "frame_id": "00a14201-259d-4be6-a3d3-b636c656a185",
+                "id": "c2",
+                "u": 0.4792410714285714,
+                "v": 0.6845238095238095
+              },
+              "rationale": "Lower edge of the weed stem at the soil junction."
+            },
+            "fallback": false,
+            "id": "eed149f8-4f25-4665-bdf1-62da5cb3b7c2",
+            "latency": 7.153098499999999,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "80d37204-244e-405b-9ac2-612ec69981eb",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": "895c7ea197b94c0c9b2ad73b491490d6",
+            "returned_model": "google/gemma-4-31b-it",
+            "usage": {
+              "completion_tokens": 80,
+              "prompt_tokens": 6541,
+              "total_tokens": 6621
+            }
+          },
+          {
+            "cost": null,
+            "fallback": false,
+            "id": "559c342a-71b1-45ad-bd44-8a02730278e9",
+            "latency": 7.0291225409999925,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "9d8ad08a-1424-494a-91c6-48c1126dbea7",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": 0.0025708,
+            "decision": {
+              "action": "assess_alignment",
+              "arguments": {
+                "depth_consistent": true,
+                "evidence": "The weed stem is clearly visible between the two robot fingers, and the depth appears consistent.",
+                "frame_id": "ac82d20d-a1a6-4c4b-b45f-ab0b5d1a81f2",
+                "stem_between_fingers": true
+              },
+              "rationale": "The weed stem is aligned between the fingers, and the depth is consistent."
+            },
+            "fallback": true,
+            "id": "1096e34f-6e2e-4289-b458-f34c95f34df8",
+            "latency": 3.559908708999984,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "7aa01f9f-5d03-438e-8fd2-5d50aaa3c844",
+            "requested_model": "google/gemini-2.5-flash",
+            "response_id": "gen_01M560MC5J8B96NX0A1CDKAV7H",
+            "returned_model": "google/gemini-2.5-flash",
+            "usage": {
+              "completion_tokens": 103,
+              "prompt_tokens": 7711,
+              "total_tokens": 7814
+            }
+          }
+        ],
+        "tokens": 22098
+      },
+      "storage_timing": {
+        "artifact": {
+          "calls": 38,
+          "max_seconds": 3.1564981670000236,
+          "seconds": 22.699309835000008
+        },
+        "commit": {
+          "calls": 75,
+          "max_seconds": 0.7077214169999877,
+          "seconds": 19.723245366999805
+        },
+        "metadata": {
+          "calls": 16,
+          "max_seconds": 0.773579959000017,
+          "seconds": 4.671315834000012
+        }
+      }
+    }
+  },
+  "passed": false
+}

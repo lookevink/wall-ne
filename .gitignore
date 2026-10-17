@@ -2,7 +2,7 @@
 .env.*
 !.env.example
 .runtime/
-node_modules/
+node_modules
 __pycache__/
 *.pyc
 .DS_Store

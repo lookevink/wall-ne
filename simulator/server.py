@@ -44,7 +44,10 @@ def saved_outcomes(state):
 
 class App:
     def __init__(self,recover_season=True):
-        self.repository=Repository(); self.fleet=TreatmentRuntime(OrchardManipulation(),repository=self.repository,config=dict(mode='vision',engine='crusoe',speed=4,arena='orchard',treatment_code_hash=treatment_implementation_hash()))
+        self.repository=Repository()
+        from .background_storage import recover_outboxes
+        self.background_sync=recover_outboxes(self.repository)
+        self.fleet=TreatmentRuntime(OrchardManipulation(),repository=self.repository,config=dict(mode='vision',engine='crusoe',speed=4,arena='orchard',treatment_code_hash=treatment_implementation_hash()))
         self.treatment=TreatmentRuntime(repository=self.repository)
         self.reset_lock=threading.RLock(); self.campaigns=Campaigns(self)
         # The orchard calendar outlives individual missions. Each day's world saves its own conditions.
@@ -120,6 +123,11 @@ class App:
     def recover_season(self):
         """Continue the latest saved season after a restart; Next day then begins the following day."""
         try:
+            from .background_storage import sync_status
+            while not sync_status()['synced']:
+                with self.season_lock:self.season_notice='Waiting for local evidence to sync before recovering the saved season'
+                time.sleep(1)
+                if self.season.day:return
             rows=self.repository.read('sessions','select=id,metadata&order=started_at.desc,id.desc&limit=25')
             # Worker sessions inherit the parent's configuration; only the parent holds the season.
             configs=[((r.get('metadata') or {}).get('configuration') or {},r) for r in rows]
@@ -252,6 +260,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send(result)
             if path in ('/api/state','/api/export'):
                 state=app.fleet.snapshot();state['epoch']=app.epoch_view()
+                from .background_storage import sync_status
+                state['background_sync']=sync_status()
                 return self.send(state)
             if path=='/api/timelapse': return self.send(dict(reels=timelapse.reels()))
             if path in ('/api/treatment/state','/api/treatment/export'): return self.send(app.treatment.snapshot())
@@ -302,7 +312,13 @@ class Handler(BaseHTTPRequestHandler):
         if len(parts)==3: return self.send(repo.read('sessions',f'id=eq.{sid}&limit=1'))
         resource=parts[3]
         if resource=='artifacts' and len(parts)==5:
-            aid=str(uuid.UUID(parts[4])); raw,a=repo.artifact_bytes(sid,aid)
+            aid=str(uuid.UUID(parts[4]))
+            from .background_storage import REGISTRY,REGISTRY_LOCK,LocalArtifactMissing
+            with REGISTRY_LOCK:local=REGISTRY.get(sid)
+            try:
+                if not local:raise LocalArtifactMissing()
+                raw,a=local.local_artifact(aid)
+            except LocalArtifactMissing:raw,a=repo.artifact_bytes(sid,aid)
             return self.send(raw,content_type='image/png' if a['kind']=='frame' else 'application/gzip')
         if resource=='events':
             after=int(query.get('after',['0'])[0]); robot=query.get('robot',[''])[0]

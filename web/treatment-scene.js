@@ -10,7 +10,31 @@ export class TreatmentScene{
  depth(request){return sampleDepth(this.scene,request);}
 }
 
-export function sampleDepth(scene,request){const camera=calibratedCamera(request.camera),raycaster=new THREE.Raycaster();scene.updateMatrixWorld(true);const meshes=[];scene.traverseVisible(o=>{if(o.isMesh&&!o.userData.overlay&&o.layers.test(camera.layers))meshes.push(o);});return request.rays.map(([u,v])=>{raycaster.setFromCamera(new THREE.Vector2(u*2-1,1-v*2),camera);raycaster.near=.05;raycaster.far=6;const hit=raycaster.intersectObjects(meshes,false)[0];return hit?[u,v,hit.point.x,hit.point.y,hit.point.z]:null;});}
+export function sampleDepth(scene,request){
+ const camera=calibratedCamera(request.camera),raycaster=new THREE.Raycaster(),meshes=[];
+ const instance=new THREE.Matrix4(),world=new THREE.Matrix4(),sphere=new THREE.Sphere();
+ scene.updateMatrixWorld(true);
+ scene.traverseVisible(object=>{
+  if(!object.isMesh||object.userData.overlay||!object.layers.test(camera.layers))return;
+  // Orchard instances span the entire forest. Three's instanced raycast loops
+  // over all of them for EACH ray. Filter exact bounding spheres once per scan,
+  // then raycast the unchanged nearby triangles with their real world matrices.
+  if(object.isInstancedMesh&&!object.morphTexture&&!object.geometry.morphAttributes.position){
+   const geometry=object.geometry;if(!geometry.boundingSphere)geometry.computeBoundingSphere();
+   if(!geometry.boundingBox)geometry.computeBoundingBox();
+   for(let i=0;i<object.count;i++){
+    object.getMatrixAt(i,instance);world.multiplyMatrices(object.matrixWorld,instance);
+    sphere.copy(geometry.boundingSphere).applyMatrix4(world);
+    if(sphere.center.distanceTo(camera.position)>6+sphere.radius+1e-8)continue;
+    const mesh=new THREE.Mesh(geometry,object.material);mesh.matrixWorld.copy(world);meshes.push(mesh);
+   }
+  }else meshes.push(object);
+ });
+ return request.rays.map(([u,v])=>{
+  raycaster.setFromCamera(new THREE.Vector2(u*2-1,1-v*2),camera);raycaster.near=.05;raycaster.far=6;
+  const hit=raycaster.intersectObjects(meshes,false)[0];return hit?[u,v,hit.point.x,hit.point.y,hit.point.z]:null;
+ });
+}
 
 export function updateTreatmentWorld(world,state){
  if(state.kind==='arm'&&!['baseline','known','depth','lidar','alignment','wrist','precision'].includes(state.trial))throw Error('Saved arm profile is unsupported; inspect its recorded images instead.');

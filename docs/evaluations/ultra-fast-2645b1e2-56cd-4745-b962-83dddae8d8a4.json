@@ -1,0 +1,1247 @@
+{
+  "session_id": "2645b1e2-56cd-4745-b962-83dddae8d8a4",
+  "controller": "ultra_fast",
+  "seed": 7,
+  "status": "blocked",
+  "checks": {
+    "all_workers_used": true,
+    "care_verified": false,
+    "inventory": true,
+    "reserve": true,
+    "returned": false,
+    "trees_complete": false
+  },
+  "measured_wall_seconds": 184.001608167,
+  "active_wall_seconds": 180.03362579199998,
+  "timing_scope": "Reset through terminal outcome",
+  "inference": {
+    "calls": 58,
+    "cost": null,
+    "failed_calls": 18,
+    "latency_seconds": 123.95217966199998,
+    "pending_calls": 0,
+    "results": [],
+    "tokens": 211342
+  },
+  "config": {
+    "arena": "orchard",
+    "care_controller": "ultra_fast",
+    "code_hash": "f1c1ec283c10e32a73c3aeafa904e6d095d2c9c1784152b5bedb9445a7ba810d",
+    "engine": "crusoe",
+    "fallback": {
+      "after_failures": 1,
+      "engine": "nemotron",
+      "models": {
+        "orchestrator": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "planner": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "retriever": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+        "treatment": "nvidia/nemotron-3.5-super-vl",
+        "verifier": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "worker": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
+      },
+      "provider_base": "https://ai-gateway.vercel.sh/v1"
+    },
+    "inference_timeout": 6,
+    "max_tokens": 512,
+    "mode": "vision",
+    "models": {
+      "orchestrator": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "planner": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "retriever": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "treatment": "google/gemma-4-31b-it",
+      "verifier": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "worker": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
+    },
+    "provider_base": "https://api.inference.crusoecloud.com/v1",
+    "speed": 16,
+    "treatment_code_hash": "dbe160caf90f1f7975d047acd9d7083650a534fa58931edc10234574e72849c0",
+    "trial": null
+  },
+  "assignments": {
+    "0": {
+      "session_id": "c56c43cd-55d7-492b-8e92-6293aa5b278d",
+      "status": "blocked",
+      "vehicle": "W1"
+    },
+    "1": {
+      "session_id": "c984979c-19ad-4cb4-a640-3eaab2b2b74b",
+      "status": "assigned",
+      "vehicle": "W2"
+    },
+    "2": {
+      "session_id": "23868a0f-4480-4673-a5f5-675a270904a1",
+      "status": "completed",
+      "vehicle": "W3"
+    },
+    "3": {
+      "session_id": "66bb595d-a3f2-432a-868a-ba54b13148f6",
+      "status": "completed",
+      "vehicle": "W4"
+    },
+    "4": {
+      "session_id": "be5a4185-8140-454d-bda9-a6e42945482e",
+      "status": "completed",
+      "vehicle": "W5"
+    },
+    "5": {
+      "session_id": "823e0531-dd5e-4b1b-807b-438927caad18",
+      "status": "assigned",
+      "vehicle": "W5"
+    },
+    "6": {
+      "session_id": "ae501da9-cfd0-4cd9-9827-d0ccf197e0ab",
+      "status": "assigned",
+      "vehicle": "W3"
+    },
+    "7": {
+      "session_id": "a61a8608-0877-4a40-a933-bde57fb18e62",
+      "status": "assigned",
+      "vehicle": "W4"
+    }
+  },
+  "workers": {
+    "W1": {
+      "id": "c56c43cd-55d7-492b-8e92-6293aa5b278d",
+      "phase": "pests",
+      "status": "blocked",
+      "feedback": "Provider returned an invalid single tool call",
+      "inference": {
+        "calls": 4,
+        "cost": null,
+        "failed_calls": 4,
+        "latency_seconds": 10.232373916,
+        "pending_calls": 0,
+        "results": [
+          {
+            "cost": null,
+            "fallback": false,
+            "id": "7b5a505b-6265-4131-ab4f-d96c478a712a",
+            "latency": 1.826238250000003,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "9a38a2cb-f175-4a88-86d4-5871ebc0ba9b",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": 0.0005565,
+            "fallback": true,
+            "id": "ca4601c9-acd0-4421-80de-6218e5b8e096",
+            "latency": 2.385436917,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "02ccd397-76c4-4661-891b-b1afc7ceedc3",
+            "requested_model": "nvidia/nemotron-3.5-super-vl",
+            "response_id": "gen_01M55ZVCRZSMGPYEZCQX15ZWMQ",
+            "response_summary": [
+              {
+                "finish_reason": "tool_calls"
+              }
+            ],
+            "returned_model": "nvidia/nemotron-3.5-super-vl",
+            "status": "failed",
+            "tool_response": "[[{'id': 'chatcmpl-tool-c57ceb933baa4d76a0bccb782e04a621', 'type': 'function', 'function': {'name': 'remove_pest', 'arguments': '{\"frame_id\": \"4e51a8f8-99ca-44d3-9d46-8a83b3aa190a\", \"u\": 0.468, \"v\": 0.503, \"result\": \"removed\"}'}}]]",
+            "usage": {
+              "completion_tokens": 93,
+              "prompt_tokens": 2550,
+              "total_tokens": 2643
+            }
+          },
+          {
+            "cost": 0.00046944,
+            "fallback": true,
+            "id": "c8ee8716-e71c-45de-84ee-ca963c3ebe93",
+            "latency": 3.6678054579999966,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "ab96586f-c7c1-4501-9396-380a5e686e1d",
+            "requested_model": "nvidia/nemotron-3.5-super-vl",
+            "response_id": "gen_01M55ZVH9AFH0FSCBFBR0NGASF",
+            "response_summary": [
+              {
+                "finish_reason": "tool_calls"
+              }
+            ],
+            "returned_model": "nvidia/nemotron-3.5-super-vl",
+            "status": "failed",
+            "tool_response": "[[{'id': 'chatcmpl-tool-b732ccf9e5c0403687ae16d8d3d07f7a', 'type': 'function', 'function': {'name': 'remove_pest', 'arguments': '{\"frame_id\": \"4e51a8f8-99ca-44d3-9d46-8a83b3aa190a\", \"u\": 0.467, \"v\": 0.497, \"visible elongated brown/purple caterpillar on tree trunk</parameter\": \"\"}'}}]]",
+            "usage": {
+              "completion_tokens": 100,
+              "prompt_tokens": 2558,
+              "total_tokens": 2658
+            }
+          },
+          {
+            "cost": 0.00047114,
+            "fallback": true,
+            "id": "d526c1f4-401a-43e3-acaa-967b98a559c9",
+            "latency": 2.352893291000001,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "3674f7b4-6eb9-4d97-8f99-d0ec7d51cc49",
+            "requested_model": "nvidia/nemotron-3.5-super-vl",
+            "response_id": "gen_01M55ZVM8X340B3D9H48WN656J",
+            "response_summary": [
+              {
+                "finish_reason": "tool_calls"
+              }
+            ],
+            "returned_model": "nvidia/nemotron-3.5-super-vl",
+            "status": "failed",
+            "tool_response": "[[{'id': 'chatcmpl-tool-7fb9cda360964c42820064dcbe82c922', 'type': 'function', 'function': {'name': 'remove_pest', 'arguments': '{\"frame_id\": \"4e51a8f8-99ca-44d3-9d46-8a83b3aa190a\", \"u\": 0.467, \"v\": 0.494, \"label\": \"elongated brown/purple caterpillar on tree trunk\"}'}}]]",
+            "usage": {
+              "completion_tokens": 103,
+              "prompt_tokens": 2559,
+              "total_tokens": 2662
+            }
+          }
+        ],
+        "tokens": 7963
+      },
+      "storage_timing": {
+        "artifact": {
+          "calls": 24,
+          "max_seconds": 3.1073668749999968,
+          "seconds": 26.65084970899998
+        },
+        "commit": {
+          "calls": 40,
+          "max_seconds": 1.169716000000001,
+          "seconds": 12.842565248999971
+        },
+        "metadata": {
+          "calls": 4,
+          "max_seconds": 0.5736895420000003,
+          "seconds": 1.0829902500000017
+        }
+      }
+    },
+    "W2": {
+      "id": "c984979c-19ad-4cb4-a640-3eaab2b2b74b",
+      "phase": "extraction",
+      "status": "paused",
+      "feedback": "Selected ground ray world point: [-2.62294, 0.08, 13.90841]. Use x,z with tool-center y=0.13 only if RGB confirms the weed root crown.",
+      "inference": {
+        "calls": 21,
+        "cost": null,
+        "failed_calls": 3,
+        "latency_seconds": 46.73429054,
+        "pending_calls": 0,
+        "results": [
+          {
+            "cost": null,
+            "fallback": false,
+            "id": "cffbfa6f-0949-4ebf-bd12-8560519da2ba",
+            "latency": 1.0698457909999988,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "36543e09-1714-4312-aa1d-9d49e20c3240",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": 0.0005509,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "87b16aba-0809-4cca-a9bd-1bd861c4ebc7",
+                "u": 0.472,
+                "v": 0.511
+              },
+              "rationale": "visible elongated purple caterpillar on tree trunk"
+            },
+            "fallback": true,
+            "id": "f2d68af5-f985-4500-aeb5-c68df6a3e87d",
+            "latency": 2.309839375000003,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "e5c55c58-0ce4-437f-9e4b-1eaa0398572b",
+            "requested_model": "nvidia/nemotron-3.5-super-vl",
+            "response_id": "gen_01M55ZVEWVTCEWHDN6646NP5DD",
+            "returned_model": "nvidia/nemotron-3.5-super-vl",
+            "usage": {
+              "completion_tokens": 95,
+              "prompt_tokens": 2517,
+              "total_tokens": 2612
+            }
+          },
+          {
+            "cost": 0.00045574,
+            "fallback": true,
+            "id": "9bbe62f2-f059-4e20-af1a-23e7d27c1694",
+            "latency": 2.347537625000001,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "e175110b-e2fa-40a3-a6cf-a210bc4d680e",
+            "requested_model": "nvidia/nemotron-3.5-super-vl",
+            "response_id": "gen_01M55ZVM7D2JPQ9F94NR2ZPK4G",
+            "response_summary": [
+              {
+                "finish_reason": "tool_calls"
+              }
+            ],
+            "returned_model": "nvidia/nemotron-3.5-super-vl",
+            "status": "failed",
+            "tool_response": "[[{'id': 'chatcmpl-tool-c54fa426440d41fdbe958652bbb7349e', 'type': 'function', 'function': {'name': 'remove_pest', 'arguments': '{\"frame_id\": \"ebba4fbd-5cc4-4fb5-a71f-fba445f89a76\", \"u\": 0.517, \"v\": 0.667, \"result\": \"removed\"}'}}]]",
+            "usage": {
+              "completion_tokens": 87,
+              "prompt_tokens": 2522,
+              "total_tokens": 2609
+            }
+          },
+          {
+            "cost": 0.00044296,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "ebba4fbd-5cc4-4fb5-a71f-fba445f89a76",
+                "u": 0.514,
+                "v": 0.667
+              },
+              "rationale": "Visible elongated purple caterpillar on tree trunk; remove pest, preserve ladybird."
+            },
+            "fallback": true,
+            "id": "ada7fc39-f914-4f9f-a326-e7b6d7f138a4",
+            "latency": 1.9284790410000028,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "61dddba3-0f51-4395-973a-8c41f979bcdb",
+            "requested_model": "nvidia/nemotron-3.5-super-vl",
+            "response_id": "gen_01M55ZVPR2ZHFH8RZDF4J6D338",
+            "returned_model": "nvidia/nemotron-3.5-super-vl",
+            "usage": {
+              "completion_tokens": 102,
+              "prompt_tokens": 2523,
+              "total_tokens": 2625
+            }
+          },
+          {
+            "cost": 0.00059692,
+            "decision": {
+              "action": "scan_lidar",
+              "arguments": {
+                "frame_id": "ac342c99-cfcf-46c1-a75a-4909cbd670f0",
+                "span": 0.16,
+                "u": 0.7234375,
+                "v": 0.7615079365079366
+              },
+              "pixel_candidate": {
+                "area": 941,
+                "bounds": [
+                  0.609375,
+                  0.5333333333333333,
+                  0.778125,
+                  0.7722222222222223
+                ],
+                "frame_id": "ac342c99-cfcf-46c1-a75a-4909cbd670f0",
+                "id": "c0",
+                "u": 0.7234375,
+                "v": 0.7615079365079366
+              },
+              "rationale": "Inspect the visible green plant root crown at the soil junction to confirm it is a weed before any extraction."
+            },
+            "fallback": true,
+            "id": "cdb67b0b-ccb6-4a6d-8f75-313a9ad11ac6",
+            "latency": 2.9307770829999953,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "03425605-182c-42f8-a999-13a96e06ab7b",
+            "requested_model": "nvidia/nemotron-3.5-super-vl",
+            "response_id": "gen_01M55ZW07QRJC2MD0GNFAF5MV4",
+            "returned_model": "nvidia/nemotron-3.5-super-vl",
+            "usage": {
+              "completion_tokens": 108,
+              "prompt_tokens": 2817,
+              "total_tokens": 2925
+            }
+          },
+          {
+            "cost": 0.00106482,
+            "decision": {
+              "action": "project_ground",
+              "arguments": {
+                "frame_id": "d6e3b630-6c94-4768-8108-2df61563c93d",
+                "u": 0.4109375,
+                "v": 0.7234126984126985
+              },
+              "pixel_candidate": {
+                "area": 2713,
+                "bounds": [
+                  0.159375,
+                  0.35555555555555557,
+                  0.575,
+                  0.7333333333333333
+                ],
+                "frame_id": "d6e3b630-6c94-4768-8108-2df61563c93d",
+                "id": "c0",
+                "u": 0.4109375,
+                "v": 0.7234126984126985
+              },
+              "rationale": "Candidate c0 is the visible upright green weed whose lower edge meets the soil; it is not clover, a leaf tip, or robot fingers, so its root crown is the correct projection target."
+            },
+            "fallback": true,
+            "id": "c654111a-4f70-4118-b529-e76d835ee077",
+            "latency": 1.980585290999997,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "1ecb4580-cd8d-4444-afb7-72ce4af2731f",
+            "requested_model": "nvidia/nemotron-3.5-super-vl",
+            "response_id": "gen_01M55ZWB9H1EKZKFMBR6QFX65Q",
+            "returned_model": "nvidia/nemotron-3.5-super-vl",
+            "usage": {
+              "completion_tokens": 117,
+              "prompt_tokens": 5134,
+              "total_tokens": 5251
+            }
+          },
+          {
+            "cost": 0.00106182,
+            "decision": {
+              "action": "project_ground",
+              "arguments": {
+                "frame_id": "e20782e3-2d86-46f9-98d9-669c630704f9",
+                "u": 0.465625,
+                "v": 0.4467171717171717
+              },
+              "pixel_candidate": {
+                "area": 175,
+                "bounds": [
+                  0.434375,
+                  0.3611111111111111,
+                  0.515625,
+                  0.45555555555555555
+                ],
+                "frame_id": "e20782e3-2d86-46f9-98d9-669c630704f9",
+                "id": "c0",
+                "u": 0.465625,
+                "v": 0.4467171717171717
+              },
+              "rationale": "c0 is the only sizable candidate at the visible weed root crown; c1/c2 are tiny edge artifacts and not root crowns."
+            },
+            "fallback": true,
+            "id": "d9a8fa68-bb1b-452f-99e0-c592d70afac0",
+            "latency": 1.5805817910000002,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "416b2ccb-c6c9-4793-9a03-da386a06e87f",
+            "requested_model": "nvidia/nemotron-3.5-super-vl",
+            "response_id": "gen_01M55ZWHWFK7XK4R2HZ0Y3FHG2",
+            "returned_model": "nvidia/nemotron-3.5-super-vl",
+            "usage": {
+              "completion_tokens": 107,
+              "prompt_tokens": 5656,
+              "total_tokens": 5763
+            }
+          },
+          {
+            "cost": 0.00099582,
+            "decision": {
+              "action": "project_ground",
+              "arguments": {
+                "frame_id": "9d53fb37-25f2-4894-a2b0-b74db5574e11",
+                "u": 0.92109375,
+                "v": 0.35694444444444445
+              },
+              "pixel_candidate": {
+                "area": 10,
+                "bounds": [
+                  0.91875,
+                  0.32222222222222224,
+                  0.928125,
+                  0.36666666666666664
+                ],
+                "frame_id": "9d53fb37-25f2-4894-a2b0-b74db5574e11",
+                "id": "c0",
+                "u": 0.92109375,
+                "v": 0.35694444444444445
+              },
+              "rationale": "Candidate c0 is the only unclassified RGB component; its lower edge at the visible root/soil junction matches the weed crown location, not a leaf tip or finger."
+            },
+            "fallback": true,
+            "id": "d42ac73a-766e-4b90-afb9-f28c81295e67",
+            "latency": 1.8499003750000043,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "ba03a0aa-7d62-4ae4-af64-9783f7373468",
+            "requested_model": "nvidia/nemotron-3.5-super-vl",
+            "response_id": "gen_01M55ZWQZNYJ05Q2A0C52FT5AK",
+            "returned_model": "nvidia/nemotron-3.5-super-vl",
+            "usage": {
+              "completion_tokens": 109,
+              "prompt_tokens": 5321,
+              "total_tokens": 5430
+            }
+          },
+          {
+            "cost": 0.00118752,
+            "decision": {
+              "action": "project_ground",
+              "arguments": {
+                "frame_id": "13e22dde-4c90-4edd-955f-a18249481045",
+                "u": 0.4625,
+                "v": 0.5638888888888889
+              },
+              "pixel_candidate": {
+                "area": 94,
+                "bounds": [
+                  0.459375,
+                  0.23333333333333334,
+                  0.559375,
+                  0.5722222222222222
+                ],
+                "frame_id": "13e22dde-4c90-4edd-955f-a18249481045",
+                "id": "c0",
+                "u": 0.4625,
+                "v": 0.5638888888888889
+              },
+              "rationale": "Candidate c0 lower edge is the visible weed root crown where upright grass meets soil; other candidates are smaller or leaf-like."
+            },
+            "fallback": true,
+            "id": "5f255fe9-9bb5-464e-9b65-5a5e60294566",
+            "latency": 1.4478378750000047,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "002df64f-b3a1-4a86-bba0-075956f893d2",
+            "requested_model": "nvidia/nemotron-3.5-super-vl",
+            "response_id": "gen_01M55ZWYXFF7M39C49GZR9D43V",
+            "returned_model": "nvidia/nemotron-3.5-super-vl",
+            "usage": {
+              "completion_tokens": 98,
+              "prompt_tokens": 5795,
+              "total_tokens": 5893
+            }
+          },
+          {
+            "cost": 0.00115312,
+            "decision": {
+              "action": "project_ground",
+              "arguments": {
+                "frame_id": "7ba80a4a-22cd-456b-8bad-dec9fc2fc507",
+                "u": 0.4421875,
+                "v": 0.4672222222222222
+              },
+              "pixel_candidate": {
+                "area": 48,
+                "bounds": [
+                  0.40625,
+                  0.3388888888888889,
+                  0.446875,
+                  0.4777777777777778
+                ],
+                "frame_id": "7ba80a4a-22cd-456b-8bad-dec9fc2fc507",
+                "id": "c0",
+                "u": 0.4421875,
+                "v": 0.4672222222222222
+              },
+              "rationale": "Candidate c0 is the largest unclassified component at the visible weed root/soil junction; its lower edge matches the crown where upright grass meets soil, and it is not a finger, clover, or leaf tip."
+            },
+            "fallback": true,
+            "id": "1a03aefe-c00d-4317-8d00-5515fdd392b2",
+            "latency": 1.9825720000000047,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "10af324c-ecca-4021-ac8f-42a06f8e1976",
+            "requested_model": "nvidia/nemotron-3.5-super-vl",
+            "response_id": "gen_01M55ZX5H5A9XDJ18ZEQ346901",
+            "returned_model": "nvidia/nemotron-3.5-super-vl",
+            "usage": {
+              "completion_tokens": 114,
+              "prompt_tokens": 6095,
+              "total_tokens": 6209
+            }
+          },
+          {
+            "cost": 0.00110082,
+            "decision": {
+              "action": "project_ground",
+              "arguments": {
+                "frame_id": "a0989f39-2af2-4b5e-b2c7-315b856eba19",
+                "u": 0.4646875,
+                "v": 0.47944444444444445
+              },
+              "pixel_candidate": {
+                "area": 28,
+                "bounds": [
+                  0.425,
+                  0.40555555555555556,
+                  0.46875,
+                  0.4888888888888889
+                ],
+                "frame_id": "a0989f39-2af2-4b5e-b2c7-315b856eba19",
+                "id": "c0",
+                "u": 0.4646875,
+                "v": 0.47944444444444445
+              },
+              "rationale": "c0 lower edge is the visible weed root crown; other candidates are smaller and less clearly at the soil junction."
+            },
+            "fallback": true,
+            "id": "d7774a3b-dc70-4cac-95b8-5b2f537a7c60",
+            "latency": 2.6737280419999934,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "09997f3e-27a3-4b79-9313-57fc14efb014",
+            "requested_model": "nvidia/nemotron-3.5-super-vl",
+            "response_id": "gen_01M55ZXDGB76N15ADS3W60NMB3",
+            "returned_model": "nvidia/nemotron-3.5-super-vl",
+            "usage": {
+              "completion_tokens": 97,
+              "prompt_tokens": 5876,
+              "total_tokens": 5973
+            }
+          },
+          {
+            "cost": 0.00116014,
+            "decision": {
+              "action": "assess_alignment",
+              "arguments": {
+                "depth_consistent": false,
+                "evidence": "No inner finger faces or weed stem are visible in the current RGB; the gripper is not positioned around a stem.",
+                "frame_id": "e0854dcb-cb44-471d-ae26-d2ad76a8c589",
+                "stem_between_fingers": false
+              },
+              "rationale": "Alignment cannot be assessed because neither finger faces nor a weed stem are visible between them."
+            },
+            "fallback": true,
+            "id": "6e5d3adb-d902-431c-9481-63a282b02309",
+            "latency": 1.7263284169999906,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "f55ecd4f-7207-4f1c-90ae-cb450702bf09",
+            "requested_model": "nvidia/nemotron-3.5-super-vl",
+            "response_id": "gen_01M55ZXM3YVSAB5ZKCCWB3HW34",
+            "returned_model": "nvidia/nemotron-3.5-super-vl",
+            "usage": {
+              "completion_tokens": 139,
+              "prompt_tokens": 6170,
+              "total_tokens": 6309
+            }
+          },
+          {
+            "cost": 0.00114974,
+            "decision": {
+              "action": "project_ground",
+              "arguments": {
+                "frame_id": "e0854dcb-cb44-471d-ae26-d2ad76a8c589",
+                "u": 0.5471874999999999,
+                "v": 0.5127777777777778
+              },
+              "pixel_candidate": {
+                "area": 44,
+                "bounds": [
+                  0.521875,
+                  0.37222222222222223,
+                  0.55,
+                  0.5222222222222223
+                ],
+                "frame_id": "e0854dcb-cb44-471d-ae26-d2ad76a8c589",
+                "id": "c0",
+                "u": 0.5471874999999999,
+                "v": 0.5127777777777778
+              },
+              "rationale": "c0 is the largest unclassified component at the visible weed root/soil junction; other candidates are smaller and likely leaf tips or non-crown pixels."
+            },
+            "fallback": true,
+            "id": "07891bf1-6ee1-4fb6-8bec-cc4b1c0672d7",
+            "latency": 1.9046463749999987,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "5373f985-d41b-4b38-83b9-c564704ee65c",
+            "requested_model": "nvidia/nemotron-3.5-super-vl",
+            "response_id": "gen_01M55ZXPFXK0VSH87Q5HVJEHKA",
+            "returned_model": "nvidia/nemotron-3.5-super-vl",
+            "usage": {
+              "completion_tokens": 105,
+              "prompt_tokens": 6203,
+              "total_tokens": 6308
+            }
+          },
+          {
+            "cost": 0.00118,
+            "fallback": true,
+            "id": "6a74fa35-7d19-4df8-929a-f98c048b324b",
+            "latency": 3.0366900409999857,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "e5f3c640-3f34-4661-bb15-376de27360bf",
+            "requested_model": "nvidia/nemotron-3.5-super-vl",
+            "response_id": "gen_01M55ZXY6CRRS1FF3TWEBK6SG1",
+            "response_summary": [
+              {
+                "finish_reason": "length"
+              }
+            ],
+            "returned_model": "nvidia/nemotron-3.5-super-vl",
+            "status": "failed",
+            "tool_response": "[None]",
+            "usage": {
+              "completion_tokens": 512,
+              "prompt_tokens": 6160,
+              "total_tokens": 6672
+            }
+          },
+          {
+            "cost": 0.00113594,
+            "decision": {
+              "action": "project_ground",
+              "arguments": {
+                "frame_id": "b941d98a-cd7b-4d57-bf38-ba62ff07ae34",
+                "u": 0.459375,
+                "v": 0.4638888888888889
+              },
+              "pixel_candidate": {
+                "area": 41,
+                "bounds": [
+                  0.4,
+                  0.35555555555555557,
+                  0.465625,
+                  0.4722222222222222
+                ],
+                "frame_id": "b941d98a-cd7b-4d57-bf38-ba62ff07ae34",
+                "id": "c0",
+                "u": 0.459375,
+                "v": 0.4638888888888889
+              },
+              "rationale": "c0 lower edge is the visible weed root crown at u=0.459,v=0.464; other candidates are smaller leaf fragments or not root crowns."
+            },
+            "fallback": true,
+            "id": "2514b626-319f-48da-93bf-3fecbea7bbfb",
+            "latency": 2.761605916999997,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "83f1494b-5000-4d7c-b43e-2e1212285b23",
+            "requested_model": "nvidia/nemotron-3.5-super-vl",
+            "response_id": "gen_01M55ZY310K3ZGG1JF29TB6GJW",
+            "returned_model": "nvidia/nemotron-3.5-super-vl",
+            "usage": {
+              "completion_tokens": 111,
+              "prompt_tokens": 6119,
+              "total_tokens": 6230
+            }
+          },
+          {
+            "cost": 0.00110524,
+            "decision": {
+              "action": "project_ground",
+              "arguments": {
+                "frame_id": "a23abc05-1191-47b9-b82c-901decc6fa94",
+                "u": 0.5471874999999999,
+                "v": 0.5127777777777778
+              },
+              "pixel_candidate": {
+                "area": 46,
+                "bounds": [
+                  0.521875,
+                  0.37222222222222223,
+                  0.55,
+                  0.5222222222222223
+                ],
+                "frame_id": "a23abc05-1191-47b9-b82c-901decc6fa94",
+                "id": "c0",
+                "u": 0.5471874999999999,
+                "v": 0.5127777777777778
+              },
+              "rationale": "c0 is the largest unclassified component at the visible weed root/soil junction; its lower edge matches the crown, not a leaf tip or finger."
+            },
+            "fallback": true,
+            "id": "d2a5d837-722d-4250-9368-6f28f5a77ef1",
+            "latency": 1.9920516669999984,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "113d97c2-9b3b-4ef9-9e20-e0a3b30659da",
+            "requested_model": "nvidia/nemotron-3.5-super-vl",
+            "response_id": "gen_01M55ZYANVA4WE14JWBPF36C8Y",
+            "returned_model": "nvidia/nemotron-3.5-super-vl",
+            "usage": {
+              "completion_tokens": 104,
+              "prompt_tokens": 5983,
+              "total_tokens": 6087
+            }
+          },
+          {
+            "cost": 0.00117934,
+            "decision": {
+              "action": "project_ground",
+              "arguments": {
+                "frame_id": "4226a731-63ab-41bd-ba88-6f578420c821",
+                "u": 0.55234375,
+                "v": 0.4736111111111111
+              },
+              "pixel_candidate": {
+                "area": 32,
+                "bounds": [
+                  0.55,
+                  0.35555555555555557,
+                  0.58125,
+                  0.48333333333333334
+                ],
+                "frame_id": "4226a731-63ab-41bd-ba88-6f578420c821",
+                "id": "c0",
+                "u": 0.55234375,
+                "v": 0.4736111111111111
+              },
+              "rationale": "c0's lower edge is the visible weed root crown; other candidates are smaller or less clearly at the soil junction."
+            },
+            "fallback": true,
+            "id": "7330e88b-3ce5-45a7-862e-c45570541fe6",
+            "latency": 3.8215809170000057,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "1cca2ae3-085c-499c-ad48-19ab47aff634",
+            "requested_model": "nvidia/nemotron-3.5-super-vl",
+            "response_id": "gen_01M55ZYQ4XQJKRBW9A9BGVK67C",
+            "returned_model": "nvidia/nemotron-3.5-super-vl",
+            "usage": {
+              "completion_tokens": 99,
+              "prompt_tokens": 6366,
+              "total_tokens": 6465
+            }
+          },
+          {
+            "cost": 0.00117444,
+            "decision": {
+              "action": "project_ground",
+              "arguments": {
+                "frame_id": "9df5a108-9f37-4a16-bc84-5b30a4d629e0",
+                "u": 0.4971875,
+                "v": 0.4927777777777778
+              },
+              "pixel_candidate": {
+                "area": 36,
+                "bounds": [
+                  0.49375,
+                  0.37222222222222223,
+                  0.525,
+                  0.5
+                ],
+                "frame_id": "9df5a108-9f37-4a16-bc84-5b30a4d629e0",
+                "id": "c0",
+                "u": 0.4971875,
+                "v": 0.4927777777777778
+              },
+              "rationale": "c0 lower edge is the visible weed root crown where upright grass meets soil; other candidates are smaller and less clearly at the soil junction."
+            },
+            "fallback": true,
+            "id": "54288df1-2ae3-4429-b816-223bb72b0f81",
+            "latency": 2.6448039170000186,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "48826835-2bb7-4ecd-811f-396aed92b73a",
+            "requested_model": "nvidia/nemotron-3.5-super-vl",
+            "response_id": "gen_01M55ZZ446WCNKQNE45TKXGYNE",
+            "returned_model": "nvidia/nemotron-3.5-super-vl",
+            "usage": {
+              "completion_tokens": 104,
+              "prompt_tokens": 6329,
+              "total_tokens": 6433
+            }
+          },
+          {
+            "cost": 0.00117554,
+            "decision": {
+              "action": "project_ground",
+              "arguments": {
+                "frame_id": "9df5a108-9f37-4a16-bc84-5b30a4d629e0",
+                "u": 0.4971875,
+                "v": 0.4927777777777778
+              },
+              "pixel_candidate": {
+                "area": 36,
+                "bounds": [
+                  0.49375,
+                  0.37222222222222223,
+                  0.525,
+                  0.5
+                ],
+                "frame_id": "9df5a108-9f37-4a16-bc84-5b30a4d629e0",
+                "id": "c0",
+                "u": 0.4971875,
+                "v": 0.4927777777777778
+              },
+              "rationale": "c0 is the largest central component at the visible weed root/soil junction; other candidates are smaller peripheral fragments or leaf tips."
+            },
+            "fallback": true,
+            "id": "45bd8368-424c-40db-8319-64efe27972e7",
+            "latency": 2.010313249999996,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "0bdfdf86-e43a-425b-9303-f7f81fb6326c",
+            "requested_model": "nvidia/nemotron-3.5-super-vl",
+            "response_id": "gen_01M55ZZ6MRQH997ANPTWADYJ4D",
+            "returned_model": "nvidia/nemotron-3.5-super-vl",
+            "usage": {
+              "completion_tokens": 103,
+              "prompt_tokens": 6337,
+              "total_tokens": 6440
+            }
+          },
+          {
+            "cost": 0.00117724,
+            "decision": {
+              "action": "project_ground",
+              "arguments": {
+                "frame_id": "9df5a108-9f37-4a16-bc84-5b30a4d629e0",
+                "u": 0.4971875,
+                "v": 0.4927777777777778
+              },
+              "pixel_candidate": {
+                "area": 36,
+                "bounds": [
+                  0.49375,
+                  0.37222222222222223,
+                  0.525,
+                  0.5
+                ],
+                "frame_id": "9df5a108-9f37-4a16-bc84-5b30a4d629e0",
+                "id": "c0",
+                "u": 0.4971875,
+                "v": 0.4927777777777778
+              },
+              "rationale": "c0 is the largest unclassified component at the visible root/soil junction; its lower edge matches the weed crown, not a leaf tip or finger."
+            },
+            "fallback": true,
+            "id": "86513ed2-0ea7-42ee-9fce-5cd24c9f62ea",
+            "latency": 2.856354166000017,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "1331b374-f1ae-4010-9384-bbdb05d500ba",
+            "requested_model": "nvidia/nemotron-3.5-super-vl",
+            "response_id": "gen_01M55ZZATS0QB4A2GRG30BTBVM",
+            "returned_model": "nvidia/nemotron-3.5-super-vl",
+            "usage": {
+              "completion_tokens": 108,
+              "prompt_tokens": 6333,
+              "total_tokens": 6441
+            }
+          },
+          {
+            "cost": 0.00117774,
+            "decision": {
+              "action": "project_ground",
+              "arguments": {
+                "frame_id": "9df5a108-9f37-4a16-bc84-5b30a4d629e0",
+                "u": 0.4971875,
+                "v": 0.4927777777777778
+              },
+              "pixel_candidate": {
+                "area": 36,
+                "bounds": [
+                  0.49375,
+                  0.37222222222222223,
+                  0.525,
+                  0.5
+                ],
+                "frame_id": "9df5a108-9f37-4a16-bc84-5b30a4d629e0",
+                "id": "c0",
+                "u": 0.4971875,
+                "v": 0.4927777777777778
+              },
+              "rationale": "c0 is the largest central component at the visible root/soil junction; other candidates are smaller peripheral blobs or leaf tips, and no fingers are present."
+            },
+            "fallback": true,
+            "id": "9db8b75f-00d9-40bf-a5d4-76776eb4f953",
+            "latency": 1.878231583999991,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "34cefc87-d3f6-40f4-813d-bf72056abb96",
+            "requested_model": "nvidia/nemotron-3.5-super-vl",
+            "response_id": "gen_01M55ZZEW0ZS9HS1HPNZW20VYC",
+            "returned_model": "nvidia/nemotron-3.5-super-vl",
+            "usage": {
+              "completion_tokens": 109,
+              "prompt_tokens": 6333,
+              "total_tokens": 6442
+            }
+          }
+        ],
+        "tokens": 109117
+      },
+      "storage_timing": {
+        "artifact": {
+          "calls": 50,
+          "max_seconds": 2.8004964160000014,
+          "seconds": 49.90495732999998
+        },
+        "commit": {
+          "calls": 137,
+          "max_seconds": 1.3580424999999963,
+          "seconds": 50.25324633200003
+        },
+        "metadata": {
+          "calls": 4,
+          "max_seconds": 1.0427950420000016,
+          "seconds": 1.9499206260000044
+        }
+      }
+    },
+    "W3": {
+      "id": "ae501da9-cfd0-4cd9-9827-d0ccf197e0ab",
+      "phase": "pests",
+      "status": "paused",
+      "feedback": "independent care checks reject stage clearance",
+      "inference": {
+        "calls": 2,
+        "cost": null,
+        "failed_calls": 2,
+        "latency_seconds": 3.5205766249999897,
+        "pending_calls": 0,
+        "results": [
+          {
+            "cost": null,
+            "fallback": false,
+            "id": "937795dc-3515-4310-85e7-15c93874d6da",
+            "latency": 1.3998215000000016,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "9251cb19-d272-4089-b16e-893a47270861",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": 0.00046494,
+            "fallback": true,
+            "id": "8600bec7-c48c-498c-85ed-022baa20d393",
+            "latency": 2.120755124999988,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "0271ce69-1de8-4ba5-bf00-9dda4a2477db",
+            "requested_model": "nvidia/nemotron-3.5-super-vl",
+            "response_id": "gen_01M55ZZGN1243FFWRMMW3EGK1E",
+            "response_summary": [
+              {
+                "finish_reason": "tool_calls"
+              }
+            ],
+            "returned_model": "nvidia/nemotron-3.5-super-vl",
+            "status": "failed",
+            "tool_response": "[[{'id': 'chatcmpl-tool-14afee094b6a4e73b83034222280e03f', 'type': 'function', 'function': {'name': 'remove_pest', 'arguments': '{\"frame_id\": \"90e08d8e-9b9f-4a96-9f8b-9796c1e19a7a\", \"u\": 0.466, \"v\": 0.494, \"label\": \"elongated purple caterpillar on tree trunk\"}'}}]]",
+            "usage": {
+              "completion_tokens": 103,
+              "prompt_tokens": 2528,
+              "total_tokens": 2631
+            }
+          }
+        ],
+        "tokens": 2631
+      },
+      "storage_timing": {
+        "artifact": {
+          "calls": 27,
+          "max_seconds": 3.5746467499999994,
+          "seconds": 28.565935872999944
+        },
+        "commit": {
+          "calls": 37,
+          "max_seconds": 1.2779399589999798,
+          "seconds": 12.634565165999902
+        },
+        "metadata": {
+          "calls": 4,
+          "max_seconds": 0.5976326660000097,
+          "seconds": 1.3052314990000298
+        }
+      }
+    },
+    "W4": {
+      "id": "a61a8608-0877-4a40-a933-bde57fb18e62",
+      "phase": "pests",
+      "status": "paused",
+      "feedback": "independent care checks reject stage clearance",
+      "inference": {
+        "calls": 2,
+        "cost": null,
+        "failed_calls": 2,
+        "latency_seconds": 4.626781084000015,
+        "pending_calls": 0,
+        "results": [
+          {
+            "cost": null,
+            "fallback": false,
+            "id": "0e8c733d-f717-45f1-9950-f5391baa477e",
+            "latency": 2.6175017500000024,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "2abd4930-1f8d-49c2-9846-39c6b8077074",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": 0.00045814,
+            "fallback": true,
+            "id": "9bb1333b-8d12-44f8-8a5b-0a28909497e3",
+            "latency": 2.009279334000013,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "becd20ad-364c-4ecf-afae-a18e534d1c7c",
+            "requested_model": "nvidia/nemotron-3.5-super-vl",
+            "response_id": "gen_01M55ZZG7ZS29XP6SNNMR4P430",
+            "response_summary": [
+              {
+                "finish_reason": "tool_calls"
+              }
+            ],
+            "returned_model": "nvidia/nemotron-3.5-super-vl",
+            "status": "failed",
+            "tool_response": "[[{'id': 'chatcmpl-tool-220303302b61434ab2e5fe6a1cce95bd', 'type': 'function', 'function': {'name': 'remove_pest', 'arguments': '{\"frame_id\": \"b8d252b4-e5ce-4fe3-87e2-fdf6bbf0432c\", \"u\": 0.471, \"v\": 0.508, \"label\": \"elongated brown/purple caterpillar on tree trunk\"}'}}]]",
+            "usage": {
+              "completion_tokens": 99,
+              "prompt_tokens": 2504,
+              "total_tokens": 2603
+            }
+          }
+        ],
+        "tokens": 2603
+      },
+      "storage_timing": {
+        "artifact": {
+          "calls": 28,
+          "max_seconds": 3.4434966249999945,
+          "seconds": 26.46413687000006
+        },
+        "commit": {
+          "calls": 36,
+          "max_seconds": 1.033070500000008,
+          "seconds": 11.772656083999976
+        },
+        "metadata": {
+          "calls": 4,
+          "max_seconds": 0.5430738340000119,
+          "seconds": 1.0539375019999682
+        }
+      }
+    },
+    "W5": {
+      "id": "823e0531-dd5e-4b1b-807b-438927caad18",
+      "phase": "pests",
+      "status": "running",
+      "feedback": "Pest removal contact confirmed",
+      "inference": {
+        "calls": 4,
+        "cost": null,
+        "failed_calls": 3,
+        "latency_seconds": 9.600719499999968,
+        "pending_calls": 0,
+        "results": [
+          {
+            "cost": null,
+            "fallback": false,
+            "id": "4a62480b-f32d-4fbc-af8b-968619692639",
+            "latency": 2.483361000000002,
+            "provider": "crusoe",
+            "provider_base": "https://api.inference.crusoecloud.com/v1",
+            "request_id": "5af2b9b3-04d3-4cb2-9a99-5361555b9b97",
+            "requested_model": "google/gemma-4-31b-it",
+            "response_id": null,
+            "returned_model": null,
+            "status": "failed",
+            "usage": {}
+          },
+          {
+            "cost": 0.00045324,
+            "fallback": true,
+            "id": "0968789c-6a89-41e5-9854-c7e0ef2e727f",
+            "latency": 2.311376124999981,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "adb0703d-d982-4943-9a55-e693e1a48628",
+            "requested_model": "nvidia/nemotron-3.5-super-vl",
+            "response_id": "gen_01M55ZZ1KSDQHVC4A0R3DEJKRR",
+            "response_summary": [
+              {
+                "finish_reason": "tool_calls"
+              }
+            ],
+            "returned_model": "nvidia/nemotron-3.5-super-vl",
+            "status": "failed",
+            "tool_response": "[[{'id': 'chatcmpl-tool-c2ceba3e2f8b4e7f8ae4da20866e932b', 'type': 'function', 'function': {'name': 'remove_pest', 'arguments': '{\"frame_id\": \"3bee7c93-5f98-4c82-a7d1-bb943b76cf74\", \"u\": 0.472, \"v\": 0.493, \"result\": \"success\"}'}}]]",
+            "usage": {
+              "completion_tokens": 90,
+              "prompt_tokens": 2502,
+              "total_tokens": 2592
+            }
+          },
+          {
+            "cost": 0.00045904,
+            "fallback": true,
+            "id": "c25b4ea2-4160-4d92-81f5-118e27283727",
+            "latency": 2.173273249999994,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "26a758ac-4c30-4a27-9f33-08df4390bc78",
+            "requested_model": "nvidia/nemotron-3.5-super-vl",
+            "response_id": "gen_01M55ZZ4Z7SKB3DNME77SEXPE5",
+            "response_summary": [
+              {
+                "finish_reason": "tool_calls"
+              }
+            ],
+            "returned_model": "nvidia/nemotron-3.5-super-vl",
+            "status": "failed",
+            "tool_response": "[[{'id': 'chatcmpl-tool-6d4e0a26d6784a249f4c977e227d589a', 'type': 'function', 'function': {'name': 'remove_pest', 'arguments': '{\"frame_id\": \"3bee7c93-5f98-4c82-a7d1-bb943b76cf74\", \"u\": 0.471, \"v\": 0.497, \"label\": \"elongated purple caterpillar on tree trunk\"}'}}]]",
+            "usage": {
+              "completion_tokens": 98,
+              "prompt_tokens": 2511,
+              "total_tokens": 2609
+            }
+          },
+          {
+            "cost": 0.00044436,
+            "decision": {
+              "action": "remove_pest",
+              "arguments": {
+                "frame_id": "3bee7c93-5f98-4c82-a7d1-bb943b76cf74",
+                "u": 0.473,
+                "v": 0.519
+              },
+              "rationale": "Visible elongated purple caterpillar on the tree trunk; remove it while preserving the red ladybird above."
+            },
+            "fallback": true,
+            "id": "dd2de2c2-28a3-44af-ba29-8609e77cee54",
+            "latency": 2.632709124999991,
+            "provider": "gateway",
+            "provider_base": "https://ai-gateway.vercel.sh/v1",
+            "request_id": "b43255e2-9551-4ab5-9a68-c6c7c217b07c",
+            "requested_model": "nvidia/nemotron-3.5-super-vl",
+            "response_id": "gen_01M55ZZ8JW5N5ZVJS10DMDTGM1",
+            "returned_model": "nvidia/nemotron-3.5-super-vl",
+            "usage": {
+              "completion_tokens": 110,
+              "prompt_tokens": 2510,
+              "total_tokens": 2620
+            }
+          }
+        ],
+        "tokens": 7821
+      },
+      "storage_timing": {
+        "artifact": {
+          "calls": 26,
+          "max_seconds": 3.6011954999999887,
+          "seconds": 24.050605456999875
+        },
+        "commit": {
+          "calls": 41,
+          "max_seconds": 0.654144959000007,
+          "seconds": 12.586495209999981
+        },
+        "metadata": {
+          "calls": 4,
+          "max_seconds": 0.2619938750000017,
+          "seconds": 0.6655459159999566
+        }
+      }
+    }
+  },
+  "passed": false
+}

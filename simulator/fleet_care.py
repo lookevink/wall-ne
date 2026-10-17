@@ -98,6 +98,10 @@ class FleetCareRuntime(Runtime):
         super().close()
 
     def restore(self,session):
+        from .background_storage import cloud_restore_scope
+        with cloud_restore_scope():self._restore_fleet(session)
+
+    def _restore_fleet(self,session):
         # Validate and acquire the destination before disturbing existing children.
         previous=self.children
         super().restore(session)

@@ -1,0 +1,9 @@
+{
+  "scope": "CPU depth scan with actual orchard instancing and recorded fleet geometry; no WebGL renderer",
+  "rays": 169,
+  "before_ms": 958.7057499999999,
+  "after_ms": 79.72083399999997,
+  "speedup": 12.025786759832446,
+  "equivalent_within_m": 1e-8,
+  "equivalent": true
+}

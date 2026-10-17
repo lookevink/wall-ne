@@ -13,6 +13,8 @@ from .inference import Adapter,InferenceError,PROMPT
 
 class Runtime:
     def __init__(self,world=None,repository=None,config=None):
+        from .background_storage import BackgroundRepository
+        if isinstance(repository,BackgroundRepository):repository=repository.remote
         self.lock=threading.RLock(); self.world=world or Mission(); self.repository=Repository(repository.url,repository.key) if isinstance(repository,Repository) else repository or Repository()
         self.config=copy.deepcopy(config or dict(mode='demo',engine='crusoe',speed=8))
         explicit_fallback='fallback' in self.config
@@ -34,8 +36,10 @@ class Runtime:
             self.config.setdefault('inference_timeout',6)
             self.config.setdefault('max_tokens',512)
             if self.config['engine']=='crusoe' and not explicit_fallback:
-                self.config['fallback']=dict(after_failures=1,engine='nemotron',provider_base=Adapter('nemotron').base,
-                    models={**self.config['models'],'treatment':Adapter('nemotron').model})
+                self.config['fallback']=dict(after_failures=1,engine='gemini',provider_base=Adapter('gemini').base,
+                    models={**self.config['models'],'treatment':'google/gemini-2.5-flash'})
+        if self.config.get('care_controller')=='ultra_fast' and isinstance(self.repository,Repository):
+            self.repository=BackgroundRepository(self.repository)
         self.config.setdefault('trial',getattr(self.world,'trial',None))
         self.provider_routes={}
         self.committed=0; self.epoch=0; self.persisted=False; self.storage_error=None; self.pending=None
@@ -101,6 +105,8 @@ class Runtime:
             return receipt
 
     def restore(self,session):
+        from .background_storage import ensure_cloud_restore_safe
+        ensure_cloud_restore_safe()
         with self.lock:
             if self.persisted and self.world.status=='running': raise ValueError('pause the current session before restoring another')
             self.collect_inactive_calls()
@@ -114,6 +120,12 @@ class Runtime:
                 from .common import treatment_implementation_hash
                 if config['treatment_code_hash']!=treatment_implementation_hash():raise ValueError('saved treatment implementation changed; create a new session')
             if config.get('mode') in ('live','vision') and ('models' not in config or 'provider_base' not in config): raise ValueError('saved live session lacks exact model pins; create a new session')
+            if config.get('care_controller')=='ultra_fast':
+                from .background_storage import bind_for_restore
+                self.repository=bind_for_restore(self.repository,session)
+            else:
+                from .background_storage import BackgroundRepository
+                if isinstance(self.repository,BackgroundRepository):self.repository=Repository(self.repository.url,self.repository.key)
             state=self.repository.restore(session); lease=self.repository.lease(session)
             from .treatment import Treatment
             from .care import PlantCare
@@ -385,6 +397,8 @@ class Runtime:
             state.update(storage_timing=copy.deepcopy(getattr(self.repository,'timings',{})),config=self.config,provider_routes=copy.deepcopy(self.provider_routes),storage=dict(healthy=not self.storage_error,error=self.storage_error,committed_sequence=self.committed),telemetry=self.telemetry.latest,
                          health=self.telemetry.health(time.monotonic(),self.failures),incidents=dict(open=copy.deepcopy(list(self.telemetry.incidents.values())),recent=copy.deepcopy(self.telemetry.closed[-10:])),escalation=copy.deepcopy(self.escalation),
                          inference=dict(calls=len(self.inference),pending_calls=len(self.futures),latency_seconds=sum(r.get('latency',0) for r in self.inference),failed_calls=sum(r.get('status') in ('failed','interrupted_unknown') for r in self.inference),tokens=sum(r['usage'].get('total_tokens',0) for r in self.inference),cost=sum(r['cost'] for r in self.inference) if self.inference and all(r['cost'] is not None for r in self.inference) else None,results=self.inference[-30:]),waiting=self.waiting)
+            if hasattr(self.repository,'status'):
+                sync=self.repository.status();state['storage'].update(sync=sync,committed_sequence=sync['cloud_committed_sequence'],local_sequence=self.committed)
             if self.storage_error: state['status']='storage_blocked'
             return state
 

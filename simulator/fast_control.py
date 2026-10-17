@@ -5,7 +5,7 @@ still crosses the ordinary command, trajectory, contact and verification guards.
 """
 import math
 
-PROMPT="""You are the visual decision maker for a simulated orchard robot. Use the named tools and current RGB. Code handles metered care and bounded arm motion; you identify caterpillars and weed root crowns and assess visual alignment. Preserve ladybirds and rounded clover. Pixel candidates are unclassified RGB components, not known weeds: choose an ID only when its bounds and lower-edge point match the visible weed root crown. Never select robot fingers or leaf tips. Use the exact current frame_id. If no safe choice exists, stop. Be concise. Physical contact, load and completion are independently checked."""
+PROMPT="""You are the visual decision maker for a simulated orchard robot. Use the named tools and current RGB. Code handles metered care and bounded arm motion; you identify caterpillars and weed root crowns and assess visual alignment. Preserve ladybirds and rounded clover. Pixel candidates are unclassified RGB components. For pests choose a visible caterpillar center; for weeds choose a lower-edge point at the root crown. Use exactly one named function, never Python or code execution. Never select robot fingers or leaf tips. Use the exact current frame_id. If no safe choice exists, stop. Be concise. Physical contact, load and completion are independently checked."""
 from .camera import project_pixel
 
 
@@ -25,6 +25,12 @@ def automatic_action(obs):
             u,v=project_pixel(frame['camera'],[x,.08,z+.35])
             return action('aim_nozzle',u=u,v=v)
         return action('water_tree' if phase=='irrigation' else 'fertilize_tree')
+    if phase=='pests':
+        # Ask the ordinary independent verifier once per geometry revision.
+        # Rejection leaves vision responsible for identifying the next pest.
+        probed=any(e.get('payload',{}).get('receipt',{}).get('action')=='next_stage' and
+                   e['payload']['receipt'].get('revision')==frame['revision'] for e in obs.get('history',[]))
+        return None if probed else action('next_stage')
     if phase!='extraction':return None
     grip=obs['gripper'];pose=obs['tool_pose']['position'];protocol=obs['protocol']
     if grip['deposited']:return action('verify')
@@ -70,13 +76,13 @@ def vision_observation(obs):
           'budgets','care_progress','task_tree','tool_pose','base','bin','gripper','protocol','crown_projection','scan','scan_stale')
     result={k:obs[k] for k in keys if k in obs};result['controller']='ultra_fast'
     allowed=obs['available_actions'];phase=obs['phase'];grip=obs.get('gripper',{})
-    if phase=='pests':wanted=['remove_pest','next_stage','stop']
+    if phase=='pests':wanted=['remove_pest','stop']
     elif not obs['protocol']['nonempty_scan'] or obs.get('current_grasp_step',{}).get('wide_view_pose'):wanted=['scan_lidar','stop']
     elif obs['tool_pose']['position'][1]>.22 or not obs.get('crown_projection'):wanted=['project_ground','stop']
     else:wanted=['assess_alignment','project_ground','stop']
     result['available_actions']=[a for a in wanted if a in allowed]
     result['instructions']='''Choose one action using current RGB. Routine care and bounded arm motion run automatically.
-PESTS: remove only visible elongated brown/purple caterpillars with image u,v. Preserve round red ladybirds. next_stage only when no pests remain; independent checks decide clearance.
+PESTS: choose the candidate ID centered on a visible elongated brown/purple caterpillar (or image u,v if no candidates are offered). Preserve round red ladybirds. Code requests independent stage clearance; you only select a visible pest or stop.
 WEED: choose the root crown where upright grass, serrated rosette or thistle meets soil. Rounded three-leaf clover must be preserved. scan_lidar: u,v at that crown, span=.16. project_ground: refine the visible ROOT/SOIL junction, not a leaf. Both use normalized image coordinates and current frame_id. Never invent world coordinates.
 ALIGNMENT: assess_alignment only if both inner finger faces and the weed stem are visible and the stem lies between them; depth_consistent must reflect measured geometry. Otherwise project_ground at the correct crown or stop. Evidence is not physical contact; measured holding/load and preservation checks remain mandatory.
 Keep reason brief. Include the current frame_id in every call.'''
@@ -96,6 +102,8 @@ def pixel_candidates(pixels,obs):
     LiDAR, alignment and independent contact checks still apply.
     """
     from .png import components
+    if obs['phase']=='pests':
+        return [dict(id='p'+str(i),color='purple',**c) for i,c in enumerate(components(pixels,'pest',include_bounds=True)[:8])]
     from .camera import project_ground,add,matvec
     from .arm import ik
     # Mask only public gripper geometry. Its shaded finger faces can also be
@@ -114,8 +122,10 @@ def pixel_candidates(pixels,obs):
             masks.append((min(p[0] for p in corners)-.006,min(p[1] for p in corners)-.006,max(p[0] for p in corners)+.006,max(p[1] for p in corners)+.006))
         except ValueError:pass
     candidates=[]
-    for component in components(pixels,'vegetation',include_bounds=True):
-        if component['area']<6:continue
+    regions=[dict(c,color='yellow-green') for c in components(pixels,'yellow_green',include_bounds=True)]+[dict(c,color='green') for c in components(pixels,'vegetation',include_bounds=True)]
+    for component in regions:
+        if component['area']<4:continue
+        if any(math.hypot(c['u']-component['u'],c['v']-component['v'])<.006 for c in candidates):continue
         if any(a<=component['u']<=c and b<=component['v']<=d for a,b,c,d in masks):continue
         try:
             p=project_ground(obs['frame']['camera'],component['u'],component['v'])

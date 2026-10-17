@@ -24,6 +24,8 @@ def clone_world(saved,cls,source_id,reason):
 
 
 def continue_fleet(repository,source_id,reason):
+    from .background_storage import ensure_cloud_restore_safe
+    ensure_cloud_restore_safe()
     saved=repository.restore(source_id)
     if saved.get('mission_type')!='fleet_care' or saved['status']=='running':raise ValueError('continue a paused or terminal fleet-care session only')
     world=clone_world(saved,FleetCareWorld,source_id,reason)

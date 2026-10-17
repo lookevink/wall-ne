@@ -27,11 +27,12 @@ def main():
         state=api(base,'/api/reset',dict(mission='full_care',tree_count=10,seed=args.seed,engine='crusoe',speed=16,care_controller=args.controller))
         api(base,'/api/start',{})
     else:state=api(base,'/api/state')
-    session=state['id'];last=-10
+    session=state['id'];last=-10;uninterrupted=True
     if state.get('mission_type')!='fleet_care':raise SystemExit('Not a full-care fleet')
     while True:
         state=api(base,'/api/state')
         if state['id']!=session:raise SystemExit('Run replaced externally')
+        if state['status']=='paused':uninterrupted=False
         elapsed=time.monotonic()-started
         if elapsed-last>=10:
             print(json.dumps(dict(wall_seconds=round(elapsed,1),status=state['status'],calls=state['inference']['calls'],completed=sum(a['status']=='completed' for a in state['assignments'].values()),workers={k:dict(stage=w['phase'],status=w['status'],waiting=w['waiting']) for k,w in state['care_workers'].items()})),flush=True);last=elapsed
@@ -44,10 +45,10 @@ def main():
         time.sleep(.5);state=api(base,'/api/state')
     report=dict(session_id=session,controller=args.controller,seed=args.seed,status=state['status'],checks=state['checks'],
         measured_wall_seconds=finished if args.start else None,active_wall_seconds=state['runtime_state']['active_wall'],
-        timing_scope='Reset through terminal outcome' if args.start else 'Attached monitor; use saved active wall',
-        inference=state['inference'],config=state['config'],assignments=state['assignments'],
+        timing_scope='Reset through terminal outcome' if args.start else 'Attached monitor; observational only',
+        inference=state['inference'],config=state['config'],assignments=state['assignments'],background_sync=state.get('background_sync'),
         workers={k:dict(id=w['id'],phase=w['phase'],status=w['status'],feedback=w['feedback'],inference=w['inference'],storage_timing=w.get('storage_timing',{})) for k,w in state['care_workers'].items()})
-    report['passed']=state['status']=='completed' and all(state['checks'].values()) and (finished if args.start else state['runtime_state']['active_wall'])<=180 and not state['inference']['pending_calls']
+    report['passed']=args.start and uninterrupted and len(state['tasks'])==10 and len(state['assignments'])==10 and state['status']=='completed' and all(state['checks'].values()) and finished<=180 and not state['inference']['pending_calls']
     directory=pathlib.Path('docs/evaluations');directory.mkdir(parents=True,exist_ok=True)
     path=directory/f'ultra-fast-{session}.json';path.write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps(dict(passed=report['passed'],report=str(path),seconds=round(finished,2))),flush=True)

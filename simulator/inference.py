@@ -135,12 +135,13 @@ class Adapter:
             schema=[]
             for name in observation['available_actions']:
                 fields={k:ARGUMENT_FIELDS[k] for k in ['frame_id',*required[name]]}
-                if name in ('scan_lidar','project_ground') and observation.get('pixel_candidates'):
+                if name in ('remove_pest','scan_lidar','project_ground') and observation.get('pixel_candidates'):
                     fields.pop('u');fields.pop('v')
-                    fields['candidate_id']=dict(type='string',description='ID of the RGB component whose lower edge is the visible WEED ROOT CROWN. Components are unclassified; avoid fingers, clover and leaf tips. Read pixel_candidates and confirm against RGB.')
+                    fields['candidate_id']=dict(type='string',enum=[c['id'] for c in observation['pixel_candidates']],description='ID of the RGB component centered on a visible caterpillar; preserve red ladybirds.' if name=='remove_pest' else 'ID of the RGB component whose lower edge is the visible WEED ROOT CROWN. Components are unclassified; avoid fingers, clover and leaf tips. Confirm against RGB.')
                 fields['reason']=dict(type='string')
                 schema.append(dict(type='function',function=dict(name=name,description=descriptions[name],parameters=dict(type='object',properties=fields,required=list(fields),additionalProperties=False))))
             body.update(tools=schema,tool_choice='required')
+            if self.provider=='gateway' and self.model=='google/gemini-2.5-flash':body['reasoning']={'enabled':False}
         if flat or fleet: body['parallel_tool_calls']=False
         request=urllib.request.Request(self.base.rstrip('/')+'/chat/completions',data=canonical(body).encode(),headers={'Authorization':'Bearer '+self.key,'Content-Type':'application/json'},method='POST')
         started=time.monotonic(); response=None
@@ -160,8 +161,12 @@ class Adapter:
         try:
             if not envelope_valid:raise InferenceError('Provider returned an invalid response envelope')
             if fast:
-                calls=response.get('choices',[{}])[0].get('message',{}).get('tool_calls',[])
-                if len(calls)!=1 or calls[0].get('function',{}).get('name') not in observation['available_actions']:
+                choices=response.get('choices')
+                choice=choices[0] if isinstance(choices,list) and choices else None
+                message=choice.get('message') if isinstance(choice,dict) else None
+                calls=message.get('tool_calls') if isinstance(message,dict) else None
+                function=calls[0].get('function') if isinstance(calls,list) and len(calls)==1 and isinstance(calls[0],dict) else None
+                if not isinstance(function,dict) or function.get('name') not in observation['available_actions']:
                     raise InferenceError('Provider returned an invalid vision action')
                 name=calls[0]['function']['name']
                 decision=parse_response(response,name)
@@ -180,7 +185,7 @@ class Adapter:
             choices=response.get('choices')
             exc.metrics['response_summary']=[dict(finish_reason=c.get('finish_reason')) for c in choices[:2] if isinstance(c,dict)] if isinstance(choices,list) else []
             # Preserve bounded tool output, excluding free-form reasoning and images.
-            exc.metrics['tool_response']=repr([c.get('message',{}).get('tool_calls') for c in choices[:2] if isinstance(c,dict) and isinstance(c.get('message'),dict)])[:12000] if isinstance(choices,list) else None
+            exc.metrics['tool_response']=repr([[call.get('function') for call in c['message'].get('tool_calls',[]) if isinstance(call,dict)] for c in choices[:2] if isinstance(c,dict) and isinstance(c.get('message'),dict) and isinstance(c['message'].get('tool_calls'),list)])[:12000] if isinstance(choices,list) else None
             raise
 
         return dict(id=uid(),decision=decision,requested_model=self.model,returned_model=response.get('model'),provider=self.provider,response_id=response.get('id'),usage={k:usage[k] for k in ('prompt_tokens','completion_tokens','total_tokens') if k in usage},cost=cost,latency=time.monotonic()-started)
