@@ -1,0 +1,57 @@
+"""Small deterministic contracts shared by the authoritative simulators."""
+import copy
+import hashlib
+import json
+import math
+import os
+import uuid
+from datetime import datetime, timezone
+from pathlib import Path
+
+VERSION = 'wall-ne/1'
+
+def utc():
+    return datetime.now(timezone.utc).isoformat()
+
+def uid():
+    return str(uuid.uuid4())
+
+def canonical(value):
+    return json.dumps(value, sort_keys=True, separators=(',', ':'), allow_nan=False)
+
+def digest(value):
+    return hashlib.sha256(canonical(value).encode()).hexdigest()
+
+def finite(value, low=-math.inf, high=math.inf):
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or not low <= value <= high:
+        raise ValueError('number outside permitted range')
+    return float(value)
+
+def load_env(path='.env'):
+    if not Path(path).is_file():
+        return
+    for line in Path(path).read_text().splitlines():
+        if '=' in line and not line.lstrip().startswith('#'):
+            key, value = line.split('=', 1)
+            os.environ.setdefault(key.strip(), value.strip().strip('\"\''))
+
+def distance(a, b):
+    return math.hypot(a[0]-b[0], a[1]-b[1])
+
+class RecordedWorld:
+    def event(self, kind, robot=None, **payload):
+        self.seq += 1
+        self.events.append(dict(sequence=self.seq, revision=self.revision, sim_time=self.time,
+                                wall_utc=utc(), type=kind, robot_id=robot, payload=payload))
+
+    def checkpoint(self):
+        return copy.deepcopy(self.__dict__)
+
+    @classmethod
+    def restore(cls, state):
+        obj = cls.__new__(cls)
+        obj.__dict__ = copy.deepcopy(state)
+        return obj
+
+    def snapshot(self):
+        return self.checkpoint()

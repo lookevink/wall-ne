@@ -1,0 +1,14 @@
+{
+  "name": "wall-ne",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {"node": ">=22", "npm": ">=10"},
+  "scripts": {
+    "start": "PYTHONPYCACHEPREFIX=.runtime/pycache python3 -m simulator.server",
+    "test": "node --test tests/*.test.mjs && PYTHONPYCACHEPREFIX=.runtime/pycache python3 -m unittest discover -s tests -v",
+    "check": "node scripts/check.mjs",
+    "test:persistence": "WALLNE_INTEGRATION=1 python3 -m unittest tests.test_persistence_integration -v"
+  },
+  "dependencies": {"three": "0.180.0", "@dgreenheck/ez-tree": "1.1.0"}
+}

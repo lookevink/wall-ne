@@ -1,0 +1,185 @@
+"""Loopback-only HTTP API and allowlisted local assets; no credentials leave Python."""
+import argparse
+import gzip
+import json
+import mimetypes
+import pathlib
+import threading
+import urllib.parse
+from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
+from .common import load_env,canonical,uid
+from .engine import Mission
+from .runtime import Runtime
+from .treatment import Treatment
+from .care import PlantCare
+from .manipulation import Manipulation
+from .treatment_runtime import TreatmentRuntime
+from .persistence import Repository,StorageError
+from .review import ReviewService
+
+ROOT=pathlib.Path(__file__).resolve().parent.parent
+WORLDS={'irrigation':Treatment,'care':PlantCare,'arm':Manipulation}
+
+class App:
+    def __init__(self):
+        self.repository=Repository(); self.fleet=Runtime(repository=self.repository)
+        self.treatment=TreatmentRuntime(repository=self.repository)
+        self.reset_lock=threading.Lock()
+
+    def reset(self,treatment,body):
+        with self.reset_lock:
+            seed=body.get('seed',8 if treatment else 7)
+            if type(seed)!=int or not 0<=seed<=100000: raise ValueError('seed must be 0..100000')
+            if treatment:
+                kind=body.get('kind','irrigation'); cls=WORLDS.get(kind)
+                if not cls: raise ValueError('invalid mission kind')
+                mode=body.get('mode','pixels')
+                if mode not in ('pixels','vision'): raise ValueError('invalid treatment mode')
+                if kind=='arm' and mode!='vision': raise ValueError('arm requires live image decisions')
+                world=cls(seed,body.get('trial','wrist' if kind=='arm' else 'baseline'))
+            else:
+                mode=body.get('mode','demo')
+                if mode not in ('demo','live'): raise ValueError('invalid fleet mode')
+                world=Mission(seed)
+            engine=body.get('engine','crusoe')
+            if engine not in ('crusoe','nemotron','gemma','gemini'): raise ValueError('invalid inference engine')
+            speed=body.get('speed',4 if treatment else 8)
+            if speed not in (1,4,8,16): raise ValueError('speed must be 1/4/8/16')
+            old=self.treatment if treatment else self.fleet
+            if old.persisted:
+                if old.storage_error: raise ValueError('recover storage before replacing a session')
+                old.pause('aborted' if old.world.status not in ('completed','failed','blocked','aborted') else old.world.status)
+                if old.storage_error: raise ValueError('session replacement paused by storage failure')
+            old.close()
+            runtime=(TreatmentRuntime if treatment else Runtime)(world,self.repository,dict(mode=mode,engine=engine,speed=speed))
+            if treatment: self.treatment=runtime
+            else: self.fleet=runtime
+            runtime.persist()
+            return runtime.snapshot()
+
+class Handler(BaseHTTPRequestHandler):
+    server_version='Wallne/1'
+    def log_message(self,format,*args): pass
+
+    def check_origin(self):
+        port=self.server.server_port
+        allowed={f'127.0.0.1:{port}',f'localhost:{port}'}
+        if self.headers.get('Host') not in allowed: raise ValueError('local Host required')
+        origin=self.headers.get('Origin')
+        if origin and origin not in {'http://'+h for h in allowed}: raise ValueError('local Origin required')
+        if self.headers.get('Sec-Fetch-Site')=='cross-site': raise ValueError('cross-site request rejected')
+
+    def send(self,data,status=200,content_type='application/json'):
+        raw=data if isinstance(data,bytes) else canonical(data).encode()
+        self.send_response(status); self.send_header('Content-Type',content_type); self.send_header('Content-Length',str(len(raw)))
+        self.send_header('Cache-Control','no-store'); self.send_header('X-Content-Type-Options','nosniff')
+        self.send_header('Content-Security-Policy',"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'")
+        self.end_headers()
+        try: self.wfile.write(raw)
+        except (BrokenPipeError,ConnectionResetError): pass
+
+    def do_GET(self):
+        try:
+            self.check_origin(); parsed=urllib.parse.urlsplit(self.path); path=urllib.parse.unquote(parsed.path); query=urllib.parse.parse_qs(parsed.query)
+            app=self.server.app
+            if path in ('/api/state','/api/export'): return self.send(app.fleet.snapshot())
+            if path in ('/api/treatment/state','/api/treatment/export'): return self.send(app.treatment.snapshot())
+            if path.startswith('/api/treatment/frame/'):
+                if query.get('mission',[''])[0]!=app.treatment.world.id: raise ValueError('cross-mission frame')
+                raw=app.treatment.frame_bytes.get(path.rsplit('/',1)[1])
+                if raw is None: raise ValueError('unknown frame; use saved session artifact')
+                return self.send(raw,content_type='image/png')
+            if path=='/api/sessions': return self.send(app.repository.sessions())
+            if path.startswith('/api/sessions/'):
+                return self.session_get(path,query)
+            if path in ('/api/reviews','/api/prompt-versions','/api/evaluations'):
+                return self.send(app.repository.read(path.rsplit('/',1)[1].replace('-','_'),'order=created_at.desc&limit=50'))
+            if path.startswith('/api/'): return self.send({'error':'unknown route'},404)
+            if '\x00' in path or '\\' in path or '..' in path.split('/'): raise ValueError('invalid static path')
+            if path.startswith('/vendor/ez-tree/'):
+                base=ROOT/'node_modules/@dgreenheck/ez-tree/build'; relative=path[len('/vendor/ez-tree/'):]
+            elif path.startswith('/vendor/'):
+                base=ROOT/'node_modules/three/build'; relative=path[len('/vendor/'):]
+            else: base=ROOT/'web'; relative=path.lstrip('/') or 'index.html'
+            file=(base/relative).resolve()
+            if base.resolve() not in file.parents or not file.is_file(): return self.send({'error':'not found'},404)
+            if file.suffix not in ('.js','.mjs','.html','.css','.png','.svg','.json'): return self.send({'error':'not found'},404)
+            return self.send(file.read_bytes(),content_type=mimetypes.guess_type(str(file))[0] or 'application/octet-stream')
+        except ValueError as exc: self.send({'error':str(exc)},400)
+        except StorageError as exc: self.send({'error':str(exc)},503)
+        except Exception: self.send({'error':'internal request failure'},500)
+
+    def session_get(self,path,query):
+        import uuid
+        parts=path.strip('/').split('/'); sid=str(uuid.UUID(parts[2])); repo=self.server.app.repository
+        if len(parts)==3: return self.send(repo.read('sessions',f'id=eq.{sid}&limit=1'))
+        resource=parts[3]
+        if resource=='artifacts' and len(parts)==5:
+            aid=str(uuid.UUID(parts[4])); raw,a=repo.artifact_bytes(sid,aid)
+            return self.send(raw,content_type='image/png' if a['kind']=='frame' else 'application/gzip')
+        if resource=='events':
+            after=int(query.get('after',['0'])[0]); robot=query.get('robot',[''])[0]
+            filters=f'session_id=eq.{sid}&sequence=gt.{max(0,after)}&order=sequence&limit=100'
+            if robot in ('W1','W2','W3','W4','W5','R1','T1'): filters+=f'&robot_id=eq.{robot}'
+            return self.send(repo.read('events',filters))
+        if resource=='robots': return self.send(repo.read('robot_sessions',f'session_id=eq.{sid}&limit=10'))
+        if resource in ('motions','artifacts'): return self.send(repo.read('artifacts',f'session_id=eq.{sid}'+('&kind=eq.movement' if resource=='motions' else '')+'&order=sequence&limit=100'))
+        if resource=='export':
+            return self.send(dict(session=repo.read('sessions',f'id=eq.{sid}&limit=1'),checkpoint=repo.restore(sid),artifacts=repo.read('artifacts',f'session_id=eq.{sid}&order=sequence&limit=1000')))
+        raise ValueError('unknown session resource')
+
+    def do_POST(self):
+        try:
+            self.check_origin()
+            length=int(self.headers.get('Content-Length','0'))
+            if not 0<=length<=3*1024*1024: raise ValueError('request too large')
+            if self.headers.get_content_type()!='application/json': raise ValueError('application/json required')
+            body=json.loads(self.rfile.read(length) or b'{}',parse_constant=lambda _: (_ for _ in ()).throw(ValueError('nonfinite JSON')))
+            if not isinstance(body,dict): raise ValueError('JSON object required')
+            path=urllib.parse.urlsplit(self.path).path; app=self.server.app
+            treatment=path.startswith('/api/treatment/'); runtime=app.treatment if treatment else app.fleet
+            action=path.rsplit('/',1)[1]
+            if path.startswith('/api/prompt-versions/') and action in ('activate','rollback'):
+                import uuid
+                version=str(uuid.UUID(path.split('/')[-2])); evaluation=str(uuid.UUID(body['evaluation_id']))
+                return self.send(app.repository.rpc('wallne_activate',dict(p_version=version,p_evaluation=evaluation,p_rollback=action=='rollback')))
+            if path=='/api/prompt-candidates': return self.send(ReviewService(app.repository).create_candidate(**body))
+            allowed={'reset','start','pause','breakdown','false-claim','retry','abort','stop','clog','fault','frame','depth','resume','command'}
+            if action not in allowed or path not in ('/api/'+action,'/api/treatment/'+action): return self.send({'error':'unknown route'},404)
+            if action=='reset': return self.send(app.reset(treatment,body))
+            if action=='start': runtime.start()
+            elif action in ('pause','abort','stop'): runtime.pause('paused' if action=='pause' else 'aborted')
+            elif action=='retry': runtime.retry()
+            elif action=='resume': runtime.restore(body['session_id'])
+            elif action=='frame' and treatment: return self.send(runtime.accept_frame(body))
+            elif action=='depth' and treatment: return self.send(runtime.accept_depth(body))
+            elif action=='command': return self.send(runtime.command(body.get('robot','T1' if treatment else 'orchestrator'),body['action'],body.get('arguments',{}),body.get('command_id')))
+            elif action in ('clog','fault') and treatment:
+                with runtime.lock:
+                    tool=body.get('tool','nozzle')
+                    if tool not in ('nozzle','gripper','fertilizer','vacuum'): raise ValueError('invalid tool')
+                    runtime.world.faults[tool]=True; runtime.world.event('fault_injected',tool=tool); runtime.persist()
+            elif action=='breakdown' and not treatment:
+                with runtime.lock:
+                    for robot in body.get('robots',['W1','W2']):
+                        if robot not in ('W1','W2','W3','W4','W5'): raise ValueError('invalid worker')
+                        runtime.world.breakdown(robot)
+                    runtime.persist()
+            elif action=='false-claim' and not treatment: return self.send(runtime.command('orchestrator','claim_complete'))
+            else: raise ValueError('action unavailable in this mode')
+            return self.send(runtime.snapshot())
+        except (ValueError,KeyError,TypeError) as exc: self.send({'error':str(exc) if isinstance(exc,ValueError) else 'invalid request arguments'},400)
+        except StorageError as exc: self.send({'error':str(exc)},503)
+        except Exception: self.send({'error':'internal request failure'},500)
+
+
+def main():
+    load_env(ROOT/'.env')
+    parser=argparse.ArgumentParser(); parser.add_argument('--port',type=int,default=8765); args=parser.parse_args()
+    server=ThreadingHTTPServer(('127.0.0.1',args.port),Handler); server.daemon_threads=True; server.app=App()
+    print(f'Wall-ne: http://127.0.0.1:{args.port}',flush=True)
+    try: server.serve_forever()
+    except KeyboardInterrupt: pass
+    finally: server.app.fleet.close(); server.app.treatment.close(); server.server_close()
+
+if __name__=='__main__': main()
