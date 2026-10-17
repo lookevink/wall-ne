@@ -214,13 +214,21 @@ class Handler(BaseHTTPRequestHandler):
             if action=='continue-care':
                 if treatment:raise ValueError('fleet continuation belongs to the main orchard')
                 with app.reset_lock:
-                    if runtime.world.status=='running' or runtime.snapshot()['inference']['pending_calls']:raise ValueError('stop and finish inference accounting before continuing')
-                    from .fleet_continuation import continue_fleet
-                    replacement=continue_fleet(app.repository,body['session_id'],str(body.get('reason','Controller update'))[:400])
-                    runtime.close();app.fleet=replacement
-                    return self.send(replacement.snapshot())
+                    runtime=app.fleet
+                    with runtime.lock:
+                        for source_runtime in [runtime,*getattr(runtime,'children',{}).values()]:
+                            with source_runtime.lock:
+                                if source_runtime.storage_error or source_runtime.pending:raise ValueError('recover storage before continuing')
+                                if source_runtime.world.status=='running' or source_runtime.futures or source_runtime.requests:raise ValueError('stop and finish inference accounting before continuing')
+                        from .fleet_continuation import continue_fleet
+                        replacement=continue_fleet(app.repository,body['session_id'],str(body.get('reason','Controller update'))[:400])
+                        runtime.close();app.fleet=replacement
+                        return self.send(replacement.snapshot())
             if action=='start' and treatment and runtime.world.kind=='arm':raise ValueError('Live arm runs now use the main orchard at /')
-            if action=='start': runtime.start()
+            if action=='start':
+                with app.reset_lock:
+                    runtime=app.treatment if treatment else app.fleet
+                    runtime.start()
             elif action in ('pause','abort','stop'): runtime.pause('paused' if action=='pause' else 'aborted')
             elif action=='retry': runtime.retry()
             elif action=='resume': runtime.restore(body['session_id'])

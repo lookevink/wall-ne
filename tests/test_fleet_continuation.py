@@ -21,3 +21,34 @@ class ContinuationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'accounting'):clone_world(saved,OrchardCare,w.id,'test')
         saved['runtime_state']['pending_requests']={};saved['damage']=['clover']
         with self.assertRaisesRegex(ValueError,'damage'):clone_world(saved,OrchardCare,w.id,'test')
+
+    def test_continuation_keeps_worker_provider_pins_and_closes_failed_child(self):
+        import copy
+        from unittest.mock import patch,Mock
+        from simulator.fleet_care import FleetCareWorld,FleetCareRuntime
+        from simulator.treatment_runtime import TreatmentRuntime
+        from simulator.fleet_continuation import continue_fleet
+        parent=FleetCareWorld();parent.status='paused'
+        worker=OrchardCare(parent.seed,1,'W1',parent.tasks[0]);worker.status='paused'
+        parent.assignments={'0':dict(vehicle='W1',status='assigned',session_id=worker.id)}
+        parent.worker_sessions={worker.id:dict(task_index=0,worker='W1')}
+        config=dict(mode='vision',engine='crusoe',models={'treatment':'parent-model'},provider_base='parent-provider')
+        child_config=dict(config,models={'treatment':'worker-model'},provider_base='worker-provider',fallback={'models':{'treatment':'pinned-fallback'},'provider_base':'fallback-provider','after_failures':2,'engine':'gemma'})
+        saved=parent.checkpoint();saved['runtime_state']=dict(config=config)
+        child_saved=worker.checkpoint();child_saved['runtime_state']=dict(config=child_config,provider_routes={'W1':{'fallback':True}})
+        repo=Mock();repo.restore.side_effect=lambda sid:copy.deepcopy({parent.id:saved,worker.id:child_saved}[sid])
+        with patch('threading.Thread.start'),patch.object(FleetCareRuntime,'persist',return_value=True),patch.object(TreatmentRuntime,'persist',return_value=True):
+            runtime=continue_fleet(repo,parent.id,'test')
+        try:
+            child=runtime.children['W1']
+            for key in ('models','provider_base','fallback'):self.assertEqual(child.config[key],child_config[key])
+            self.assertEqual(child.config['parent_session_id'],runtime.world.id)
+            self.assertTrue(child.provider_routes['W1']['fallback'])
+        finally:runtime.close()
+        created=[]
+        original=FleetCareRuntime.make_child
+        def track(runtime,*args):
+            child=original(runtime,*args);created.append(child);return child
+        with patch('threading.Thread.start'),patch.object(FleetCareRuntime,'make_child',track),patch.object(TreatmentRuntime,'persist',return_value=False):
+            with self.assertRaisesRegex(ValueError,'checkpoint'):continue_fleet(repo,parent.id,'test')
+        self.assertEqual(len(created),1);self.assertTrue(created[0].closed)

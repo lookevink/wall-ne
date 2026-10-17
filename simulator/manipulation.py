@@ -33,7 +33,7 @@ class Manipulation(Treatment):
         self.joints=ik([0,.8,2.2,0,0,0],self.base())
         self.opening=.12; self.force=0; self.load=0; self.holding=False; self.extracted=False; self.deposited=False; self.grip_origin=None
         self.damage=[]; self.collision=None; self.alignment=None; self.contact_ack=None; self.must_reopen=False; self.nonempty_scan=False
-        self.control_progress=None
+        self.control_progress=None;self.missed_grasp=None
         self.bin=[.95,.48,2.5]; self.initial_inventory=dict(weed=dict(self.weed),protected=self.protected)
         self.contract.update(goal='Extract the weed, collect in the bin, preserve protected plants and return',reserve=20)
         self.contract_hash=digest(self.contract)
@@ -63,6 +63,8 @@ class Manipulation(Treatment):
             actions=['scan_lidar','capture_image','stop']
             if not self.nonempty_scan:return actions
             actions+=['open_gripper']
+            if getattr(self,'missed_grasp',None) and not self.holding and self.opening>=.06 and not self.must_reopen:
+                return ['move_arm','scan_lidar','stop'] if self.tool_pose()['position'][1]>=.55 else ['move_arm','stop']
             if self.deposited:return actions+['verify']
             if self.holding:return actions+['set_gripper','move_arm' if self.contact_ack else 'confirm_contact']
             if self.opening>=.06 and not self.must_reopen:
@@ -96,6 +98,10 @@ class Manipulation(Treatment):
         if self.trial=='precision' and self.nonempty_scan and not self.holding and self.opening>=.06:
             obs['current_grasp_step']=dict(tool_center_world=p,valid_grasp_height=.09<=p[1]<=.22,
                 next_action='At approach height: descend to tool-center y=0.13 at the visually selected stem x,z; do not repeat the current pose. If this is rounded clover, retract and select the pointed weed instead.' if .22<p[1]<=.45 else 'Inspect the current fingers/stem and assess alignment before closing.' if .09<=p[1]<=.22 else 'Approach the observed weed crown at y=0.4, then descend to y=0.13.')
+        if getattr(self,'missed_grasp',None) and not self.holding:
+            wide=[self.base()[0],.8,self.base()[2]-1.1,0,0,0]
+            obs['current_grasp_step']=dict(failed_pose=self.missed_grasp,wide_view_pose=wide,
+                next_action='Reopen fully, then retract to the public wide_view_pose and scan the actual weed crown in the NEW wide image. Reidentify the specimen: serrated rosette, thistle or upright grass is a weed; rounded three-leaf clover must be preserved. Do not reuse the failed horizontal target or assert alignment without a new scan.')
         return obs
 
     def record_control_progress(self,action):
@@ -111,7 +117,8 @@ class Manipulation(Treatment):
             if action=='move_arm':
                 q=ik(args['pose'],self.base(),self.joints) if 'pose' in args else args['joints']
                 target=fk(q,self.base());current=self.tool_pose()
-                recovery=norm(sub(target['position'],current['position']))>=.02 or max(abs(a-b) for a,b in zip(target['euler'],current['euler']))>=3
+                recovery=norm(sub(target['position'],current['position']))>=.02-1e-6 or max(abs(a-b) for a,b in zip(target['euler'],current['euler']))>=3
+            if action=='scan_lidar' and getattr(self,'missed_grasp',None) and self.tool_pose()['position'][1]>=.55:recovery=True
             if not recovery:raise ValueError('No meaningful progress: choose a different viewpoint/grasp pose (at least 2 cm or 3 degrees), reopen after a miss, or stop. Repeated images and identical poses are not recovery.')
         if action=='move_arm':
             if self.trial in ('lidar','alignment','wrist','precision') and not self.nonempty_scan: raise ValueError('initial nonempty LiDAR scan required')
@@ -159,6 +166,7 @@ class Manipulation(Treatment):
                     self.grip_origin=p[:]; self.load=2.0; self.event('contact','T1',force=force,load=self.load)
                 else:
                     self.must_reopen=True
+                    self.missed_grasp=dict(position=p[:],revision=self.revision,force=force)
                     self.feedback=f'No stem contact. Tool center y={p[1]:.3f} m; required 0.09..0.22 m (suggested 0.15 m), upright tilt <25 degrees. Surface-return y is not the grasp height. Reopen, inspect stem x,z and both fingers, then reposition; hidden target position is not supplied.'
                 for plant in self.protected:
                     if math.hypot(p[0]-plant['position'][0],p[2]-plant['position'][2])<.12 and p[1]<.3: self.damage.append(plant['id'])
@@ -191,6 +199,9 @@ class Manipulation(Treatment):
         if not artifact.get('ready'): raise ValueError('depth artifact not durable')
         self.scan=dict(frame_id=frame_id,revision=revision,points=accepted,bounds=self.depth_request['bounds'],artifact_id=artifact['id'],rays=len(accepted),misses=sum(p is None for p in accepted),**interpret_scan(accepted,self.depth_request['camera'],self.tool_pose(),self.opening,self.robot['position'],self.trial))
         self.nonempty_scan=self.nonempty_scan or any(p is not None for p in accepted)
+        if getattr(self,'missed_grasp',None) and self.tool_pose()['position'][1]>=.55 and revision>self.missed_grasp['revision'] and any(p is not None for p in accepted):
+            self.missed_grasp=None
+            self.feedback='Fresh wide-view scan acquired after the miss. Select the visible weed crown anew; do not reuse a clover or outer-leaf target.'
         self.depth_request=None; self.event('depth','T1',scan=self.scan)
 
     def physical_step(self,a,step):

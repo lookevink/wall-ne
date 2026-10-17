@@ -65,7 +65,7 @@ class OrchardCare(OrchardManipulation):
         self.moisture=23.;self.effective=0.;self.delivered=0.;self.flow=None;self.moisture_reading=None;self.aim=None
         self.care_completed={};self.inspection=None;self.stage_verified=False
         self.holding=False;self.extracted=False;self.deposited=False;self.grip_origin=None;self.load=0.;self.force=0.;self.opening=.12
-        self.alignment=None;self.contact_ack=None;self.must_reopen=False;self.nonempty_scan=False;self.scan=None;self.depth_request=None
+        self.alignment=None;self.contact_ack=None;self.must_reopen=False;self.missed_grasp=None;self.nonempty_scan=False;self.scan=None;self.depth_request=None
         self.return_verified=False;self.phase='travel';self.tool='service head';self.frame=None
         self.joints=ik([self.robot['position'][0],.8,self.robot['position'][1]-1.6,0,0,0],self.base())
         self.control_progress=None;self.record_control_progress('new_tree');self.invalidate()
