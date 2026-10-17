@@ -3,6 +3,7 @@ import {fieldRover} from './field-rover.js';
 import {landscape} from './orchard-landscape.js';
 import {orchard} from './orchard-trees.js';
 import {OrchardArm} from './orchard-arm.js';
+import {Atmosphere} from './orchard-epoch.js';
 
 export class FleetScene {
   constructor(element) {
@@ -17,8 +18,8 @@ export class FleetScene {
     element.prepend(this.renderer.domElement);
     this.scene=new THREE.Scene();this.scene.fog=new THREE.Fog(0xd5d6bd,95,330);
     this.camera=new THREE.PerspectiveCamera(43,1,.1,700);
-    this.scene.add(new THREE.HemisphereLight(0xe4edec,0x8c7854,2));
-    const sun=new THREE.DirectionalLight(0xffe6c1,3.3);sun.position.set(-28,32,22);sun.castShadow=true;
+    this.hemi=new THREE.HemisphereLight(0xe4edec,0x8c7854,2);this.scene.add(this.hemi);
+    const sun=this.sun=new THREE.DirectionalLight(0xffe6c1,3.3);sun.position.set(-28,32,22);sun.castShadow=true;
     sun.shadow.mapSize.set(2048,2048);sun.shadow.bias=-.00025;sun.shadow.normalBias=.045;
     Object.assign(sun.shadow.camera,{left:-43,right:43,top:43,bottom:-43,near:1,far:120});this.scene.add(sun);
     this.landscape=landscape(this.scene);this.trees=orchard(this.scene);
@@ -30,7 +31,7 @@ export class FleetScene {
     this.camera.layers.enable(1);
     for(const camera of Object.values(this.feedCameras))camera.layers.enable(1);
     this.feedCameras.WRIST=new THREE.PerspectiveCamera(70,16/9,.05,30);
-    this.armControl=new OrchardArm(this);
+    this.armControl=new OrchardArm(this);this.atmosphere=new Atmosphere(this);
     this.expanded=null;this.windEnabled=!matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.paused=false;this.last=0;this.frames=0;this.statsAt=performance.now();this.fps=0;
     this.target=new THREE.Vector3(0,0,0);this.orbit={theta:.56,phi:.73,radius:69};this.bindNavigation();this.setView('overview');
@@ -76,14 +77,14 @@ export class FleetScene {
       const c=this.feedCameras[id];c.position.set(v.position[0],1.6,v.position[1]-.5);
       const forward=new THREE.Vector3(0,-.15,-1).applyAxisAngle(new THREE.Vector3(0,1,0),m.rotation.y);c.lookAt(c.position.clone().add(forward));m.visible=v.lifecycle!=='spare';
     }
-    this.armControl.update(state);
+    this.armControl.update(state);this.atmosphere?.update(state.epoch);
     if(!this.orchardMission&&this.expanded==='WRIST')this.expanded=null;
   }
 
   draw(time) {
     if(this.paused||document.hidden||time-this.last<1000/30)return false;
     this.last=time-(time-this.last)%(1000/30);this.trees.wind(time/1000,this.windEnabled&&!this.orchardMission);this.landscape.wind(time/1000,this.windEnabled&&!this.orchardMission);
-    this.renderer.shadowMap.autoUpdate=false;this.renderer.shadowMap.needsUpdate=time-(this.lastShadow||0)>100;
+    this.renderer.shadowMap.autoUpdate=false;this.renderer.shadowMap.needsUpdate||=time-(this.lastShadow||0)>100;
     if(this.renderer.shadowMap.needsUpdate)this.lastShadow=time;
     this.renderer.setRenderTarget(null);
     const active=this.expanded?this.feedCameras[this.expanded]:this.camera;

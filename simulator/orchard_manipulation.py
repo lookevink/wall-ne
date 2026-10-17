@@ -10,9 +10,11 @@ from .arm import ik
 TREES=json.loads(Path(__file__).with_name('orchard_trees.json').read_text())
 
 class OrchardManipulation(Manipulation):
-    def __init__(self,seed=7,trial='precision'):
+    def __init__(self,seed=7,trial='precision',growth=None):
         if trial!='precision':raise ValueError('orchard weeding uses the precision wrist controller')
         super().__init__(seed,trial)
+        # A season day sets the weed's rendered growth stage; grasp physics are unchanged.
+        if growth:self.weed.update(size=growth['size'],leaves=growth['leaves'],render_seed=seed*101%2**31)
         tree=next(t for t in TREES if t['row']==6 and t['column']==12)
         x,_,z=tree['position']
         self.arena='orchard';self.orchard=dict(tree=tree,worker='W1',arrived=False)
