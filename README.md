@@ -2,6 +2,10 @@
 
 A local 3D orchard laboratory with authoritative Python simulation, Three.js views, camera-guided plant care, a six-axis gripper, and durable Supabase evidence.
 
+![Wall-ne season film: overview, care row, W3 camera and orchard almanac on days 1, 8 and 14](docs/media/season-film.gif)
+
+*Days 1, 8 and 14 of a deterministic 14-day season film (seed 7). See [Season film](#season-film).*
+
 ## Run
 
 Python 3.9+ and Node 22+ are required. The selected validation runtimes are recorded in `docs/DEPENDENCIES.md`.
@@ -50,6 +54,10 @@ The clock runs at the chosen daylight length while the mission runs, then sweeps
 python3 -m scripts.timelapse            # latest reel
 python3 -m scripts.timelapse --list
 ```
+
+### Season film
+
+`/film.html` renders a deterministic multi-day film as a 2×2 grid: overview, care-row close-up, W3's onboard camera and an almanac panel. Frames come from `simulator/film.py`, which steps the season in fixed simulated-time increments. A scripted controller reads simulator truth and issues the ordinary care commands, so arm kinematics, collision checks and per-tree checks still decide every outcome. The same seed always produces the same frames. Rendering is promise-driven, so it also runs in headless Chrome. Add `&reel=<id>&from=<n>` to resume an interrupted reel. The reel's `manifest.json` records the seed, day count and controller.
 
 ## Recovery and evidence
 

@@ -30,6 +30,11 @@ def save_frame(reel,index,data_url,meta=None):
     return dict(reel=reel,frames=sum(1 for _ in path.glob('frame-*.jpg')))
 
 
+def write_manifest(reel,manifest):
+    path=folder(reel);path.mkdir(parents=True,exist_ok=True)
+    (path/'manifest.json').write_text(json.dumps(dict(manifest,created_utc=utc()),indent=2))
+
+
 def reels():
     return sorted((p.name for p in ROOT.glob('*') if p.is_dir() and REEL.match(p.name)),reverse=True) if ROOT.is_dir() else []
 
@@ -45,7 +50,7 @@ def render(reel,fps=30):
     output=path.with_suffix('.mp4')
     try:
         subprocess.run([ffmpeg,'-y','-loglevel','error','-f','concat','-i',str(listing),'-vf','scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p',
-                        '-c:v','libx264','-crf','18','-r',str(fps),str(output)],check=True,timeout=900,capture_output=True)
+                        '-c:v','libx264','-crf','21','-preset','medium','-movflags','+faststart','-r',str(fps),str(output)],check=True,timeout=900,capture_output=True)
     except subprocess.CalledProcessError as exc:
         raise ValueError('ffmpeg failed: '+exc.stderr.decode(errors='replace')[-300:]) from None
     return dict(reel=reel,frames=len(frames),fps=fps,seconds=round(len(frames)/fps,1),output=str(output))
