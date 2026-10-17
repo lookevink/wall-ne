@@ -51,6 +51,10 @@ class Repository:
             connection.close(); self.connections.connection=None
             raise StorageError('Supabase connection unavailable') from None
 
+    def close_current(self):
+        connection=getattr(self.connections,'connection',None)
+        if connection: connection.close();self.connections.connection=None
+
     def rpc(self,name,args):
         return self.request('POST','/rest/v1/rpc/'+name,args)
 
@@ -114,11 +118,17 @@ class Repository:
     def sessions(self):
         return self.read('sessions','select=*&order=started_at.desc&limit=50')
 
-    def restore(self,session):
+    def checkpoint_record(self,session):
         rows=self.read('checkpoints',f'session_id=eq.{session}&order=sequence.desc&limit=1')
         if not rows: raise StorageError('No committed checkpoint exists')
         row=rows[0]
-        if digest(row['state'])!=row['integrity_hash']: raise StorageError('Checkpoint integrity mismatch')
+        legacy=hashlib.sha256(json.dumps(row['state'],sort_keys=True,separators=(',',':'),allow_nan=False).encode()).hexdigest()
+        valid=row['integrity_hash'] in (digest(row['state']),legacy)
+        return row,valid
+
+    def restore(self,session):
+        row,valid=self.checkpoint_record(session)
+        if not valid: raise StorageError('Checkpoint integrity mismatch; evidence remains available, resumption is blocked')
         return row['state']
 
     def artifact_bytes(self,session,artifact_id):

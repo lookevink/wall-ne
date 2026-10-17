@@ -40,6 +40,10 @@ class ReviewService:
         review=self.repository.read('reviews',f'id=eq.{review_id}&limit=1')
         if not review or review[0]['candidate_id']: raise ValueError('one candidate per saved review')
         if not evidence_ids: raise ValueError('supporting evidence IDs required')
+        source=self.repository.read('sessions',f'id=eq.{review[0]["session_id"]}&limit=1')
+        if not source or source[0]['metadata']['prompt_versions'].get(role)!=parent_id: raise ValueError('parent must be the reviewed session pinned prompt')
+        allowed=review[0]['evidence'].get('sequence_ids',[])+review[0]['evidence'].get('frame_ids',[])+review[0]['evidence'].get('motion_ids',[])
+        if not set(evidence_ids).issubset(set(allowed)): raise ValueError('candidate references evidence outside its review')
         candidate=dict(id=uid(),role=role,text=text,hash=digest(text),parent_id=parent_id,source_review=review_id,status='candidate')
         self.repository.rpc('wallne_candidate',dict(p_candidate=candidate,p_review=review_id))
         return dict(candidate=candidate,diff='\n'.join(difflib.unified_diff(parent[0]['text'].splitlines(),text.splitlines(),fromfile='baseline',tofile='candidate')))
@@ -48,11 +52,16 @@ class ReviewService:
         from .inference import Adapter
         sessions=self.repository.read('sessions',f'id=eq.{session_id}&limit=1')
         if not sessions or sessions[0]['status']=='running': raise ValueError('terminal or explicit paused review boundary required')
-        query=f'session_id=eq.{session_id}&sequence=gt.{max(0,int(after))}&order=sequence.desc&limit=100'
+        boundary=max(0,int(after))
+        if boundary==0:
+            incidents=self.repository.read('events',f'session_id=eq.{session_id}&type=eq.slip&order=sequence.desc&limit=1')
+            if not incidents: incidents=self.repository.read('events',f'session_id=eq.{session_id}&type=eq.rejected&order=sequence.desc&limit=1')
+            if incidents: boundary=max(0,incidents[0]['sequence']-30)
+        query=f'session_id=eq.{session_id}&sequence=gt.{boundary}&order=sequence&limit=100'
         if robot_id:
             if robot_id not in ('T1','W1','W2','W3','W4','W5','R1'): raise ValueError('unknown robot')
             query+=f'&robot_id=eq.{robot_id}'
-        events=list(reversed(self.repository.read('events',query)))
+        events=self.repository.read('events',query)
         evidence=permitted_evidence(events)
         session=sessions[0];role='treatment' if session['kind']!='fleet' else 'worker'
         parent_id=session['metadata']['prompt_versions'].get(role)
@@ -60,16 +69,25 @@ class ReviewService:
         if not parents: raise ValueError('session has no saved immutable prompt version')
         obs=dict(role=role,observations=evidence,verification=session['verification'],baseline_prompt=parents[0]['text'],instruction='Review the actual evidence. Return choose_action with action propose_prompt_revision and arguments diagnosis (concise evidence-based), hypothesis (clearly labeled), and prompt (complete revised prompt text). Preserve physical checks, contract, sensor limits and budgets. One candidate only. No hidden target truth is provided.')
         import base64
-        frames=self.repository.read('artifacts',f'session_id=eq.{session_id}&kind=eq.frame&order=sequence.desc&limit=1')
-        image=None
-        if frames:
-            raw,_=self.repository.artifact_bytes(session_id,frames[0]['id'])
-            image='data:image/png;base64,'+base64.b64encode(raw).decode()
-            obs['frame_artifact_id']=frames[0]['id']
+        end=events[-1]['sequence'] if events else boundary
+        frames=self.repository.read('artifacts',f'session_id=eq.{session_id}&kind=eq.frame&sequence=gte.{boundary}&sequence=lte.{end}&order=sequence&limit=3')
+        image=[]
+        for frame in frames:
+            raw,_=self.repository.artifact_bytes(session_id,frame['id'])
+            image.append('data:image/png;base64,'+base64.b64encode(raw).decode())
+        obs['frame_artifact_ids']=[f['id'] for f in frames]
+        motions=self.repository.read('artifacts',f'session_id=eq.{session_id}&kind=eq.movement&sequence=gte.{boundary}&sequence=lte.{end}&order=sequence&limit=3')
+        import gzip,json
+        load_history=[]
+        for motion in motions:
+            raw,_=self.repository.artifact_bytes(session_id,motion['id'])
+            for sample in json.loads(gzip.decompress(raw)):
+                if 'load' in sample: load_history.append({k:sample[k] for k in ('sim_time','revision','force','load','holding','opening')})
+        obs['bounded_load_history']=load_history[::max(1,len(load_history)//40)][:40]
         response=Adapter(engine,'reviewer').call(obs,image=image,prompt='You review recorded simulation outcomes. Distinguish observed evidence from hypotheses. Do not change physical rules. Propose one bounded prompt revision using the required tool.')
         decision=response['decision'];args=decision['arguments']
         if decision['action']!='propose_prompt_revision' or not all(isinstance(args.get(k),str) for k in ('diagnosis','hypothesis','prompt')): raise ValueError('invalid review proposal')
-        review=dict(id=uid(),session_id=session_id,evidence=dict(sequence_ids=[e['sequence'] for e in evidence],robot_id=robot_id),diagnosis=dict(summary=args['diagnosis'][:3000],hypothesis=args['hypothesis'][:2000],inference=response),candidate_id=None)
+        review=dict(id=uid(),session_id=session_id,evidence=dict(sequence_ids=[e['sequence'] for e in evidence],robot_id=robot_id,frame_ids=obs['frame_artifact_ids'],motion_ids=[m['id'] for m in motions]),diagnosis=dict(summary=args['diagnosis'][:3000],hypothesis=args['hypothesis'][:2000],inference=response),candidate_id=None)
         self.repository.request('POST','/rest/v1/reviews',review)
         candidate=self.create_candidate(role,parent_id,args['prompt'],review['id'],review['evidence']['sequence_ids'])
         return dict(review=review,**candidate)

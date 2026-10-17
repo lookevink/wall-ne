@@ -37,7 +37,7 @@ export function orchard(scene) {
     const geometry = wood.children.find(o => o.isMesh).geometry;
     return {data, geometry, transforms:[]};
   });
-  const dummy = new THREE.Object3D(), transform = new THREE.Matrix4(), color = new THREE.Color();
+  const dummy = new THREE.Object3D(), color = new THREE.Color();
   const leaves = [], hulls = [];
   for (let row = 0; row < 12; row++) {
     const leafData = [], hullData = [];
@@ -72,10 +72,26 @@ export function orchard(scene) {
   // Three seeded windbreak forms. Keep EZ-Tree's original asset attribution.
   for (let v = 0; v < 3; v++) {
     const tree = new Tree(); tree.loadPreset('Oak Small'); tree.options.seed = 87 + v;
-    tree.options.branch.levels = 2; tree.options.leaves.count = 12; tree.options.leaves.size = 2.2; tree.generate();
+    tree.options.branch.levels = 3; tree.options.leaves.count = 8; tree.options.leaves.size = 2.8; tree.generate();
+    const matrices=[];
     for (let i = v; i < 22; i += 3) {
-      const clone = tree.clone(); clone.position.set(-33 + i * 3.2,0,-24-rng()*3);
-      clone.rotation.y = rng() * 6.28; clone.scale.setScalar(.24 + rng() * .1); group.add(clone);
+      dummy.position.set(-33 + i * 3.2,0,-24-rng()*3);
+      dummy.rotation.set(0,rng()*6.28,0); dummy.scale.setScalar(.24+rng()*.1);dummy.updateMatrix();matrices.push(dummy.matrix.clone());
+    }
+    // EZ-Tree replaces project_vertex; restore the instance transform it omits.
+    const compileWind=tree.leavesMesh.material.onBeforeCompile;
+    tree.leavesMesh.material.onBeforeCompile=shader=>{
+      compileWind(shader);shader.uniforms.uTime=clock;
+      shader.vertexShader=shader.vertexShader.replace('mvPosition = modelViewMatrix * mvPosition;', `
+        #ifdef USE_INSTANCING
+        mvPosition = instanceMatrix * mvPosition;
+        #endif
+        mvPosition = modelViewMatrix * mvPosition;`);
+    };
+    tree.leavesMesh.material.customProgramCacheKey=()=> 'instanced-ez-tree-wind-v1';
+    for (const source of [tree.branchesMesh,tree.leavesMesh]) {
+      const mesh=new THREE.InstancedMesh(source.geometry,source.material,matrices.length);
+      matrices.forEach((matrix,i)=>mesh.setMatrixAt(i,matrix));mesh.castShadow=mesh.receiveShadow=true;group.add(mesh);
     }
   }
   scene.add(group);

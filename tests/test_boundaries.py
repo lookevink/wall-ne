@@ -38,7 +38,7 @@ class BoundaryTests(unittest.TestCase):
         from simulator.engine import Mission
         class FakeAdapter:
             calls=[]
-            def __init__(self,engine,role):self.role=role
+            def __init__(self,engine,role):self.role=role;self.model='fake';self.base='https://example.invalid'
             def call(self,obs,*args):
                 FakeAdapter.calls.append(self.role)
                 if self.role=='planner':d={'action':'accept_contract','arguments':{}}
@@ -61,3 +61,43 @@ class BoundaryTests(unittest.TestCase):
             previous=len(w.receipts);f=concurrent.futures.Future();f.set_result({'decision':{'action':'activate_spare','arguments':{}},'usage':{},'cost':None})
             runtime.futures['orchestrator']=('another-session',f);runtime._live();self.assertEqual(len(w.receipts),previous)
             runtime.close()
+
+    def test_jsonb_numeric_canonicalization(self):
+        from simulator.common import canonical,digest
+        import json
+        a={'rotation':[-0.0,1.0,0.0000001],'position':[0,.8,2.2]}
+        b={'rotation':[0,1,0.0000001],'position':[0.0,.8,2.2]}
+        self.assertEqual(digest(a),digest(b));self.assertEqual(digest(a),digest(json.loads(canonical(a))))
+
+    def test_invalid_tool_response_retains_reported_charge(self):
+        import json
+        from unittest.mock import patch
+        from simulator.inference import Adapter
+        class Response:
+            def __enter__(self):return self
+            def __exit__(self,*args):pass
+            def read(self,*args):return json.dumps({'choices':[], 'usage':{'cost':1.5,'total_tokens':42}}).encode()
+        adapter=Adapter('gemini');adapter.key='test-only'
+        with patch('urllib.request.urlopen',return_value=Response()):
+            with self.assertRaises(InferenceError) as failure:adapter.call({})
+        self.assertEqual(failure.exception.metrics['cost'],1.5)
+        self.assertEqual(failure.exception.metrics['usage']['total_tokens'],42)
+
+    def test_invalid_fleet_planner_is_bounded(self):
+        import concurrent.futures
+        from unittest.mock import patch
+        from simulator.runtime import Runtime
+        from simulator.engine import Mission
+        w=Mission();w.status='running'
+        with patch('threading.Thread.start'),patch.object(Runtime,'persist',return_value=True):
+            runtime=Runtime(world=w,config={'mode':'live','engine':'crusoe'})
+            runtime.executor.shutdown(wait=False)
+            class Pending:
+                def submit(self,*args):return concurrent.futures.Future()
+                def shutdown(self,**kwargs):pass
+            runtime.executor=Pending()
+            for _ in range(3):
+                f=concurrent.futures.Future();f.set_result(dict(decision={'action':'wrong','arguments':{}},usage={},cost=.01))
+                runtime.futures['planner']=(w.id,f);runtime._live()
+            self.assertEqual(w.status,'blocked');self.assertEqual(runtime.failures['planner'],3)
+            self.assertEqual(len(runtime.inference),3);runtime.close()

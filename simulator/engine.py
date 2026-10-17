@@ -17,7 +17,7 @@ class Mission(RecordedWorld):
         self.revision = self.seq = 0
         self.status = 'paused'
         self.events, self.receipts, self.assignments = [], {}, {}
-        self.prompt_versions = {'orchestrator':'fleet-orchestrator-v1','worker':'fleet-worker-v1','retriever':'fleet-retriever-v1','verifier':'fleet-verifier-v1'}
+        self.prompt_versions = {'planner':'fleet-planner-v1','orchestrator':'fleet-orchestrator-v1','worker':'fleet-worker-v1','retriever':'fleet-retriever-v1','verifier':'fleet-verifier-v1'}
         self.zones, self.vehicles = {}, {}
         rng = random.Random(seed)
         for row in range(rows):

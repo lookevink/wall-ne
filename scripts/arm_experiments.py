@@ -26,9 +26,16 @@ def trial(engine,condition,seed=7):
             if time.monotonic()-started>=240 or cost is not None and cost>=1:
                 api('/api/treatment/stop',{});state=api('/api/treatment/state');break
             time.sleep(1)
+        # Await accounting only. No new actions are allowed after the terminal boundary.
+        accounting_deadline=time.monotonic()+60
+        while state['inference'].get('pending_calls',0) and time.monotonic()<accounting_deadline:
+            time.sleep(.5);state=api('/api/treatment/state')
+            if state['id']!=session:raise RuntimeError('session replaced during final accounting')
         path=pathlib.Path('.runtime/exports');path.mkdir(parents=True,exist_ok=True)
-        (path/f'{session}.json').write_text(json.dumps(api(f'/api/sessions/{session}/export'),indent=2))
-        return dict(session_id=session,engine=engine,trial=condition,seed=seed,status=state['status'],checks=state['checks'],calls=state['inference']['calls'],cost=state['inference']['cost'],wall_seconds=time.monotonic()-started)
+        export_error=None
+        try: (path/f'{session}.json').write_text(json.dumps(api(f'/api/sessions/{session}/export'),indent=2))
+        except Exception: export_error='Export unavailable; authoritative session retained in Supabase'
+        return dict(export_error=export_error,session_id=session,engine=engine,trial=condition,seed=seed,status=state['status'],checks=state['checks'],calls=state['inference']['calls'],cost=state['inference']['cost'],wall_seconds=time.monotonic()-started)
     finally:
         if session:
             try:

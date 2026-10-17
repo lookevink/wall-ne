@@ -1,7 +1,18 @@
-import * as THREE from 'three';import {weedMesh,cloverMesh} from './weed-geometry.js';
-export class Garden{constructor(scene){this.scene=scene;this.group=new THREE.Group();scene.add(this.group);this.targets={};this.id=null;}
- update(state){if(this.id!==state.id){this.group.traverse(o=>{if(o.isMesh)o.geometry.dispose();});this.group.clear();this.targets={};this.id=state.id;for(const w of state.weeds||(state.weed?[state.weed]:[])){const mesh=weedMesh(w);this.targets[w.id]=mesh;this.group.add(mesh);}for(const p of state.protected||[])this.group.add(cloverMesh(p));for(const p of state.pests||[]){const g=new THREE.Group();for(let i=0;i<5;i++){const m=new THREE.Mesh(new THREE.SphereGeometry(.032,8,6),new THREE.MeshBasicMaterial({color:0x805575}));m.scale.set(1,1.3,.7);m.position.set(0,(i-2)*.04,0);g.add(m);}g.position.set(...p.position);this.targets[p.id]=g;this.group.add(g);}for(const p of state.beneficial||[]){const m=new THREE.Mesh(new THREE.SphereGeometry(.045,10,8),new THREE.MeshBasicMaterial({color:0xda3a29}));m.scale.z=.5;m.position.set(...p.position);this.group.add(m);for(let i=0;i<5;i++){const dot=new THREE.Mesh(new THREE.SphereGeometry(.009,5,4),new THREE.MeshBasicMaterial({color:0x17221c}));dot.position.set(p.position[0]+Math.sin(i*2.4)*.026,p.position[1]+Math.cos(i*2.4)*.026,p.position[2]+.025);this.group.add(dot);}}}
- for(const w of state.weeds||(state.weed?[state.weed]:[]))if(this.targets[w.id])this.targets[w.id].visible=!w.removed;
- for(const p of state.pests||[])if(this.targets[p.id])this.targets[p.id].visible=!p.removed;
- }
+import * as THREE from 'three';
+import {weedMesh,cloverMesh,disposeSpecimen} from './weed-geometry.js';
+import {caterpillarMesh,ladybirdMesh} from './insect-geometry.js';
+
+export class Garden {
+  constructor(scene) {this.group=new THREE.Group();scene.add(this.group);this.targets={};this.id=null;}
+  update(state) {
+    if(this.id!==state.id) {
+      disposeSpecimen(this.group);this.group.clear();this.targets={};this.id=state.id;
+      for(const w of state.weeds||(state.weed?[state.weed]:[])){const mesh=weedMesh(w);this.targets[w.id]=mesh;this.group.add(mesh);}
+      for(const p of state.protected||[])this.group.add(cloverMesh(p));
+      for(const p of state.pests||[]){const mesh=caterpillarMesh(p);this.targets[p.id]=mesh;this.group.add(mesh);}
+      for(const p of state.beneficial||[])this.group.add(ladybirdMesh(p));
+    }
+    for(const w of state.weeds||(state.weed?[state.weed]:[]))if(this.targets[w.id])this.targets[w.id].visible=!w.removed;
+    for(const p of state.pests||[])if(this.targets[p.id])this.targets[p.id].visible=!p.removed;
+  }
 }

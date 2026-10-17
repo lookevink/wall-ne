@@ -27,7 +27,7 @@ export function leafTexture() {
   return texture(c);
 }
 export function leafGeometry() {
-  // Folded lanceolate leaf, with a raised midrib and curved tip (eight triangles).
+  // Folded lanceolate leaf, with a raised midrib and curved tip.
   const g = new THREE.BufferGeometry(), vertices = [], uvs = [], indices = [];
   for (let i = 0; i < 5; i++) {
     const t = i / 4, width = Math.sin(t * Math.PI) * .062;

@@ -11,7 +11,7 @@ from . import lidar
 class TreatmentRuntime(Runtime):
     def __init__(self,world=None,repository=None,config=None):
         self.pixels=None; self.image=None; self.capture_started=None; self.depth_started=None; self.started_wall=None
-        self.consecutive_invalid=0; self.frame_bytes={}; self.pending_artifacts=[]
+        self.consecutive_invalid=0; self.last_miss=None; self.miss_count=0; self.frame_bytes={}; self.pending_artifacts=[]
         super().__init__(world or Treatment(),repository,config or dict(mode='pixels',engine='crusoe',speed=4))
         self.pixel_controller=PixelController()
 
@@ -87,6 +87,12 @@ class TreatmentRuntime(Runtime):
             action,args=self.pixel_controller.decide(obs,self.pixels)
             receipt=w.command(uid(),'T1',action,**args)
             self.consecutive_invalid=0 if receipt['accepted'] else self.consecutive_invalid+1
+            if action in ('remove_weed','remove_pest') and w.feedback.startswith('No contact'):
+                fingerprint=(action,w.frame.get('content_hash'))
+                self.miss_count=self.miss_count+1 if fingerprint==self.last_miss else 1;self.last_miss=fingerprint
+                if self.miss_count>=3:
+                    w.status='blocked';w.feedback='Possible loop: three misses without changed image evidence or removal progress';w.event('loop_incident','T1',reason=w.feedback)
+            else: self.miss_count=0;self.last_miss=None
             if self.consecutive_invalid>=3: w.status='blocked'; w.feedback='Three rejected actions without physical progress'
             self.persist(); return
         entry=self.futures.get('T1')
@@ -107,5 +113,5 @@ class TreatmentRuntime(Runtime):
                 if self.failures['T1']>=3: w.status='blocked'; w.feedback=str(exc)
             self.persist(); return
         obs=w.observations(); obs['tool_arguments']={k:TOOL_HELP[k] for k in w.allowed_actions() if k in TOOL_HELP}
-        self.futures['T1']=(w.id,self.executor.submit(Adapter(self.config['engine']).call,obs,self.image,getattr(w,'prompt_texts',{}).get('treatment',PROMPT)))
+        self.futures['T1']=(w.id,self.executor.submit(self.adapter('treatment').call,obs,self.image,getattr(w,'prompt_texts',{}).get('treatment',PROMPT)))
         self.waiting='inference_wait'

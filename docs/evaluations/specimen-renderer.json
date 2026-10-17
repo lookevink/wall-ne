@@ -1,0 +1,93 @@
+{
+  "kind": "isolated-renderer-pixel-contact-regression",
+  "date": "2026-10-17",
+  "seed_count": 5,
+  "case_count": 10,
+  "all_passed": true,
+  "scope": "Actual 640x360 WebGL captures, existing PNG color components and PlantCare contact validation. Repeated removal until no targets remain. No live session, persistence, inference, or full mission run.",
+  "results": {
+    "0-weeds": {
+      "done": true,
+      "passed": true,
+      "remaining": 0,
+      "components": 0,
+      "rounds": 1
+    },
+    "0-pests": {
+      "done": true,
+      "passed": true,
+      "remaining": 0,
+      "components": 0,
+      "rounds": 1
+    },
+    "7-weeds": {
+      "done": true,
+      "passed": true,
+      "remaining": 0,
+      "components": 0,
+      "rounds": 5
+    },
+    "7-pests": {
+      "done": true,
+      "passed": true,
+      "remaining": 0,
+      "components": 0,
+      "rounds": 4
+    },
+    "8-weeds": {
+      "done": true,
+      "passed": true,
+      "remaining": 0,
+      "components": 0,
+      "rounds": 6
+    },
+    "8-pests": {
+      "done": true,
+      "passed": true,
+      "remaining": 0,
+      "components": 0,
+      "rounds": 3
+    },
+    "11-weeds": {
+      "done": true,
+      "passed": true,
+      "remaining": 0,
+      "components": 0,
+      "rounds": 6
+    },
+    "11-pests": {
+      "done": true,
+      "passed": true,
+      "remaining": 0,
+      "components": 0,
+      "rounds": 4
+    },
+    "21-weeds": {
+      "done": true,
+      "passed": true,
+      "remaining": 0,
+      "components": 0,
+      "rounds": 4
+    },
+    "21-pests": {
+      "done": true,
+      "passed": true,
+      "remaining": 0,
+      "components": 0,
+      "rounds": 4
+    }
+  },
+  "commands": [
+    "npm run check",
+    "node --test tests/geometry.test.mjs tests/specimens.test.mjs",
+    "python3 scripts/specimen_check.py"
+  ],
+  "morphology_references": [
+    "https://ipm.ucanr.edu/weeds-identification-gallery/dandelion/",
+    "https://ipm.ucanr.edu/agriculture/almond/peach-twig-borer/"
+  ],
+  "limits": [
+    "Generic morphology-inspired models, not exact species identification.",
+    "Insects retain enlarged treatment scale and detector-compatible coloration."
+  ]
+}

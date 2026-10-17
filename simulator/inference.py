@@ -2,6 +2,7 @@
 import concurrent.futures
 import json
 import os
+import math
 import time
 import urllib.error
 import urllib.request
@@ -56,7 +57,8 @@ class Adapter:
     def call(self,observation,image=None,prompt=PROMPT):
         if not self.key: raise InferenceError(f'{self.provider} credential missing')
         content=[dict(type='text',text=canonical(observation))]
-        if image: content.append(dict(type='image_url',image_url={'url':image}))
+        if image:
+            for png in (image if isinstance(image,list) else [image])[:3]: content.append(dict(type='image_url',image_url={'url':png}))
         body=dict(model=self.model,messages=[dict(role='system',content=prompt),dict(role='user',content=content)],tools=TOOLS,tool_choice={'type':'function','function':{'name':'choose_action'}},temperature=.1,max_tokens=4096)
         request=urllib.request.Request(self.base.rstrip('/')+'/chat/completions',data=canonical(body).encode(),headers={'Authorization':'Bearer '+self.key,'Content-Type':'application/json'},method='POST')
         started=time.monotonic(); response=None
@@ -66,14 +68,40 @@ class Adapter:
             raise InferenceError(f'{self.provider} HTTP {exc.code}; no fallback performed',self.failed_metrics(started)) from None
         except (OSError,ValueError):
             raise InferenceError(f'{self.provider} unavailable or timed out',self.failed_metrics(started)) from None
+        usage=response.get('usage') or {}
+        cost=reported_cost(usage)
         try: decision=parse_response(response)
         except InferenceError as exc:
-            exc.metrics=self.failed_metrics(started);exc.metrics['usage']=response.get('usage') or {};raise
+            exc.metrics=self.failed_metrics(started);exc.metrics['usage']={k:v for k,v in (response.get('usage') or {}).items() if k in ('prompt_tokens','completion_tokens','total_tokens')}
+            exc.metrics['cost']=cost
+            choices=response.get('choices') or []
+            exc.metrics['response_summary']=[dict(finish_reason=c.get('finish_reason'),tool_names=[t.get('function',{}).get('name') for t in (c.get('message',{}).get('tool_calls') or [])]) for c in choices[:2]]
+            raise
 
-        usage=response.get('usage') or {}
-        reported=usage.get('cost'); upstream=usage.get('cost_details',{}).get('upstream_inference_cost')
-        cost=float(reported)+(float(upstream) if upstream is not None else 0) if reported is not None else None
         return dict(id=uid(),decision=decision,requested_model=self.model,returned_model=response.get('model'),provider=self.provider,response_id=response.get('id'),usage={k:usage[k] for k in ('prompt_tokens','completion_tokens','total_tokens') if k in usage},cost=cost,latency=time.monotonic()-started)
 
     def failed_metrics(self,started):
         return dict(id=uid(),status='failed',requested_model=self.model,returned_model=None,provider=self.provider,response_id=None,usage={},cost=None,latency=time.monotonic()-started)
+
+def reported_cost(usage):
+    values=[usage.get('cost'),(usage.get('cost_details') or {}).get('upstream_inference_cost')]
+    if values[0] is None: return None
+    try:
+        numbers=[float(v) for v in values if v is not None]
+        return sum(numbers) if all(math.isfinite(v) and v>=0 for v in numbers) else None
+    except (TypeError,ValueError): return None
+
+# Explicit argument fields are essential for providers that compile object schemas;
+# an unspecified object may be interpreted as an empty object by a schema adapter.
+ARGUMENT_FIELDS={
+    'u':{'type':'number','minimum':0,'maximum':1},'v':{'type':'number','minimum':0,'maximum':1},
+    'span':{'type':'number','minimum':.04,'maximum':.5},'frame_id':{'type':'string'},
+    'liters':{'type':'number','minimum':.01,'maximum':5},'grams':{'type':'number','minimum':.01,'maximum':5},
+    'tool':{'type':'string'},'opening':{'type':'number','minimum':0,'maximum':.12},'force':{'type':'number','minimum':0,'maximum':45},
+    'pose':{'type':'array','items':{'type':'number'},'minItems':6,'maxItems':6},
+    'joints':{'type':'array','items':{'type':'number'},'minItems':6,'maxItems':6},
+    'stem_between_fingers':{'type':'boolean'},'depth_consistent':{'type':'boolean'},'evidence':{'type':'string'},
+    'row':{'type':'integer'},'vehicle':{'type':'string'},'ownership_version':{'type':'integer'},'zone':{'type':'string'},'target':{'type':'string'},
+    'diagnosis':{'type':'string'},'hypothesis':{'type':'string'},'prompt':{'type':'string'}
+}
+TOOLS[0]['function']['parameters']['properties']['arguments'].update(properties=ARGUMENT_FIELDS,additionalProperties=False)

@@ -1,0 +1,19 @@
+{
+  "session_id": "32105258-5fe8-4039-9ddc-eece2b119831",
+  "status": "completed",
+  "seed": 7,
+  "checks": {
+    "battery": true,
+    "contract": true,
+    "coverage": true,
+    "critical_water": true,
+    "idle": true,
+    "returned": true
+  },
+  "sim_time": 719.9343786878945,
+  "mode": "demo",
+  "recovered": {
+    "W1": true,
+    "W2": true
+  }
+}

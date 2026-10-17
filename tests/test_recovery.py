@@ -20,14 +20,14 @@ class SavedRepository:
 class RecoveryTests(unittest.TestCase):
     def test_frozen_live_configuration_survives_restore(self):
         w=Mission();w.runtime_state=dict(inference=[{'cost':.12}],failures={'W1':1},active_wall=20)
-        repo=SavedRepository(w,dict(mode='live',engine='gemini',speed=4))
+        repo=SavedRepository(w,dict(mode='live',engine='gemini',speed=4,models={'worker':'test-pinned'},provider_base='https://example.invalid/v1'))
         with patch('threading.Thread.start'),patch.object(Runtime,'persist',return_value=True):
             runtime=Runtime(repository=repo);runtime.restore(w.id)
             self.assertEqual(runtime.config,repo.config);self.assertEqual(runtime.inference,[{'cost':.12}]);self.assertEqual(runtime.active_wall,20);runtime.close()
 
     def test_restore_requires_new_pixels_and_matching_family(self):
         w=Treatment();r=w.request_frame();w.accept_frame(r['id'],{'id':uid(),'ready':True})
-        repo=SavedRepository(w,dict(mode='vision',engine='gemini',speed=4))
+        repo=SavedRepository(w,dict(mode='vision',engine='gemini',speed=4,models={'treatment':'test-pinned'},provider_base='https://example.invalid/v1'))
         with patch('threading.Thread.start'),patch.object(Runtime,'persist',return_value=True):
             runtime=TreatmentRuntime(repository=repo);runtime.image='old image';runtime.pixels=b'old';runtime.restore(w.id)
             self.assertIsNone(runtime.image);self.assertIsNone(runtime.pixels);self.assertIsNone(runtime.world.frame);self.assertEqual(len(runtime.world.frames),1);runtime.close()

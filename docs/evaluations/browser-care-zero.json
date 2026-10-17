@@ -1,0 +1,25 @@
+{
+  "session_id": "f64d4c1e-6835-40dd-b897-975bc70cf677",
+  "status": "completed",
+  "seed": 8,
+  "checks": {
+    "battery": true,
+    "delivery": true,
+    "fertilizer": true,
+    "images": true,
+    "inventory": true,
+    "measured": true,
+    "moisture": true,
+    "pests": true,
+    "preserved": true,
+    "returned": true,
+    "weeds": true
+  },
+  "sim_time": 32.99339616800022,
+  "mode": "pixels",
+  "frames": 27,
+  "effective_liters": 20.999999999999808,
+  "fertilizer": 21.000000000000014,
+  "damage": [],
+  "injected_fault": "nozzle clog"
+}

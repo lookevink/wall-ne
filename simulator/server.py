@@ -7,7 +7,7 @@ import pathlib
 import threading
 import urllib.parse
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
-from .common import load_env,canonical,uid
+from .common import load_env,canonical,uid,digest
 from .engine import Mission
 from .runtime import Runtime
 from .treatment import Treatment
@@ -52,7 +52,12 @@ class App:
                 old.pause('aborted' if old.world.status not in ('completed','failed','blocked','aborted') else old.world.status)
                 if old.storage_error: raise ValueError('session replacement paused by storage failure')
             old.close()
-            runtime=(TreatmentRuntime if treatment else Runtime)(world,self.repository,dict(mode=mode,engine=engine,speed=speed,**({"prompt_version":body['prompt_version']} if body.get('prompt_version') else {})))
+            config=dict(mode=mode,engine=engine,speed=speed,**({'prompt_version':body['prompt_version']} if body.get('prompt_version') else {}))
+            if body.get('campaign_id'): config['campaign_id']=body['campaign_id']
+            if body.get('model_pins'): config.update(models=body['model_pins'],provider_base=body['provider_base'])
+            import hashlib
+            config['code_hash']=digest({str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for folder in ('simulator','web') for p in sorted((ROOT/folder).glob('*')) if p.suffix in ('.py','.js','.html','.css')})
+            runtime=(TreatmentRuntime if treatment else Runtime)(world,self.repository,config)
             if treatment: self.treatment=runtime
             else: self.fleet=runtime
             with runtime.lock: runtime.persist()
@@ -61,6 +66,11 @@ class App:
 class Handler(BaseHTTPRequestHandler):
     server_version='Wallne/1'
     def log_message(self,format,*args): pass
+
+    def finish(self):
+        try: super().finish()
+        finally:
+            for repo in (self.server.app.repository,self.server.app.fleet.repository,self.server.app.treatment.repository): repo.close_current()
 
     def check_origin(self):
         port=self.server.server_port
@@ -83,6 +93,15 @@ class Handler(BaseHTTPRequestHandler):
         try:
             self.check_origin(); parsed=urllib.parse.urlsplit(self.path); path=urllib.parse.unquote(parsed.path); query=urllib.parse.parse_qs(parsed.query)
             app=self.server.app
+            if path=='/api/fixtures/arm':
+                pose=query.get('pose',['initial'])[0]
+                if pose not in ('initial','aligned'): raise ValueError('unknown fixture')
+                world=Manipulation(7,'wrist')
+                if pose=='aligned':
+                    from .arm import ik
+                    x,_,z=world.weed['position'];world.joints=ik([x,.15,z,0,0,0],world.base())
+                result=world.snapshot();result['diagnostic_fixture']=pose
+                return self.send(result)
             if path in ('/api/state','/api/export'): return self.send(app.fleet.snapshot())
             if path in ('/api/treatment/state','/api/treatment/export'): return self.send(app.treatment.snapshot())
             if path.startswith('/api/treatment/frame/'):
@@ -93,8 +112,11 @@ class Handler(BaseHTTPRequestHandler):
             if path=='/api/sessions': return self.send(app.repository.sessions())
             if path.startswith('/api/sessions/'):
                 return self.session_get(path,query)
-            if path in ('/api/reviews','/api/prompt-versions','/api/evaluations'):
-                return self.send(app.repository.read(path.rsplit('/',1)[1].replace('-','_'),'order=created_at.desc&limit=50'))
+            if path in ('/api/reviews','/api/prompt-versions','/api/evaluations','/api/evaluation-campaigns'):
+                rows=app.repository.read(path.rsplit('/',1)[1].replace('-','_'),'order=created_at.desc&limit=50')
+                if path=='/api/evaluation-campaigns' and app.campaigns.active:
+                    rows=[dict(r,status=app.campaigns.active['status']) if r['id']==app.campaigns.active['id'] else r for r in rows]
+                return self.send(rows)
             if path.startswith('/api/'): return self.send({'error':'unknown route'},404)
             if '\x00' in path or '\\' in path or '..' in path.split('/'): raise ValueError('invalid static path')
             if path.startswith('/vendor/ez-tree/'):
@@ -124,9 +146,15 @@ class Handler(BaseHTTPRequestHandler):
             if robot in ('W1','W2','W3','W4','W5','R1','T1'): filters+=f'&robot_id=eq.{robot}'
             return self.send(repo.read('events',filters))
         if resource=='robots': return self.send(repo.read('robot_sessions',f'session_id=eq.{sid}&limit=10'))
-        if resource in ('motions','artifacts'): return self.send(repo.read('artifacts',f'session_id=eq.{sid}'+('&kind=eq.movement' if resource=='motions' else '')+'&order=sequence&limit=100'))
+        if resource in ('motions','artifacts'):
+            after=max(0,int(query.get('after',['0'])[0]))
+            after_id=query.get('after_id',[''])[0]
+            cursor=f'or=(sequence.gt.{after},and(sequence.eq.{after},id.gt.{str(uuid.UUID(after_id))}))' if after_id else f'sequence=gt.{after}'
+            return self.send(repo.read('artifacts',f'session_id=eq.{sid}&{cursor}'+('&kind=eq.movement' if resource=='motions' else '')+'&order=sequence,id&limit=100'))
         if resource=='export':
-            return self.send(dict(session=repo.read('sessions',f'id=eq.{sid}&limit=1'),checkpoint=repo.restore(sid),artifacts=repo.read('artifacts',f'session_id=eq.{sid}&order=sequence&limit=1000')))
+            record,valid=repo.checkpoint_record(sid)
+            artifacts=repo.read('artifacts',f'session_id=eq.{sid}&order=sequence,id&limit=1000')
+            return self.send(dict(session=repo.read('sessions',f'id=eq.{sid}&limit=1'),checkpoint=record['state'],checkpoint_integrity=dict(valid=valid,expected_hash=record['integrity_hash']),artifacts=artifacts,artifacts_next_cursor=dict(after=artifacts[-1]['sequence'],after_id=artifacts[-1]['id']) if len(artifacts)==1000 else None))
         raise ValueError('unknown session resource')
 
     def do_POST(self):
@@ -145,6 +173,7 @@ class Handler(BaseHTTPRequestHandler):
                 version=str(uuid.UUID(path.split('/')[-2])); evaluation=str(uuid.UUID(body['evaluation_id']))
                 return self.send(app.repository.rpc('wallne_activate',dict(p_version=version,p_evaluation=evaluation,p_rollback=action=='rollback')))
             if path=='/api/evaluations': return self.send(app.campaigns.start(**body))
+            if path=='/api/evaluations/retry': return self.send(app.campaigns.retry(body['campaign_id']))
             if path.startswith('/api/sessions/') and action=='review':
                 import uuid
                 sid=str(uuid.UUID(path.split('/')[-2]))
@@ -152,7 +181,9 @@ class Handler(BaseHTTPRequestHandler):
             if path=='/api/prompt-candidates': return self.send(ReviewService(app.repository).create_candidate(**body))
             allowed={'reset','start','pause','breakdown','false-claim','retry','abort','stop','clog','fault','frame','depth','resume','command'}
             if action not in allowed or path not in ('/api/'+action,'/api/treatment/'+action): return self.send({'error':'unknown route'},404)
-            if action=='reset': return self.send(app.reset(treatment,body))
+            if action=='reset':
+                if 'model_pins' in body or 'provider_base' in body or 'prompt_version' in body: raise ValueError('prompt/model overrides are only available to frozen evaluation campaigns')
+                return self.send(app.reset(treatment,body))
             if action=='start': runtime.start()
             elif action in ('pause','abort','stop'): runtime.pause('paused' if action=='pause' else 'aborted')
             elif action=='retry': runtime.retry()

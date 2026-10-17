@@ -1,0 +1,74 @@
+{
+  "session_id": "5ae2d8ec-6699-43ba-9db2-acebdd82d2db",
+  "kind": "arm",
+  "seed": 7,
+  "trial": "wrist",
+  "status": "blocked",
+  "feedback": "Provider returned an invalid single tool call",
+  "checks": {
+    "battery": true,
+    "collected": false,
+    "extracted": false,
+    "images": false,
+    "inventory": true,
+    "preserved": true,
+    "returned": false
+  },
+  "inference": {
+    "calls": 3,
+    "cost": null,
+    "results": [
+      {
+        "cost": null,
+        "id": "6a7b476f-12bb-4fc0-8692-4af5c9298c4d",
+        "latency": 15.914603125,
+        "provider": "crusoe",
+        "requested_model": "nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B",
+        "response_id": null,
+        "returned_model": null,
+        "status": "failed",
+        "usage": {
+          "completion_tokens": 4096,
+          "prompt_tokens": 3919,
+          "prompt_tokens_details": null,
+          "total_tokens": 8015
+        }
+      },
+      {
+        "cost": null,
+        "id": "5d805a36-807b-40e8-8681-e19ddfc46c06",
+        "latency": 2.5726975420000002,
+        "provider": "crusoe",
+        "requested_model": "nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B",
+        "response_id": null,
+        "returned_model": null,
+        "status": "failed",
+        "usage": {
+          "completion_tokens": 362,
+          "prompt_tokens": 4567,
+          "prompt_tokens_details": null,
+          "total_tokens": 4929
+        }
+      },
+      {
+        "cost": null,
+        "id": "6f137ea9-a06d-4f0a-b4b6-f9a18da495a9",
+        "latency": 16.583095625,
+        "provider": "crusoe",
+        "requested_model": "nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B",
+        "response_id": null,
+        "returned_model": null,
+        "status": "failed",
+        "usage": {
+          "completion_tokens": 4096,
+          "prompt_tokens": 4561,
+          "prompt_tokens_details": null,
+          "total_tokens": 8657
+        }
+      }
+    ],
+    "tokens": 21601
+  },
+  "commands": 0,
+  "note": "Early checkpoint used legacy numeric hash; original record retained, strict restore blocked. No arm actions executed."
+}

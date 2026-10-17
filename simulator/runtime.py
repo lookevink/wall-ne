@@ -13,7 +13,10 @@ from .inference import Adapter,InferenceError,PROMPT
 class Runtime:
     def __init__(self,world=None,repository=None,config=None):
         self.lock=threading.RLock(); self.world=world or Mission(); self.repository=Repository(repository.url,repository.key) if isinstance(repository,Repository) else repository or Repository()
-        self.config=config or dict(mode='demo',engine='crusoe',speed=8)
+        self.config=copy.deepcopy(config or dict(mode='demo',engine='crusoe',speed=8))
+        self.config.setdefault('models',{role:Adapter(self.config['engine'],role).model for role in ('planner','orchestrator','worker','retriever','verifier','treatment')})
+        self.config.setdefault('provider_base',Adapter(self.config['engine']).base)
+        self.config.setdefault('trial',getattr(self.world,'trial',None))
         self.committed=0; self.epoch=0; self.persisted=False; self.storage_error=None; self.pending=None
         self.telemetry=Telemetry(); self.controller=DemoController(); self.executor=concurrent.futures.ThreadPoolExecutor(max_workers=7)
         self.futures={}; self.inference=[]; self.failures={}; self.waiting=None; self.closed=False; self.last_commit=0; self.active_wall=0
@@ -24,6 +27,8 @@ class Runtime:
             self.world.runtime_state=dict(config=self.config,inference=self.inference,failures=self.failures,active_wall=self.active_wall)
             if not self.persisted:
                 lease=self.repository.create(self.world,self.config); self.epoch=lease['resume_epoch']; self.persisted=True
+            if self.persisted and self.last_commit and time.monotonic()-self.last_commit>15:
+                self.repository.lease(self.world.id)
             if self.pending is None:
                 self.world.event('checkpoint',status=self.world.status)
                 artifacts=self.telemetry.flush(self.repository,self.world)
@@ -68,13 +73,15 @@ class Runtime:
         with self.lock:
             rows=self.repository.read('sessions',f'id=eq.{session}&limit=1')
             if not rows or (rows[0]['kind']=='fleet')!=(self.world.kind=='fleet'): raise ValueError('session belongs to a different runtime family')
+            config=copy.deepcopy(rows[0]['metadata']['configuration'])
+            if config.get('mode') in ('live','vision') and ('models' not in config or 'provider_base' not in config): raise ValueError('saved live session lacks exact model pins; create a new session')
             state=self.repository.restore(session); lease=self.repository.lease(session)
             from .treatment import Treatment
             from .care import PlantCare
             from .manipulation import Manipulation
             cls={'fleet':Mission,'irrigation':Treatment,'care':PlantCare,'arm':Manipulation}[rows[0]['kind']]
             self.world=cls.restore(state); self.world.status='paused'
-            self.config=copy.deepcopy(rows[0]['metadata']['configuration'])
+            self.config=config
             durable_runtime=state.get('runtime_state',{})
             self.inference=durable_runtime.get('inference',[]);self.failures=durable_runtime.get('failures',{})
             self.active_wall=durable_runtime.get('active_wall',0)
@@ -86,6 +93,11 @@ class Runtime:
             for row in self.repository.read('robot_sessions',f'session_id=eq.{session}&limit=10'):
                 self.telemetry.sequences[row['robot_id']]=row['sequence']
             self.world.event('restored',resume_epoch=self.epoch); self.persist()
+
+    def adapter(self,role):
+        adapter=Adapter(self.config['engine'],role)
+        adapter.model=self.config['models'][role];adapter.base=self.config['provider_base']
+        return adapter
 
     def _demo(self):
         decisions=self.controller.decisions(self.world.observations())
@@ -101,7 +113,7 @@ class Runtime:
             del self.futures[robot]
             if session!=self.world.id or self.world.status!='running': continue
             try:
-                result=future.result(); self.inference.append(result); self.failures[robot]=0
+                result=future.result(); self.inference.append(result)
                 decision=result['decision']; args=decision['arguments']
                 self.world.event('decision',robot,result=result,prompt_version=self.world.prompt_versions)
                 if robot=='planner':
@@ -110,7 +122,10 @@ class Runtime:
                 elif robot=='verifier':
                     if decision['action'] not in ('verify','claim_complete'): raise InferenceError('Verifier must evaluate the completion evidence')
                     self.world.command(uid(),'verifier','claim_complete')
-                else: self.world.command(uid(),robot,decision['action'],**args)
+                else:
+                    receipt=self.world.command(uid(),robot,decision['action'],**args)
+                    if not receipt['accepted']: raise InferenceError('Rejected model command: '+receipt['reason'])
+                self.failures[robot]=0
                 self.persist()
             except InferenceError as exc:
                 if exc.metrics: self.inference.append(exc.metrics)
@@ -121,11 +136,11 @@ class Runtime:
         # Deterministic feasible option enumeration constrains role calls, but does not choose for a model.
         if not getattr(self.world,'planned',False):
             if 'planner' not in self.futures and self.world.status=='running':
-                self.futures['planner']=(self.world.id,self.executor.submit(Adapter(self.config['engine'],'planner').call,dict(role='contract planner',observation=obs,instruction='Use choose_action action accept_contract with arguments {} to pin this fixed valid contract. You cannot weaken coverage, reserve, deadlines or acceptance checks.')))
+                self.futures['planner']=(self.world.id,self.executor.submit(self.adapter('planner').call,dict(role='contract planner',observation=obs,instruction='Use choose_action action accept_contract with arguments {} to pin this fixed valid contract. You cannot weaken coverage, reserve, deadlines or acceptance checks.'),None,getattr(self.world,'prompt_texts',{}).get('planner',PROMPT)))
             return
         if all(self.world.verify().values()):
             if 'verifier' not in self.futures and self.world.status=='running':
-                self.futures['verifier']=(self.world.id,self.executor.submit(Adapter(self.config['engine'],'verifier').call,dict(role='independent verifier explanation',observation=obs,checks=self.world.verify(),instruction='Explain the independent checks concisely; use choose_action action verify with arguments {}. Code determines success.')))
+                self.futures['verifier']=(self.world.id,self.executor.submit(self.adapter('verifier').call,dict(role='independent verifier explanation',observation=obs,checks=self.world.verify(),instruction='Explain the independent checks concisely; use choose_action action verify with arguments {}. Code determines success.'),None,getattr(self.world,'prompt_texts',{}).get('verifier',PROMPT)))
             return
         candidates=self.controller.decisions(obs)
         grouped={}
@@ -135,7 +150,7 @@ class Runtime:
             if robot in self.futures or self.world.status!='running': continue
             role='orchestrator' if robot=='orchestrator' else 'retriever' if robot=='R1' else 'worker'
             permitted=dict(observation=obs,role=role,robot=robot,feasible_options=options)
-            future=self.executor.submit(Adapter(self.config['engine'],role).call,permitted,None,getattr(self.world,'prompt_texts',{}).get(role,PROMPT))
+            future=self.executor.submit(self.adapter(role).call,permitted,None,getattr(self.world,'prompt_texts',{}).get(role,PROMPT))
             self.futures[robot]=(self.world.id,future)
 
     def step(self,elapsed):
@@ -159,10 +174,12 @@ class Runtime:
                     if self.world.status=='running':
                         self.active_wall+=elapsed
                         self.step(elapsed)
+                    else: self.collect_inactive_calls()
                     if self.persisted and self.world.status not in TERMINAL and now-self.telemetry.last_heartbeat>=1:
                         self.telemetry.sample(self.world,self.epoch,True,self.waiting)
                     if self.persisted and self.world.seq>self.committed and now-self.last_commit>=.5: self.persist()
                 except (ValueError,StorageError,InferenceError) as exc:
+                    if hasattr(self.world,'feedback'): self.world.feedback=str(exc)
                     self.world.status='blocked'; self.world.event('blocked',error=str(exc)); self.persist()
                 except Exception:
                     self.world.status='blocked'; self.world.event('blocked',error='Internal runtime error; inspect server diagnostics'); self.persist()
@@ -171,11 +188,28 @@ class Runtime:
         with self.lock:
             state=self.world.snapshot(); state['events']=state['events'][-100:]
             state.update(config=self.config,storage=dict(healthy=not self.storage_error,error=self.storage_error,committed_sequence=self.committed),telemetry=self.telemetry.latest,
-                         inference=dict(calls=len(self.inference),tokens=sum(r['usage'].get('total_tokens',0) for r in self.inference),cost=sum(r['cost'] for r in self.inference) if self.inference and all(r['cost'] is not None for r in self.inference) else None,results=self.inference[-30:]),waiting=self.waiting)
+                         inference=dict(calls=len(self.inference),pending_calls=len(self.futures),tokens=sum(r['usage'].get('total_tokens',0) for r in self.inference),cost=sum(r['cost'] for r in self.inference) if self.inference and all(r['cost'] is not None for r in self.inference) else None,results=self.inference[-30:]),waiting=self.waiting)
             if self.storage_error: state['status']='storage_blocked'
             return state
 
     def close(self):
         self.closed=True
-        for _,future in self.futures.values(): future.cancel()
+        for _,future in list(self.futures.values()):
+            future.cancel()
+            future.add_done_callback(lambda _: self.collect_inactive_calls())
         self.executor.shutdown(wait=False,cancel_futures=True)
+        if hasattr(self.repository,'close_current'): self.repository.close_current()
+
+    def collect_inactive_calls(self):
+        with self.lock:
+            for robot,(session,future) in list(self.futures.items()):
+                if not future.done(): continue
+                del self.futures[robot]
+                if session!=self.world.id or future.cancelled(): continue
+                try: result=future.result()
+                except InferenceError as exc: result=exc.metrics
+                except Exception: result=None
+                if result:
+                    self.inference.append(result)
+                    self.world.event('inference_discarded',robot,result=result,reason='Session paused, stopped or replaced; no action executed')
+            if self.persisted and not self.storage_error and self.world.seq>self.committed:self.persist()

@@ -17,7 +17,13 @@ def uid():
     return str(uuid.uuid4())
 
 def canonical(value):
-    return json.dumps(value, sort_keys=True, separators=(',', ':'), allow_nan=False)
+    # JSONB normalizes signed zero and integral numbers. Hash semantic numeric values.
+    def normalize(item):
+        if isinstance(item,float) and math.isfinite(item) and item.is_integer(): return int(item)
+        if isinstance(item,dict): return {k:normalize(v) for k,v in item.items()}
+        if isinstance(item,(list,tuple)): return [normalize(v) for v in item]
+        return item
+    return json.dumps(normalize(value), sort_keys=True, separators=(',', ':'), allow_nan=False)
 
 def digest(value):
     return hashlib.sha256(canonical(value).encode()).hexdigest()

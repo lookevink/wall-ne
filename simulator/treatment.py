@@ -58,7 +58,7 @@ class Treatment(RecordedWorld):
                     available_actions=self.allowed_actions(),resources={k:self.robot[k] for k in ('battery','water','position')},
                     tool=self.tool,frame=copy.deepcopy(self.frame),camera=self.camera(),feedback=self.feedback,
                     sensors=dict(moisture=self.moisture_reading,flow=self.flow,observed_fault=self.observed_fault),
-                    budgets=dict(frames_remaining=self.frame_limit-len(self.frames),commands_remaining=self.decision_limit-self.decisions,time_remaining=300-self.time),history=[e for e in self.events if e['type']!='fault_injected'][-8:])
+                    budgets=dict(frames_remaining=self.frame_limit-len(self.frames),commands_remaining=self.decision_limit-self.decisions,time_remaining=300-self.time),history=[e for e in self.events if e['type'] in ('accepted','rejected','completed','slip','contact','extraction','deposit','dropped','verification','inference_error')][-8:])
 
     def command(self,command_id,robot,action,**args):
         if command_id in self.receipts: return copy.deepcopy(self.receipts[command_id])
@@ -72,7 +72,7 @@ class Treatment(RecordedWorld):
             self._action(action,args)
             receipt['accepted']=True
         except (ValueError,KeyError,TypeError) as exc:
-            receipt['reason']=str(exc) if isinstance(exc,ValueError) else 'invalid action arguments'
+            receipt['reason']=str(exc) if isinstance(exc,ValueError) else 'missing or invalid argument: '+str(exc.args[0])[:60] if isinstance(exc,KeyError) else 'invalid argument type'
             self.feedback=receipt['reason']
         self.receipts[command_id]=receipt
         if self.robot['action']: self.robot['action']['id']=command_id
