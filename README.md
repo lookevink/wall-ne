@@ -88,6 +88,8 @@ npm start
 
 Open http://127.0.0.1:8765/ for fleet control, `/treatment.html` for treatment and manipulation, or `/sessions.html` for recorded evidence. Use `python3 -m simulator.server --port 8766` for another loopback port.
 
+Open `/activity.html` (or **Activity ↗** in the orchard) for live incidents, escalation, provider fallbacks, worker health, and full event payloads. It opens separately so the orchard can continue supplying camera observations. **Past sessions** reads saved events, including linked worker runs, with explicit pagination. The observer only issues GET requests: pausing its feed does not pause robots. Live polling is bounded, backs off on failure, and suspends in hidden tabs; recent snapshots may have gaps, and unconfirmed events may not yet be saved. No emission, persistence, or robot-control behavior is changed by this view.
+
 Apply the ordered SQL files in `supabase/migrations/` to the configured project before persisted runs. They create service-only tables, fenced atomic commit RPCs, immutable evidence, prompt gates, and the private `robot-session-artifacts` bucket. The provided wall-ne project has been provisioned during this build. Pure simulation tests need no database. Integration checks are explicit:
 
 ```sh

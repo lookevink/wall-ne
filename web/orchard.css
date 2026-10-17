@@ -161,6 +161,7 @@
   .bottom-hud {bottom:12px;gap:8px}.mission-hud {padding:10px}.mission-actions {margin-top:8px;padding-top:8px}
   .top-hud {top:12px}.fleet-page .metric-strip {grid-template-columns:repeat(4,minmax(0,1fr))}
 }
+.mission-actions .activity-link{font-size:12px;color:var(--accent);padding:9px 12px;border:1px solid #4b6141;border-radius:6px;white-space:nowrap}
 /* Selected-machine telemetry: code-computed health, the robot's last model decision and its own event ticker. */
 .worker-hud {position:absolute;right:24px;top:116px;width:min(340px,calc(100% - 48px));max-height:calc(100% - 330px);overflow:auto;padding:14px 16px;display:grid;gap:10px;font:11px ui-monospace,monospace;z-index:3;scrollbar-width:thin}
 .hud-head {display:flex;align-items:center;gap:10px}
