@@ -5,6 +5,7 @@ import {barkTexture, leafGeometry, leafTexture, hullTexture} from './almond-text
 import {cylinder, material} from './static-geometry.js';
 import {batchStatic} from './batch-geometry.js';
 import {ORCHARD,planting,rowX} from './orchard-layout.js';
+import {almondTrunkGeometry} from './almond-trunk.js';
 
 function windMaterial(mat, clock, strength) {
   mat.onBeforeCompile = shader => {
@@ -32,8 +33,7 @@ export function orchard(scene) {
   const leafShape = leafGeometry(), hullShape = new THREE.SphereGeometry(.067, 7, 6);
   const variants = Array.from({length:ORCHARD.variants},(_,i)=>71+i*17).map(seed => {
     const data = skeleton(seed), wood = new THREE.Group();
-    cylinder(wood, [0,0,0], [.025,.55,-.02], .19, .145, bark, 9);
-    cylinder(wood, [.025,.55,-.02], [0,1.83,0], .145, .105, bark, 9);
+    wood.add(new THREE.Mesh(almondTrunkGeometry(),bark));
     for (const [a,b,r1,r2] of data.branches) cylinder(wood, a,b,r1,r2,bark, r1 > .05 ? 7 : 4);
     batchStatic(wood);
     const geometry = wood.children.find(o => o.isMesh).geometry;
