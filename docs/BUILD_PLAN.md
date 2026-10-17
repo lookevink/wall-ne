@@ -235,7 +235,7 @@ Build `/` with mission controls, seed/mode/speed, zone/vehicle display, task/res
 
 ### M3 — Provider adapters and separate fleet roles (after M2)
 
-Implement OpenAI-compatible Chat Completions calls with standard-library HTTP, JSON tool schema, exactly one expected function call, required tool choice, temperature .1 and max output 4096 tokens. Reject malformed JSON, wrong/multiple tool calls and invalid argument objects. Keep inference outside the simulation lock; discard stale replies after mission replacement. Use bounded retry/backoff and visible blocked states.
+Implement OpenAI-compatible Chat Completions calls with standard-library HTTP, JSON tool schema, exactly one expected function call, required tool choice, temperature .1 and a max output of `WALLNE_MAX_TOKENS` tokens (default 16384; reasoning models spend output tokens before the tool call). Reject malformed JSON, wrong/multiple tool calls and invalid argument objects. Keep inference outside the simulation lock; discard stale replies after mission replacement. Use bounded retry/backoff and visible blocked states.
 
 Configure provider base URLs through environment variables and append `/chat/completions` when making a request. Supply credentials and verify model/tool compatibility before a live run.
 
@@ -247,7 +247,7 @@ Configure provider base URLs through environment variables and append `/chat/com
 
 Make model identifiers configurable. Record the exact requested and returned identifiers for each run. A changed model or provider constitutes a separate evaluation condition.
 
-Provider timeout: 25 s Crusoe, 55 s Gateway. Record requested/returned model, response ID, usage and latency. Missing cost is unknown, not zero. BYOK accounting adds separately reported upstream charge to Gateway charge when both are available; this is not billing reconciliation.
+Provider timeout: `WALLNE_INFERENCE_TIMEOUT` seconds for either provider (default 300). Record requested/returned model, response ID, usage and latency. Missing cost is unknown, not zero. BYOK accounting adds separately reported upstream charge to Gateway charge when both are available; this is not billing reconciliation.
 
 Fleet uses separate per-role concurrent requests (seven-worker executor), not a recursively spawned process tree. Context is reconstructed from permitted shared observations, telemetry summaries and recent events. Persist request/decision IDs, the prompt version, input evidence references and the returned tool call or concise rationale; never log authorization headers or hidden chain-of-thought. Pin role prompts when the session starts. Contract planner may choose critical threshold 15..35 and target 55..65 while coverage, reserve, deadlines and return remain fixed. Workers choose validated feasible action options. The verifier model explains evidence and possible corrections; code decides pass/fail.
 
@@ -344,7 +344,7 @@ Check that the palm and wrist housing do not obstruct the fingers or stem. Inspe
 
 ### M9 — Bounded experiments and evidence UI (after M3, M8)
 
-Implement `scripts/arm_experiments.py` against the local API with the treatment page open. Reset to seed7 per condition. Poll to terminal outcome; stop at 240 wall seconds or $1 reported cost per trial. Simulator retains its 50-command limit. Stop on runner exceptions/interruption rather than leaving inference unattended.
+Implement `scripts/arm_experiments.py` against the local API with the treatment page open. Reset to seed7 per condition. Poll to terminal outcome; stop at `WALLNE_WALL_CAP` wall seconds (default 3600) or `WALLNE_COST_CAP` reported dollars (default 1) per trial. Simulator retains its 50-command limit. Stop on runner exceptions/interruption rather than leaving inference unattended.
 
 ```sh
 python3 scripts/arm_experiments.py              # Gemini baseline; all three known; Nemo/Gemma depth

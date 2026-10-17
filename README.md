@@ -32,7 +32,9 @@ Use a dedicated test project when running persistence integration tests; they cr
 - **Irrigation / complete care:** “Offline PNG heuristic” finds stylized color components in actual browser PNGs. Live multimodal mode receives the same camera image and permitted sensor readings. Keep the treatment page open to supply observations.
 - **Orchard weeding (default at `/`):** W1 drives to a tree, uses Crusoe wrist RGB/LiDAR control to grasp and collect one weed, and returns to its dock. Select fleet watering in the orchard menu for the fleet mission. All new live arm trials and evaluation campaigns run in this orchard; `/treatment.html` retains calibration fixtures and other tool diagnostics. Independent contact/load and completion checks remain mandatory.
 
-Crusoe is primary; live treatment defaults to Gemma 4. Two consecutive provider/protocol failures switch the affected role to its pinned AI Gateway fallback for the rest of the session. Physical misses and rejected actions do not trigger fallback. Gemini, Nemotron VL and Gemma remain explicit Gateway comparison conditions. See [the wrist control and routing notes](docs/WRIST_CONTROL.md). `AI_GATEWAY_KEY` is accepted as an alias for `AI_GATEWAY_API_KEY`. Missing credentials, failed inference and exhausted budgets produce blocked results; there is no silent offline fallback.
+Crusoe is primary; live treatment defaults to Gemma 4. The AI Gateway fallback is opt-in (`WALLNE_GATEWAY_FALLBACK=1`, off by default); when enabled, two consecutive provider/protocol failures switch the affected role to its pinned Gateway route for the rest of the session, and physical misses or rejected actions never trigger it. Gemini, Nemotron VL and Gemma remain explicit Gateway comparison conditions. See [the wrist control and routing notes](docs/WRIST_CONTROL.md). `AI_GATEWAY_KEY` is accepted as an alias for `AI_GATEWAY_API_KEY`. Missing credentials, failed inference and exhausted budgets produce blocked results; there is no silent offline fallback.
+
+Runs are allowed to think. The only inference budgets are `WALLNE_MAX_TOKENS` (16384 output tokens), `WALLNE_INFERENCE_TIMEOUT` (300 s per call), `WALLNE_WALL_CAP` (3600 s per arm trial and campaign child) and `WALLNE_COST_CAP` ($1 reported), each overridable in `.env`. Frame, decision and simulated-time limits are mission rules and stay fixed.
 
 ## Days, seasons and timelapses
 
@@ -64,3 +66,11 @@ A terminal/paused-session review can propose one immutable prompt candidate. A f
 ## Validation
 
 See `docs/VALIDATION.md` for milestone status, exact evidence paths and incomplete gates. `docs/BUILD_PLAN.md` is the supplied contract. Successful synthetic or scripted tests do not establish live model performance. All quantities are simulation parameters, not agricultural or robot safety recommendations.
+
+## Telemetry, incidents and the orchestrator
+
+Every robot emits telemetry independently of inference: a health sample at each 0.05 s physics substep and a 1 Hz heartbeat, carrying position, battery, water, lifecycle, waiting reason, fault, progress markers and, for arm workers, six joint angles, tool pose, jaw opening, force, load and contact. Samples are chunked into ≤2-simulated-second gzip artifacts and committed with the session's events; heartbeats are also kept in memory for queries.
+
+Health is computed by code from those heartbeats (`healthy`, `healthy_wait`, `stale_heartbeat`, `stalled`, `possible_loop`, `disabled`) and incidents are opened once per robot and kind while a condition holds (breakdown, stale heartbeat, stall, loop, storage), then closed when it clears. In live fleet mode a new incident engages the orchestrator at once with two non-physical tools: `query_telemetry(robot, since_sim_time)` returns a bounded heartbeat history in its next observation, and `respond_incident(incident_id, decision, reason)` records `continue`, `retrieve`, `reassign`, `stop` or `escalate`; escalate pauses the mission for a human. Neither tool can change physical state, and three queries in a row without a physical decision count as a failure.
+
+On the orchard page, selecting a machine opens its telemetry panel: health, state, task, battery, water, heartbeat age, time since progress, fault, arm joints and load, the robot's last model decision in its own words, and its recent events. Open incidents and escalations show in the strip beside the status badge.

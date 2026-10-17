@@ -29,6 +29,60 @@ $('mission').onchange=()=>{$('mode').disabled=$('mission').value!=='watering';};
 const workerFaults=document.createElement('div');workerFaults.className='small-buttons';workerFaults.setAttribute('aria-label','Individual worker breakdowns');
 for(const id of ['W1','W2','W3','W4','W5']){const control=document.createElement('button');control.textContent=`Break ${id}`;control.dataset.breakdownWorker=id;control.disabled=true;control.onclick=()=>api('/api/breakdown',{robots:[id]}).catch(error=>notice(error.message));workerFaults.append(control);}
 $('breakdown').parentElement.after(workerFaults);
+$('hud-close').onclick=()=>{if(view)view.expanded=null;};
+view?.element.addEventListener('viewchange',()=>{if(state)updateHud(state);});
+
+const HUD_EVENTS=new Set(['accepted','rejected','completed','cancelled','breakdown','recovered','contact','slip','extraction','deposit','dropped','incident','incident_resolved','incident_response','decision','inference_error','provider_fallback','telemetry_query','escalation','worker_dispatched','worker_finished','inspection']);
+const ALERT_EVENTS=new Set(['rejected','breakdown','slip','dropped','incident','inference_error','escalation','cancelled']);
+function describe(e){
+  const p=e.payload||{};
+  switch(e.type){
+    case 'accepted':case 'rejected':return `${p.receipt?.action||''}${p.receipt?.reason?' · '+p.receipt.reason:''}`;
+    case 'decision':{const d=p.result?.decision;return d?`${d.action}${d.rationale?' · '+d.rationale.slice(0,110):''}`:'';}
+    case 'incident':return `${p.incident_kind} · ${p.detail||''}`;
+    case 'incident_resolved':return `${p.incident_kind} · ${p.response?p.response.decision:'resolved'}`;
+    case 'incident_response':return `${p.incident_kind} on ${p.target} → ${p.decision} · ${p.reason||''}`;
+    case 'slip':return `force ${p.force} N at lift ${Number(p.lift||0).toFixed(2)} m`;
+    case 'contact':return `load ${p.load} N at ${p.force} N`;
+    case 'completed':return p.action||p.result?.kind||'';
+    case 'cancelled':return p.reason||'';
+    case 'inspection':return `zone ${p.zone} · moisture ${Number(p.moisture).toFixed(0)}%`;
+    case 'telemetry_query':return `${p.arguments?.robot} since ${p.arguments?.since_sim_time}s · ${p.returned} of ${p.samples} heartbeats`;
+    default:return Object.entries(p).filter(([,v])=>['string','number','boolean'].includes(typeof v)).slice(0,3).map(([k,v])=>`${k} ${v}`).join(' · ');
+  }
+}
+// Everything here is read from the authoritative snapshot: health is code-computed, decisions are the model's own words.
+function updateHud(state){
+  const id=view?.expanded,hud=$('worker-hud'),v=id&&state.vehicles?.[id];
+  if(!v){hud.hidden=true;return;}
+  const t=state.telemetry?.[id],h=state.health?.[id];hud.hidden=false;
+  $('hud-id').textContent=id;$('hud-role').textContent=v.role==='retriever'?'Recovery unit':v.lifecycle==='spare'?'Reserve worker':'Orchard worker';
+  const status=h?.status||(v.lifecycle==='disabled'?'disabled':'healthy');$('hud-health').textContent=status.replaceAll('_',' ');$('hud-health').dataset.status=status;
+  $('hud-state').textContent=`${v.lifecycle} · ${v.action?.kind||'standby'}${v.action?.stage?' · '+v.action.stage:''}`;
+  $('hud-task').textContent=v.action?.zone||v.action?.target||t?.task_id||(state.arena==='orchard'&&id==='W1'&&state.phase?state.phase:'—');
+  $('hud-battery').textContent=`${v.battery.toFixed(1)}% · min ${Number(v.minimum_battery??v.battery).toFixed(1)}%`;$('hud-water').textContent=v.water==null?'—':`${v.water.toFixed(1)} L`;
+  $('hud-heartbeat').textContent=h?`${h.heartbeat_age.toFixed(1)} s · ${h.waiting_reason||'no wait'}`:'—';
+  $('hud-progress').textContent=t?`r${t.last_progress_revision} · ${Math.max(0,state.time-(t.last_progress_sim_time??state.time)).toFixed(1)} s ago`:'—';
+  $('hud-fault').textContent=v.fault||h?.fault||'none';
+  const arm=!!t&&Array.isArray(t.joints);$('hud-arm').hidden=!arm;
+  if(arm){
+    const bars=$('hud-joints');
+    if(bars.children.length!==t.joints.length)bars.replaceChildren(...t.joints.map(()=>{const s=document.createElement('span');s.innerHTML='<i><b></b></i><small></small>';return s;}));
+    t.joints.forEach((q,i)=>{const s=bars.children[i];s.querySelector('b').style.width=`${(q+180)/3.6}%`;s.querySelector('small').textContent=q.toFixed(0);});
+    const p=t.tool_pose?.position||[];
+    $('hud-tool').textContent=`tool ${p.map(x=>x.toFixed(2)).join(' / ')} m · jaw ${(t.opening*100).toFixed(1)} cm · ${t.force} N cmd · ${Number(t.load||0).toFixed(1)} N load · ${t.holding?'holding':'empty'}${t.extracted?' · extracted':''}${t.deposited?' · collected':''}`;
+  }
+  const mine=(state.robot_events?.[id]||state.events.filter(e=>e.robot_id===id)).filter(e=>HUD_EVENTS.has(e.type));
+  const decision=[...mine].reverse().find(e=>e.type==='decision');$('hud-decision').textContent=decision?describe(decision):state.config.mode==='demo'?'rule-based demo: no model decisions':'no model decision yet';
+  $('hud-events').replaceChildren(...mine.slice(-8).reverse().map(e=>{const li=document.createElement('li');if(ALERT_EVENTS.has(e.type))li.className='alert';li.innerHTML='<b></b><span></span>';li.querySelector('b').textContent=`${Number(e.sim_time).toFixed(1)}s ${e.type.replaceAll('_',' ')}`;li.querySelector('span').textContent=describe(e);return li;}));
+}
+function updateIncidents(state){
+  const strip=$('incident-strip'),open=state.incidents?.open||[];
+  if(!open.length&&!state.escalation){strip.hidden=true;return;}
+  strip.hidden=false;
+  strip.replaceChildren(...open.map(i=>{const d=document.createElement('div');d.innerHTML='<b></b> <span></span>';d.querySelector('b').textContent=`INCIDENT · ${i.kind.replaceAll('_',' ')} · ${i.robot}`;d.querySelector('span').textContent=`${i.detail}${i.response?` → orchestrator: ${i.response.decision} (${i.response.reason})`:state.config.mode==='live'?' → orchestrator engaged':' → rule-based recovery'}`;return d;}));
+  if(state.escalation){const d=document.createElement('div');d.innerHTML='<b>ESCALATED · HUMAN NEEDED</b> <span></span>';d.querySelector('span').textContent=`${state.escalation.robot}: ${state.escalation.reason} · resume when handled`;strip.prepend(d);}
+}
 
 function updateFleet(vehicles){
   for(const v of vehicles){
@@ -67,7 +121,7 @@ async function poll(){
     $('arm-feedback').hidden=!arm;$('arm-feedback').textContent=fleetCare?`${state.feedback} · ${Object.values(state.care_workers).filter(w=>w.status==='running').length} workers active${state.navigation_owner?' · lane reserved for '+state.navigation_owner:''}`:arm?`W1 · ${state.phase} · ${state.status==='completed'?(care?'All trees fully cared for and rover returned':'Extraction, collection and return verified'):state.feedback} · ${state.load.toFixed(1)} N load`:'';
     $('breakdown').disabled=$('false-claim').disabled=arm;
     $('clock').textContent=`${String(Math.floor(state.time/60)).padStart(2,'0')}:${String(Math.floor(state.time%60)).padStart(2,'0')}`;$('minimum').textContent=Math.min(...vehicles.map(v=>v.minimum_battery)).toFixed(1);
-    checks(state.checks);journal(state.events);updateFleet(vehicles);
+    checks(state.checks);journal(state.events);updateFleet(vehicles);updateHud(state);updateIncidents(state);
     for(const control of workerFaults.children)control.disabled=arm||state.status!=='running'||state.vehicles[control.dataset.breakdownWorker]?.lifecycle==='disabled';
     $('storage').textContent=state.storage.error||`Supabase · committed event ${state.storage.committed_sequence}`;
     $('inference').textContent=`${arm?`W1 wrist / ${state.provider_routes?.treatment?.fallback?'Gateway fallback':'Crusoe'}`:state.config.mode==='demo'?'Rule-based demo':'Live roles'} · ${state.inference.calls} calls · ${state.inference.tokens} tokens · ${state.inference.cost===null?'cost unknown':'$'+state.inference.cost.toFixed(4)}`;
