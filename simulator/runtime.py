@@ -1,5 +1,6 @@
 """One writer per session, persistence barriers, wall clock and role-call executor."""
 import concurrent.futures
+import os
 import copy
 import threading
 import time
@@ -19,12 +20,15 @@ class Runtime:
         # New Crusoe sessions pin their fallback before the first paid call.
         # Restores use saved configuration, never newly introduced defaults.
         if self.config['engine']=='crusoe' and 'fallback' not in self.config:
-            aliases={'nvidia/NVIDIA-Nemotron-3.5-Super-VL':'nvidia/nemotron-3.5-super-vl',
-                     'nvidia/NVIDIA-Nemotron-3-Super-120B-A12B':'nvidia/nemotron-3-super-120b-a12b',
-                     'nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B':'nvidia/nemotron-3-nano-30b-a3b',
-                     'nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B':'nvidia/nemotron-3.5-super-vl'}
-            self.config['fallback']=dict(after_failures=2,engine='gemma',provider_base=Adapter('gemma').base,
-                models={role:aliases.get(model,model) for role,model in self.config['models'].items()})
+            # Off unless WALLNE_GATEWAY_FALLBACK=1: a Crusoe run stays a Crusoe run, and a provider failure blocks visibly.
+            if os.getenv('WALLNE_GATEWAY_FALLBACK','0')!='1': self.config['fallback']=None
+            else:
+                aliases={'nvidia/NVIDIA-Nemotron-3.5-Super-VL':'nvidia/nemotron-3.5-super-vl',
+                         'nvidia/NVIDIA-Nemotron-3-Super-120B-A12B':'nvidia/nemotron-3-super-120b-a12b',
+                         'nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B':'nvidia/nemotron-3-nano-30b-a3b',
+                         'nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B':'nvidia/nemotron-3.5-super-vl'}
+                self.config['fallback']=dict(after_failures=2,engine='gemma',provider_base=Adapter('gemma').base,
+                    models={role:aliases.get(model,model) for role,model in self.config['models'].items()})
         self.config.setdefault('trial',getattr(self.world,'trial',None))
         self.provider_routes={}
         self.committed=0; self.epoch=0; self.persisted=False; self.storage_error=None; self.pending=None

@@ -6,6 +6,7 @@ import math
 import time
 import urllib.error
 import urllib.request
+from .common import budget
 from .common import uid,canonical
 
 MODELS={'nemotron':'nvidia/nemotron-3.5-super-vl','gemma':'google/gemma-4-31b-it','gemini':'google/gemini-3.1-pro-preview'}
@@ -53,7 +54,7 @@ class Adapter:
         self.provider='crusoe' if engine=='crusoe' else 'gateway'
         if self.provider=='crusoe':
             self.base=os.getenv('CRUSOE_API_BASE_URL','https://api.inference.crusoecloud.com/v1')
-            self.key=os.getenv('CRUSOE_API_KEY',''); self.timeout=25
+            self.key=os.getenv('CRUSOE_API_KEY',''); self.timeout=budget('INFERENCE_TIMEOUT')
             default='google/gemma-4-31b-it' if role=='treatment' else 'nvidia/Nemotron-3-Super-120B-A12B' if role in ('orchestrator','verifier','planner','reviewer') else 'nvidia/Nemotron-3-Nano-30B-A3B'
             env='CRUSOE_VISION_MODEL' if role=='treatment' else 'CRUSOE_ORCHESTRATOR_MODEL' if role in ('orchestrator','verifier','planner','reviewer') else 'CRUSOE_WORKER_MODEL'
             self.model=os.getenv(env,os.getenv(env.lower(),default))
@@ -63,7 +64,7 @@ class Adapter:
                 'nvidia/Nemotron-3-Nano-30B-A3B':'nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B',
             }.get(self.model,self.model)
         else:
-            self.base=os.getenv('AI_GATEWAY_BASE_URL','https://ai-gateway.vercel.sh/v1'); self.key=os.getenv('AI_GATEWAY_API_KEY') or os.getenv('AI_GATEWAY_KEY',''); self.timeout=55
+            self.base=os.getenv('AI_GATEWAY_BASE_URL','https://ai-gateway.vercel.sh/v1'); self.key=os.getenv('AI_GATEWAY_API_KEY') or os.getenv('AI_GATEWAY_KEY',''); self.timeout=budget('INFERENCE_TIMEOUT')
             self.model=os.getenv(engine.upper()+'_MODEL',MODELS.get(engine,MODELS['gemini']))
 
     def call(self,observation,image=None,prompt=PROMPT):
@@ -79,7 +80,7 @@ class Adapter:
             fields.update({k:dict(type='number') for k in ('x','y','z','rx','ry','rz')})
             fields.update(action=dict(type='string',enum=observation['available_actions']),reason=dict(type='string'))
             schema=[dict(type='function',function=dict(name=tool_name,description='Execute one available action. move_arm requires x,y,z in WORLD METERS. Optional rx,ry,rz default to zero (gripper straight DOWN). set_gripper requires opening and force. Assess/confirm require current frame_id and evidence.',parameters=dict(type='object',properties=fields,required=['action','reason'],additionalProperties=False)))]
-        body=dict(model=self.model,messages=[dict(role='system',content=prompt),dict(role='user',content=content)],tools=schema,tool_choice='required' if flat else {'type':'function','function':{'name':tool_name}},temperature=.1,max_tokens=4096)
+        body=dict(model=self.model,messages=[dict(role='system',content=prompt),dict(role='user',content=content)],tools=schema,tool_choice='required' if flat else {'type':'function','function':{'name':tool_name}},temperature=.1,max_tokens=int(budget('MAX_TOKENS')))
         request=urllib.request.Request(self.base.rstrip('/')+'/chat/completions',data=canonical(body).encode(),headers={'Authorization':'Bearer '+self.key,'Content-Type':'application/json'},method='POST')
         started=time.monotonic(); response=None
         try:

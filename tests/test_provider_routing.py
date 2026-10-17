@@ -8,12 +8,22 @@ from simulator.inference import InferenceError,Adapter
 from tests.test_treatment import frame
 
 class ProviderRoutingTests(unittest.TestCase):
-    def runtime(self):
+    def runtime(self,fallback=True):
         w=Manipulation(7,'precision');w.status='running';frame(w)
-        with patch('threading.Thread.start'):
+        # The Gateway fallback is opt-in; these routing tests exercise it explicitly.
+        with patch('threading.Thread.start'),patch.dict('os.environ',{'WALLNE_GATEWAY_FALLBACK':'1' if fallback else '0'}):
             r=TreatmentRuntime(w,config=dict(mode='vision',engine='crusoe'))
         self.addCleanup(r.close)
         return r
+
+    def test_fallback_is_off_by_default_and_failures_block_visibly(self):
+        r=self.runtime(fallback=False)
+        self.assertIsNone(r.config['fallback'])
+        for index in range(3):
+            r.futures['T1']=(r.world.id,self.response(r,True))
+            with patch.object(r,'persist',return_value=True):r.step(.01)
+            self.assertEqual(r.adapter('treatment').provider,'crusoe')
+        self.assertEqual(r.world.status,'blocked')
 
     def response(self,r,error=False):
         a=r.adapter('treatment');future=concurrent.futures.Future()
@@ -93,7 +103,7 @@ class ProviderRoutingTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'implementation changed'):r.restore(r.world.id)
 
     def test_shared_worker_route_and_late_primary_do_not_spend_gateway_error_budget(self):
-        with patch('threading.Thread.start'):r=Runtime(config=dict(mode='live',engine='crusoe'))
+        with patch('threading.Thread.start'),patch.dict('os.environ',{'WALLNE_GATEWAY_FALLBACK':'1'}):r=Runtime(config=dict(mode='live',engine='crusoe'))
         self.addCleanup(r.close);r.world.status='running';r.world.planned=True
         def request(robot,fallback):
             r.requests[robot]=dict(id=robot,role='worker',model='test',provider='gateway' if fallback else 'crusoe',provider_base='test',fallback=fallback)
