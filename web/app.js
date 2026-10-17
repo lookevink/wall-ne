@@ -1,12 +1,26 @@
 import {FleetScene} from './scene.js';
 import {RoverViews} from './rover-views.js';
 import {$,api,notice,checks,journal,button,download} from './ui.js';
+import {renderEpoch,renderAlmanac,renderSeasonLog} from './epoch-ui.js';
+import {Timelapse} from './timelapse.js';
 let view,feeds,state,currentSession=null,lastFrame=null,lastDepth=null;
+const recorder=new Timelapse();
 const workerFrames=new Map(),workerDepths=new Map(),workerScenes=new Map();
 const decisionCanvas=document.createElement('canvas');decisionCanvas.width=640;decisionCanvas.height=360;
 try{view=new FleetScene($('viewport'));feeds=new RoverViews(view,$('feeds'));}catch(e){notice(`Renderer unavailable: ${e.message}`);}
-button('reset',()=>api('/api/reset',{mission:$('mission').value,seed:Number($('seed').value),mode:$('mode').value,speed:Number($('speed').value)}));
-for(const action of ['start','pause','breakdown','false-claim','retry','abort'])button(action,()=>api(`/api/${action}`,{}));
+// Agents are always on: a new day or season starts its mission immediately; Pause holds the mission and the clock.
+const plan=()=>({mission:$('mission').value,mode:$('mode').value,speed:Number($('speed').value)});
+button('next-day',()=>api('/api/next-day',plan()));
+button('new-season',()=>api('/api/season',{...plan(),seed:Number($('seed').value)}).then(()=>$('orchard-menu').close()));
+button('pause',()=>api(state?.status==='running'?'/api/pause':'/api/start',{}));
+$('day-minutes').onchange=()=>api('/api/epoch',{day_minutes:Number($('day-minutes').value)}).catch(e=>notice(e.message));
+$('auto-advance').onchange=()=>api('/api/epoch',{auto_advance:$('auto-advance').checked}).catch(e=>notice(e.message));
+button('tl-record',()=>{
+  if(recorder.recording)recorder.stop();else recorder.start(Number($('tl-interval').value),$('tl-caption').checked);
+  $('tl-record').textContent=recorder.recording?'■ Stop recording':'● Record timelapse';$('tl-render').disabled=recorder.recording||!recorder.lastReel;
+});
+button('tl-render',async()=>{$('tl-status').textContent=`Rendering reel ${recorder.lastReel}…`;const r=await recorder.render(30);$('tl-status').textContent=`Saved ${r.seconds} s video (${r.frames} frames at ${r.fps} fps): ${r.output}`;});
+for(const action of ['breakdown','false-claim','retry','abort'])button(action,()=>api(`/api/${action}`,{}));
 button('export',()=>download(state,`wall-ne-${state.id}.json`));
 button('camera-pause',()=>{view.paused=!view.paused;$('camera-pause').textContent=view.paused?'Resume cameras':'Pause cameras';});
 button('wind',()=>{view.windEnabled=!view.windEnabled;$('wind').textContent=`Wind ${view.windEnabled?'on':'off'}`;});
@@ -37,7 +51,14 @@ async function poll(){
     state=await api('/api/state');if(['Failed to fetch','stale capture request','stale or superseded scan frame'].includes($('notice').textContent))notice('');view?.update(state);feeds?.update(state);
     $('status').textContent=state.status.replaceAll('_',' ');$('status').classList.toggle('error',['failed','blocked','storage_blocked'].includes(state.status));
     const arm=state.arena==='orchard',care=['full_care','fleet_care'].includes(state.mission_type),fleetCare=state.mission_type==='fleet_care',vehicles=Object.values(state.vehicles);
-    if(currentSession!==state.id){currentSession=state.id;lastFrame=null;lastDepth=null;$('mission').value=care?'full_care':arm?'weeding':'watering';$('mission').onchange();$('seed').value=state.seed;}
+    if(currentSession!==state.id){currentSession=state.id;lastFrame=null;lastDepth=null;const p=state.epoch?.plan;$('mission').value=p?.mission||(care?'full_care':arm?'weeding':'watering');if(p){$('mode').value=p.mode;$('speed').value=String(p.speed);}$('mission').onchange();$('seed').value=state.epoch?.seed??state.seed;}
+    renderEpoch(state.epoch);renderAlmanac(state.epoch);renderSeasonLog(state.epoch);
+    if(state.epoch?.notice)notice(state.epoch.notice);
+    const terminal=['completed','failed','blocked','aborted'].includes(state.status);
+    $('pause').textContent=state.status==='running'?'Pause':'Resume';$('pause').disabled=!state.epoch?.day||terminal;
+    $('next-day').textContent=state.epoch?.day?'Next day ⏭':'Begin day 1 ⏭';
+    $('rec-badge').hidden=!recorder.recording;
+    if(recorder.recording)$('tl-status').textContent=`Recording reel ${recorder.reel} · ${recorder.frames} frames saved${recorder.error?` · last upload failed: ${recorder.error}`:''}`;
     $('goal').textContent=state.contract.goal||'Inspect and water the orchard, preserve reserve and return.';
     $('inspected-label').textContent=care?'Trees cared for':arm?'Extracted':'Inspected';$('watered-label').textContent=care?'Collected':arm?'Collected':'Watered';$('inspected-total').textContent=care?`/ ${state.tasks.length}`:arm?'/ 1':'/ 36';
     if(care){$('inspected').textContent=fleetCare?Object.values(state.assignments).filter(a=>a.status==='completed').length:state.completed_trees.length;$('watered').textContent=fleetCare?Object.values(state.care_workers).reduce((n,w)=>n+w.collected_total,0)+Object.entries(state.results).filter(([id])=>!Object.values(state.care_workers).some(w=>w.id===id)).length:state.collected_total;$('critical-total').textContent=`/ ${state.tasks.length}`;}
@@ -75,7 +96,13 @@ async function poll(){
 poll();
 function animate(time){
   requestAnimationFrame(animate);if(!view)return;
+  view.atmosphere.tick(time);
   const start=performance.now();feeds?.draw(time);const drawn=view.draw(time);if(drawn)view.lastCpu=performance.now()-start;
+  if(drawn&&state&&recorder.due(time)){
+    const e=state.epoch||{},done=state.mission_type==='fleet_care'?Object.values(state.assignments).filter(a=>a.status==='completed').length:null;
+    recorder.grab(view.renderer.domElement,time,e.day?`Day ${e.day} · ${e.label}`:`Pre-season · ${e.label||''}`,
+      `WALL-NE ORCHARD · ${(e.phase||'').toUpperCase()}${done===null?'':` · ${done}/${state.tasks.length} TREES CARED`}`,{day:e.day,clock:e.label,session_id:state.id});
+  }
   if(time%1000<40)$('performance').textContent=`${view.fps.toFixed(1)} overview fps · ${(feeds?.rate||0).toFixed(1)} feed fps · ${view.renderer.info.render.calls} draw calls · ${view.renderer.info.memory.geometries} geometries · ${(view.lastCpu||0).toFixed(1)} ms CPU submission/readback · ${view.element.clientWidth}×${view.element.clientHeight} · DPR ${view.renderer.getPixelRatio()} · ${view.backend}`;
 }
 requestAnimationFrame(animate);
