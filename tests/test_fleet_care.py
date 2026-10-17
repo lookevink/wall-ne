@@ -60,3 +60,21 @@ class FleetCareTests(unittest.TestCase):
             self.assertEqual(w.robot['position'],start)
             self.assertEqual(w.robot['action']['kind'],'navigate')
         finally:child.close();parent.close()
+
+    def test_failed_worker_does_not_stop_healthy_workers(self):
+        with patch('threading.Thread.start'):
+            r=FleetCareRuntime(config=dict(mode='vision',engine='crusoe',arena='orchard'))
+            a=r.make_child(0,'W1');b=r.make_child(1,'W2')
+        try:
+            r.children={'W1':a,'W2':b};r.world.status='running';a.world.status='blocked';b.world.status='running'
+            r.world.assignments={'0':dict(vehicle='W1',status='assigned',session_id=a.world.id),'1':dict(vehicle='W2',status='assigned',session_id=b.world.id)}
+            with patch.object(r,'persist',return_value=True):r.sync_workers()
+            self.assertEqual(r.world.status,'running');self.assertEqual(b.world.status,'running')
+            self.assertEqual(r.world.assignments['0']['status'],'blocked')
+            self.assertFalse(r.world.verify()['trees_complete'])
+            self.assertNotIn('W1',{o['arguments']['vehicle'] for o in r.world.options()})
+            for i in range(2,5):r.world.assignments[str(i)]=dict(vehicle=f'W{i+1}',status='blocked',session_id=f'failed-{i}')
+            b.world.status='blocked'
+            with patch.object(r,'persist',return_value=True):r.step(.1)
+            self.assertEqual(r.world.status,'failed');self.assertIn('5 unattempted',r.world.feedback)
+        finally:r.close()

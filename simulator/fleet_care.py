@@ -9,7 +9,7 @@ from .orchard_care import OrchardCare
 from .common import digest, uid, treatment_implementation_hash
 from .inference import InferenceError
 
-ORCHESTRATION='''You orchestrate Wall-ne's five equipped orchard workers W1-W5. Mobilize every worker, including W5. Assign ten distinct trees for complete care. Choose one feasible option using choose_action: assign with row (task index) and vehicle, or claim_complete with {} after all independent checks pass. Workers execute live visual inspection, watering, fertilizer, pest removal and articulated weed extraction, then service at their docks. Each tree has exactly one owner; never duplicate active assignments. Prefer idle workers that have not yet participated, then assign remaining trees to available workers. Traffic reservations are enforced by the runtime. A blocked worker is an incident, never a completed tree. R1 is the recovery vehicle, not a fitted plant-care worker. Do not instruct workers with hidden target coordinates.'''
+ORCHESTRATION='''You orchestrate Wall-ne's five equipped orchard workers W1-W5. Mobilize every worker, including W5. Assign ten distinct trees for complete care. Choose one feasible option using choose_action: assign with row (task index) and vehicle, or claim_complete with {} after all independent checks pass. Workers execute live visual inspection, watering, fertilizer, pest removal and articulated weed extraction, then service at their docks. Each tree has exactly one owner; never duplicate active assignments. Prefer idle workers that have not yet participated, then assign remaining trees to available workers. Traffic reservations are enforced by the runtime. A blocked worker is an incident, never a completed tree. Continue assigning remaining trees to healthy available workers; failed workers remain unavailable for this run. R1 is the recovery vehicle, not a fitted plant-care worker. Do not instruct workers with hidden target coordinates.'''
 
 
 class FleetCareWorld(Mission):
@@ -149,6 +149,13 @@ class FleetCareRuntime(Runtime):
         if self.storage_error:return
         self.sync_workers()
         if self.world.status!='running':return
+        settled=bool(self.world.assignments) and all(a['status'] in TERMINAL for a in self.world.assignments.values())
+        if settled and not self.world.options() and not all(self.world.verify().values()):
+            succeeded=sum(a['status']=='completed' for a in self.world.assignments.values())
+            self.world.status='failed'
+            self.world.feedback=f'Run finished: {succeeded}/{len(self.world.tasks)} trees fully cared for; {len(self.world.assignments)-succeeded} failed attempts; {len(self.world.tasks)-len(self.world.assignments)} unattempted. Results retained for the next improvement.'
+            self.world.event('run_finished',successful=succeeded,attempted=len(self.world.assignments),total=len(self.world.tasks))
+            self.persist();return
         self.coordinate_traffic()
         entry=self.futures.get('orchestrator')
         if entry:
@@ -189,7 +196,7 @@ class FleetCareRuntime(Runtime):
                     self.world.results[w.id]=dict(status=w.status,checks=w.verify(),worker=worker,completed_trees=copy.deepcopy(w.completed_trees),inference=copy.deepcopy(child.inference))
                     self.world.event('worker_finished',worker,status=w.status,checks=w.verify(),session_id=w.id)
                     if w.status!='completed':
-                        self.pause('blocked');self.world.feedback=f'{worker} blocked: {w.feedback}';self.persist();return
+                        self.world.feedback=f'{worker} stopped: {w.feedback}. Healthy workers continue.'
                     self.persist()
         # Completed workers that have a newer assignment are counted from durable results.
         active={c.world.id for c in self.children.values()}

@@ -63,13 +63,14 @@ class Manipulation(Treatment):
             actions=['scan_lidar','capture_image','stop']
             if not self.nonempty_scan:return actions
             actions+=['open_gripper']
+            if getattr(self,'crown_projection_required',False) and not self.holding and self.opening>=.06 and not self.must_reopen:actions+=['project_ground']
             if getattr(self,'missed_grasp',None) and not self.holding and self.opening>=.06 and not self.must_reopen:
                 return ['move_arm','scan_lidar','stop'] if self.tool_pose()['position'][1]>=.55 else ['move_arm','stop']
             if self.deposited:return actions+['verify']
             if self.holding:return actions+['set_gripper','move_arm' if self.contact_ack else 'confirm_contact']
             if self.opening>=.06 and not self.must_reopen:
                 actions+=['move_arm']
-                if .09<=self.tool_pose()['position'][1]<=.22:actions+=['assess_alignment']
+                if .09<=self.tool_pose()['position'][1]<=.22 and (not getattr(self,'crown_projection_required',False) or getattr(self,'crown_projection',None)):actions+=['assess_alignment']
                 if self.alignment and self.alignment['aligned'] and self.alignment['revision']==self.revision:actions+=['set_gripper']
             return actions
         actions=['capture_image','move_arm','set_gripper','open_gripper','verify','return','stop']
@@ -98,10 +99,15 @@ class Manipulation(Treatment):
         if self.trial=='precision' and self.nonempty_scan and not self.holding and self.opening>=.06:
             obs['current_grasp_step']=dict(tool_center_world=p,valid_grasp_height=.09<=p[1]<=.22,
                 next_action='At approach height: descend to tool-center y=0.13 at the visually selected stem x,z; do not repeat the current pose. If this is rounded clover, retract and select the pointed weed instead.' if .22<p[1]<=.45 else 'Inspect the current fingers/stem and assess alignment before closing.' if .09<=p[1]<=.22 else 'Approach the observed weed crown at y=0.4, then descend to y=0.13.')
+        if getattr(self,'crown_projection_required',False) and not self.holding and not getattr(self,'missed_grasp',None):
+            obs['crown_projection']=getattr(self,'crown_projection',None)
+            if self.nonempty_scan:
+                obs['current_grasp_step']=dict(tool_center_world=p,projection=obs['crown_projection'],
+                    next_action='Use project_ground(frame_id,u,v) at the visible ROOT CROWN where stems meet the soil, NOT a leaf or clover. It projects the selected image ray onto the public y=0.08 plane. Then move_arm to the returned world x,z with tool-center y=0.13. The projection is geometric, not proof that you selected a weed. Reproject if the image shows an offset. Assess only after reaching the grasp height.' if .09<=p[1]<=.45 else 'Use project_ground(frame_id,u,v) at the visible weed root/soil junction to measure its world x,z. Approach above that point at y=0.4, then project_ground again in the close view before descending to y=0.13.')
         if getattr(self,'missed_grasp',None) and not self.holding:
             wide=[self.base()[0],.8,self.base()[2]-1.1,0,0,0]
             obs['current_grasp_step']=dict(failed_pose=self.missed_grasp,wide_view_pose=wide,
-                next_action='Reopen fully, then retract to the public wide_view_pose and scan the actual weed crown in the NEW wide image. Reidentify the specimen: serrated rosette, thistle or upright grass is a weed; rounded three-leaf clover must be preserved. Do not reuse the failed horizontal target or assert alignment without a new scan.')
+                next_action=('Already at a raised viewpoint: scan_lidar NOW with current frame_id, normalized u,v at the visible weed crown and span=0.16. Do not repeat the current move.' if p[1]>=.55 and self.opening>=.06 and not self.must_reopen else 'Reopen fully, then retract to the public wide_view_pose before scanning.')+' Reidentify the specimen: serrated rosette, thistle or upright grass is a weed; rounded three-leaf clover must be preserved. Do not reuse the failed horizontal target or assert alignment without a new scan.')
         return obs
 
     def record_control_progress(self,action):
@@ -167,14 +173,19 @@ class Manipulation(Treatment):
                 else:
                     self.must_reopen=True
                     self.missed_grasp=dict(position=p[:],revision=self.revision,force=force)
+                    self.crown_projection=None
                     self.feedback=f'No stem contact. Tool center y={p[1]:.3f} m; required 0.09..0.22 m (suggested 0.15 m), upright tilt <25 degrees. Surface-return y is not the grasp height. Reopen, inspect stem x,z and both fingers, then reposition; hidden target position is not supplied.'
                 for plant in self.protected:
                     if math.hypot(p[0]-plant['position'][0],p[2]-plant['position'][2])<.12 and p[1]<.3: self.damage.append(plant['id'])
                 if any(math.hypot(p[0]-x,p[2]-z)<.25 for x,z in getattr(self,'trunks',((0,0),))): self.damage.append('crop')
             self.alignment=None; self.invalidate()
         elif action=='project_ground':
-            if self.trial not in ('baseline','known'): raise ValueError('ground projection unavailable')
-            frame=self.fresh(args['frame_id']); self.feedback='Ground projection: '+str(project_ground(frame['camera'],args['u'],args['v']))
+            if self.trial not in ('baseline','known') and not getattr(self,'crown_projection_required',False): raise ValueError('ground projection unavailable')
+            frame=self.fresh(args['frame_id']);u=finite(args['u'],0,1);v=finite(args['v'],0,1)
+            point=project_ground(frame['camera'],u,v)
+            if getattr(self,'crown_projection_required',False):
+                self.crown_projection=dict(frame_id=frame['id'],revision=self.revision,image=dict(u=u,v=v),world=dict(x=point[0],y=point[1],z=point[2]),grasp_tool_center_y=.13,semantics='Selected ray intersection with public y=0.08 plane; no plant identity, target snapping or contact guarantee.')
+            self.feedback='Selected ground ray world point: '+str([round(n,5) for n in point])+'. Use x,z with tool-center y=0.13 only if RGB confirms the weed root crown.'
         elif action in ('scan_lidar','measure_depth'):
             frame=self.fresh(args['frame_id'])
             if action not in self.allowed_actions(): raise ValueError('sensor unavailable in this trial')

@@ -1,0 +1,343 @@
+{
+  "session_id": "f7d8d782-5662-4aed-b1d3-f0929c02fdda",
+  "arena": "orchard",
+  "mission": "fleet_care",
+  "status": "aborted",
+  "checks": {
+    "all_workers_used": true,
+    "care_verified": false,
+    "inventory": true,
+    "reserve": true,
+    "returned": false,
+    "trees_complete": false
+  },
+  "feedback": "Orchestrator assigned tree 5 to W5",
+  "assignments": {
+    "0": {
+      "session_id": "a7ae055b-3df4-406b-8058-6fe915f8a226",
+      "status": "assigned",
+      "vehicle": "W1"
+    },
+    "1": {
+      "session_id": "c6689593-5892-437d-a05a-8c884ef45de0",
+      "status": "assigned",
+      "vehicle": "W2"
+    },
+    "2": {
+      "session_id": "cc056aab-d9a1-4d44-8f85-7453d3775b60",
+      "status": "assigned",
+      "vehicle": "W3"
+    },
+    "3": {
+      "session_id": "3cf9a2f6-08cd-464b-a291-3eeef733efd5",
+      "status": "assigned",
+      "vehicle": "W4"
+    },
+    "4": {
+      "session_id": "3e2867ad-b90f-46e6-8924-739dda892455",
+      "status": "assigned",
+      "vehicle": "W5"
+    }
+  },
+  "results": {},
+  "inference": {
+    "calls": 119,
+    "cost": null,
+    "failed_calls": 3,
+    "latency_seconds": 48.79324574900001,
+    "pending_calls": 0,
+    "results": [
+      {
+        "cost": null,
+        "decision": {
+          "action": "assign",
+          "arguments": {
+            "row": 0,
+            "vehicle": "W1"
+          },
+          "rationale": "Prefer idle worker W1 that has not yet participated; assign to first tree (row 0)."
+        },
+        "fallback": false,
+        "id": "e4a062b0-92e6-4d2c-b30a-b8ce9c570e35",
+        "latency": 6.7692964159999995,
+        "provider": "crusoe",
+        "provider_base": "https://api.inference.crusoecloud.com/v1",
+        "request_id": "bb3c8e04-2d9f-4d92-925c-e3e4a32678da",
+        "requested_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "response_id": "chatcmpl-bf0d7bb68f6017f6",
+        "returned_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "usage": {
+          "completion_tokens": 398,
+          "prompt_tokens": 3031,
+          "total_tokens": 3429
+        }
+      },
+      {
+        "cost": null,
+        "decision": {
+          "action": "assign",
+          "arguments": {
+            "row": 1,
+            "vehicle": "W2"
+          },
+          "rationale": "Assign tree at index 1 to idle worker W2, preferring workers that have not yet participated."
+        },
+        "fallback": false,
+        "id": "093a78ef-3022-4f80-b1e4-4c799f0e9c02",
+        "latency": 6.019134832999999,
+        "provider": "crusoe",
+        "provider_base": "https://api.inference.crusoecloud.com/v1",
+        "request_id": "9f5ffb21-4c22-4dad-b21c-ce7555e75b29",
+        "requested_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "response_id": "chatcmpl-bc9260aa425ec5fd",
+        "returned_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "usage": {
+          "completion_tokens": 317,
+          "prompt_tokens": 2965,
+          "total_tokens": 3282
+        }
+      },
+      {
+        "cost": null,
+        "decision": {
+          "action": "assign",
+          "arguments": {
+            "row": 2,
+            "vehicle": "W3"
+          },
+          "rationale": "Assign tree at row 2 (index 7) to idle worker W3, which has not yet participated, preferring idle workers and avoiding already assigned rows 5 and 6."
+        },
+        "fallback": false,
+        "id": "eee103ce-84e4-4abc-8854-c3c4adb17c60",
+        "latency": 18.039061500000003,
+        "provider": "crusoe",
+        "provider_base": "https://api.inference.crusoecloud.com/v1",
+        "request_id": "9d8fbdc5-9e48-4c79-9e98-9237d58b3661",
+        "requested_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "response_id": "chatcmpl-aa0a228284eeffc8",
+        "returned_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "usage": {
+          "completion_tokens": 834,
+          "prompt_tokens": 2864,
+          "total_tokens": 3698
+        }
+      },
+      {
+        "cost": null,
+        "decision": {
+          "action": "assign",
+          "arguments": {
+            "row": 3,
+            "vehicle": "W4"
+          },
+          "rationale": "Assign tree at row 3 to idle worker W4, who has not yet participated, preferring unused workers."
+        },
+        "fallback": false,
+        "id": "57127c9c-d859-466c-bdb8-380992b8aa35",
+        "latency": 8.884357167000005,
+        "provider": "crusoe",
+        "provider_base": "https://api.inference.crusoecloud.com/v1",
+        "request_id": "98e867ad-2da6-47e0-81cd-5fd7493db8a8",
+        "requested_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "response_id": "chatcmpl-af2864985d8ef5e1",
+        "returned_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "usage": {
+          "completion_tokens": 439,
+          "prompt_tokens": 2802,
+          "total_tokens": 3241
+        }
+      },
+      {
+        "cost": null,
+        "decision": {
+          "action": "assign",
+          "arguments": {
+            "row": 4,
+            "vehicle": "W5"
+          },
+          "rationale": "Assign the next unassigned tree (index 4) to the idle worker W5, following preference for idle workers that have not yet participated."
+        },
+        "fallback": false,
+        "id": "663b1999-af0c-4776-a5d2-d8e53d4a097c",
+        "latency": 9.081395833000002,
+        "provider": "crusoe",
+        "provider_base": "https://api.inference.crusoecloud.com/v1",
+        "request_id": "09b1a53c-0966-4f8e-b579-64ff8d47557a",
+        "requested_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "response_id": "chatcmpl-897e748920af3002",
+        "returned_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+        "usage": {
+          "completion_tokens": 590,
+          "prompt_tokens": 2785,
+          "total_tokens": 3375
+        }
+      }
+    ],
+    "tokens": 1002461
+  },
+  "config": {
+    "arena": "orchard",
+    "code_hash": "0ead67ce80a68a09bd996f01eb761bd61d803ce482a682e70bb318e0acec39ed",
+    "engine": "crusoe",
+    "fallback": {
+      "after_failures": 2,
+      "engine": "gemma",
+      "models": {
+        "orchestrator": "nvidia/nemotron-3-super-120b-a12b",
+        "planner": "nvidia/nemotron-3-super-120b-a12b",
+        "retriever": "nvidia/nemotron-3-nano-30b-a3b",
+        "treatment": "google/gemma-4-31b-it",
+        "verifier": "nvidia/nemotron-3-super-120b-a12b",
+        "worker": "nvidia/nemotron-3-nano-30b-a3b"
+      },
+      "provider_base": "https://ai-gateway.vercel.sh/v1"
+    },
+    "mode": "vision",
+    "models": {
+      "orchestrator": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "planner": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "retriever": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "treatment": "google/gemma-4-31b-it",
+      "verifier": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+      "worker": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
+    },
+    "provider_base": "https://api.inference.crusoecloud.com/v1",
+    "speed": 8,
+    "treatment_code_hash": "072c038c226d0c77de8a35bf7048db6765feba41d5f82679cac5f14b8899528f",
+    "trial": null
+  },
+  "provider_routes": {
+    "orchestrator": {
+      "failures": 0,
+      "fallback": false
+    }
+  },
+  "workers": {
+    "W1": {
+      "session_id": "a7ae055b-3df4-406b-8058-6fe915f8a226",
+      "phase": "extraction",
+      "status": "paused",
+      "checks": {
+        "battery": true,
+        "evidence": false,
+        "fertilized": false,
+        "inspected": false,
+        "inventory": true,
+        "pests_removed": false,
+        "preserved": true,
+        "returned": false,
+        "trees_complete": false,
+        "watered": false,
+        "weeds_collected": false
+      },
+      "feedback": "No stem contact. Tool center y=0.130 m; required 0.09..0.22 m (suggested 0.15 m), upright tilt <25 degrees. Surface-return y is not the grasp height. Reopen, inspect stem x,z and both fingers, then reposition; hidden target position is not supplied.",
+      "provider_routes": {
+        "treatment": {
+          "failures": 0,
+          "fallback": false
+        }
+      }
+    },
+    "W2": {
+      "session_id": "c6689593-5892-437d-a05a-8c884ef45de0",
+      "phase": "extraction",
+      "status": "paused",
+      "checks": {
+        "battery": true,
+        "evidence": false,
+        "fertilized": false,
+        "inspected": false,
+        "inventory": true,
+        "pests_removed": false,
+        "preserved": true,
+        "returned": false,
+        "trees_complete": false,
+        "watered": false,
+        "weeds_collected": false
+      },
+      "feedback": "Fresh wide-view scan acquired after the miss. Select the visible weed crown anew; do not reuse a clover or outer-leaf target.",
+      "provider_routes": {
+        "treatment": {
+          "failures": 0,
+          "fallback": false
+        }
+      }
+    },
+    "W3": {
+      "session_id": "cc056aab-d9a1-4d44-8f85-7453d3775b60",
+      "phase": "extraction",
+      "status": "paused",
+      "checks": {
+        "battery": true,
+        "evidence": false,
+        "fertilized": false,
+        "inspected": false,
+        "inventory": true,
+        "pests_removed": false,
+        "preserved": true,
+        "returned": false,
+        "trees_complete": false,
+        "watered": false,
+        "weeds_collected": false
+      },
+      "feedback": "unreachable pose",
+      "provider_routes": {
+        "treatment": {
+          "failures": 0,
+          "fallback": false
+        }
+      }
+    },
+    "W4": {
+      "session_id": "3cf9a2f6-08cd-464b-a291-3eeef733efd5",
+      "phase": "extraction",
+      "status": "paused",
+      "checks": {
+        "battery": true,
+        "evidence": false,
+        "fertilized": false,
+        "inspected": false,
+        "inventory": true,
+        "pests_removed": false,
+        "preserved": true,
+        "returned": false,
+        "trees_complete": false,
+        "watered": false,
+        "weeds_collected": false
+      },
+      "feedback": "Measured contact acknowledged",
+      "provider_routes": {
+        "treatment": {
+          "failures": 0,
+          "fallback": false
+        }
+      }
+    },
+    "W5": {
+      "session_id": "3e2867ad-b90f-46e6-8924-739dda892455",
+      "phase": "extraction",
+      "status": "paused",
+      "checks": {
+        "battery": true,
+        "evidence": false,
+        "fertilized": false,
+        "inspected": false,
+        "inventory": true,
+        "pests_removed": false,
+        "preserved": true,
+        "returned": false,
+        "trees_complete": false,
+        "watered": false,
+        "weeds_collected": false
+      },
+      "feedback": "No stem contact. Tool center y=0.130 m; required 0.09..0.22 m (suggested 0.15 m), upright tilt <25 degrees. Surface-return y is not the grasp height. Reopen, inspect stem x,z and both fingers, then reposition; hidden target position is not supplied.",
+      "provider_routes": {
+        "treatment": {
+          "failures": 0,
+          "fallback": false
+        }
+      }
+    }
+  },
+  "wall_seconds": 524.3795210000001
+}
