@@ -13,6 +13,9 @@ async function read(path) {
     const response = await fetch(path, {method: 'GET', cache: 'no-store', signal: controller.signal});
     if (!response.ok) throw Error(`HTTP ${response.status}`);
     return await response.json();
+  } catch (error) {
+    if (controller.signal.aborted) throw Error('request timed out');
+    throw error;
   } finally { clearTimeout(timeout); }
 }
 function text(tag, value, className) {
