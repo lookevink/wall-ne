@@ -15,18 +15,24 @@ const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(37,1,.01,20),pi
 scene.add(new THREE.HemisphereLight(0xf4f3df,0x77795a,2));const light=new THREE.DirectionalLight(0xffeed1,3);light.position.set(-2,4,3);light.castShadow=true;light.shadow.mapSize.set(2048,2048);Object.assign(light.shadow.camera,{left:-1,right:1,top:1,bottom:-1,near:.1,far:10});light.shadow.normalBias=.002;scene.add(light);
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({color:0xd7dcc6,roughness:1}));ground.rotation.x=-Math.PI/2;ground.position.y=-.006;ground.receiveShadow=true;scene.add(ground);
 let current='rosette',specimen=null,roots=false,turning=false,yaw=.25,pitch=.58,distance=.85,previous=0,dirty=true;
+const center=new THREE.Vector3(0,.1,0);let homeDistance=.85;
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
-function position(){camera.position.set(Math.sin(yaw)*distance*Math.cos(pitch),.10+Math.sin(pitch)*distance,Math.cos(yaw)*distance*Math.cos(pitch));camera.lookAt(0,.1,0);dirty=true;}
+function position(){camera.position.set(center.x+Math.sin(yaw)*distance*Math.cos(pitch),center.y+Math.sin(pitch)*distance,center.z+Math.cos(yaw)*distance*Math.cos(pitch));camera.lookAt(center);dirty=true;}
+function fit(){
+  specimen.updateMatrixWorld(true);const sphere=new THREE.Box3().setFromObject(specimen).getBoundingSphere(new THREE.Sphere());center.copy(sphere.center);
+  const vertical=THREE.MathUtils.degToRad(camera.fov)/2,angle=Math.min(vertical,Math.atan(Math.tan(vertical)*camera.aspect));
+  homeDistance=sphere.radius/Math.sin(angle)*1.16;distance=homeDistance;position();
+}
 function build(){
   if(specimen){disposeSpecimen(specimen);pivot.remove(specimen);}
   const spec={id:'study',form:current,position:[0,0,0],leaves:13,rotation:.73,size:1};
   if(current==='caterpillar'||current==='ladybird'){
     specimen=current==='caterpillar'?caterpillarMesh(spec):ladybirdMesh(spec);specimen.rotation.set(-Math.PI/2,0,Math.PI);specimen.scale.setScalar(current==='caterpillar'?2.8:5);specimen.position.y=.025;
   } else {specimen=current==='clover'?cloverMesh(spec):weedMesh(spec,{roots});if(current==='clover')specimen.scale.setScalar(1.6);}
-  pivot.add(specimen);ground.visible=!roots;dirty=true;
+  pivot.add(specimen);ground.visible=!roots;fit();dirty=true;
 }
 function select(key){
-  current=key;roots=false;distance=['caterpillar','ladybird'].includes(key)?1.08:.85;const p=profiles[key];
+  current=key;roots=false;const p=profiles[key];
   document.querySelector('#name').textContent=p.name;document.querySelector('#subtitle').textContent=p.subtitle;document.querySelector('#description').textContent=p.description;document.querySelector('#care-note').textContent=p.note;document.querySelector('#role').textContent=p.protected?'PROTECTED IN THE ORCHARD':'MANAGEMENT TARGET';
   document.querySelector('#features').replaceChildren(...p.features.map(([label,value])=>{const row=document.createElement('div'),dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=value;row.append(dt,dd);return row;}));
   const keys=Object.keys(profiles);document.querySelector('#specimen-number').textContent=`SPECIMEN ${String(keys.indexOf(key)+1).padStart(2,'0')}`;
@@ -36,12 +42,12 @@ function select(key){
 for(const b of document.querySelectorAll('[data-specimen]'))b.onclick=()=>select(b.dataset.specimen);
 document.querySelector('#roots').onclick=()=>{roots=!roots;document.querySelector('#roots').setAttribute('aria-pressed',String(roots));build();};
 document.querySelector('#rotate').onclick=()=>{turning=!turning;document.querySelector('#rotate').setAttribute('aria-pressed',String(turning));document.querySelector('#rotate').textContent=turning?'Stop turning':'Turn slowly';};
-document.querySelector('#reset-view').onclick=()=>{yaw=.25;pitch=.58;distance=['caterpillar','ladybird'].includes(current)?1.08:.85;position();};
+document.querySelector('#reset-view').onclick=()=>{yaw=.25;pitch=.58;distance=homeDistance;position();};
 let drag=null;const canvas=renderer.domElement;canvas.tabIndex=0;canvas.setAttribute('aria-label','Specimen view. Drag or use arrow keys to turn. Plus and minus zoom.');
 canvas.addEventListener('pointerdown',e=>{drag=[e.clientX,e.clientY];canvas.setPointerCapture(e.pointerId);});canvas.addEventListener('pointermove',e=>{if(!drag)return;yaw-=(e.clientX-drag[0])*.01;pitch=THREE.MathUtils.clamp(pitch+(e.clientY-drag[1])*.008,-.45,1.35);drag=[e.clientX,e.clientY];position();});for(const type of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(type,()=>drag=null);
 canvas.addEventListener('wheel',e=>{e.preventDefault();distance=THREE.MathUtils.clamp(distance*Math.exp(e.deltaY*.001),.5,2.5);position();},{passive:false});
 canvas.addEventListener('keydown',e=>{if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','+','=','-'].includes(e.key))return;e.preventDefault();if(e.key==='ArrowLeft')yaw-=.12;if(e.key==='ArrowRight')yaw+=.12;if(e.key==='ArrowUp')pitch+=.08;if(e.key==='ArrowDown')pitch-=.08;if(e.key==='+'||e.key==='=')distance*=.9;if(e.key==='-')distance*=1.1;pitch=THREE.MathUtils.clamp(pitch,-.45,1.35);distance=THREE.MathUtils.clamp(distance,.5,2.5);position();});
-function resize(){renderer.setSize(viewport.clientWidth,viewport.clientHeight,false);camera.aspect=viewport.clientWidth/viewport.clientHeight;camera.updateProjectionMatrix();dirty=true;}
+function resize(){renderer.setSize(viewport.clientWidth,viewport.clientHeight,false);camera.aspect=viewport.clientWidth/viewport.clientHeight;camera.updateProjectionMatrix();if(specimen)fit();dirty=true;}
 new ResizeObserver(resize).observe(viewport);document.addEventListener('visibilitychange',()=>{previous=0;dirty=true;});reduced.addEventListener('change',()=>{turning=false;document.querySelector('#rotate').setAttribute('aria-pressed','false');document.querySelector('#rotate').textContent='Turn slowly';});
 function draw(time){requestAnimationFrame(draw);if(document.hidden)return;if(turning&&!drag){yaw+=Math.min((time-previous)/1000,.05)*.17;position();}previous=time;if(dirty){renderer.render(scene,camera);dirty=false;}}
 select(current);position();resize();requestAnimationFrame(draw);

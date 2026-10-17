@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import {fieldRover} from './field-rover.js';
 import {landscape} from './orchard-landscape.js';
 import {orchard} from './orchard-trees.js';
+import {TREE_COUNT,aisleX} from './orchard-layout.js';
 
 export class FleetScene {
   constructor(element) {
@@ -17,7 +18,7 @@ export class FleetScene {
     this.scene=new THREE.Scene();this.scene.fog=new THREE.Fog(0xd8ddcc,65,180);
     this.camera=new THREE.PerspectiveCamera(43,1,.1,250);
     this.scene.add(new THREE.HemisphereLight(0xe4edec,0x8c7854,2));
-    const sun=new THREE.DirectionalLight(0xffdfaa,3.3);sun.position.set(-28,32,22);sun.castShadow=true;
+    const sun=new THREE.DirectionalLight(0xffe6c1,3.3);sun.position.set(-28,32,22);sun.castShadow=true;
     sun.shadow.mapSize.set(2048,2048);sun.shadow.bias=-.00025;sun.shadow.normalBias=.045;
     Object.assign(sun.shadow.camera,{left:-43,right:43,top:43,bottom:-43,near:1,far:120});this.scene.add(sun);
     landscape(this.scene);this.trees=orchard(this.scene);
@@ -36,8 +37,8 @@ export class FleetScene {
     this._expanded=value;
     const stamp=this.element.querySelector('.orchard-stamp');
     if(stamp){
-      stamp.querySelector('span').textContent=value?`ONBOARD / ${value}`:'PRUNUS DULCIS';
-      stamp.querySelector('strong').textContent=value?'A rover’s view of the orchard.':'144 trees. One shared home.';
+      stamp.querySelector('span').textContent=value?`ONBOARD / ${value}`:'PRUNUS DULCIS / 13 × 13';
+      stamp.querySelector('strong').textContent=value?'A rover’s view of the orchard.':`${TREE_COUNT} trees. One shared home.`;
       stamp.querySelector('small').textContent=value?'Press Escape to return to the orchard':'Drag to explore · Scroll to get closer';
     }
     const compass=this.element.querySelector('.compass');if(compass)compass.hidden=Boolean(value);
@@ -45,7 +46,7 @@ export class FleetScene {
   }
   setView(name) {
     this.currentView=name;this.expanded=null;
-    if(name==='rows') { this.target.set(-4,2,-3);this.orbit={theta:.15,phi:1.43,radius:25}; }
+    if(name==='rows') { this.target.set(aisleX(5),.4,-8);this.orbit={theta:0,phi:1.5,radius:20}; }
     else if(name==='depot') {this.target.set(-1,1,20);this.orbit={theta:.6,phi:1.13,radius:22};}
     else {this.target.set(0,0,1);this.orbit={theta:.56,phi:.73,radius:this.element.clientWidth<600?77:69};}
     this.positionCamera();

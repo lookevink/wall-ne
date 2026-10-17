@@ -4,6 +4,7 @@ import {skeleton, random} from './almond-geometry.js';
 import {barkTexture, leafGeometry, leafTexture, hullTexture} from './almond-textures.js';
 import {cylinder, material} from './static-geometry.js';
 import {batchStatic} from './batch-geometry.js';
+import {ORCHARD,planting,rowX} from './orchard-layout.js';
 
 function windMaterial(mat, clock) {
   mat.onBeforeCompile = shader => {
@@ -28,7 +29,7 @@ export function orchard(scene) {
   const leaf = windMaterial(new THREE.MeshStandardMaterial({map:leafTexture(), color:0xc1ce8e, roughness:.83, side:THREE.DoubleSide}), clock);
   const hull = new THREE.MeshStandardMaterial({map:hullTexture(), roughness:1});
   const leafShape = leafGeometry(), hullShape = new THREE.SphereGeometry(.067, 7, 6);
-  const variants = [71, 72, 73, 74].map(seed => {
+  const variants = Array.from({length:ORCHARD.variants},(_,i)=>71+i*17).map(seed => {
     const data = skeleton(seed), wood = new THREE.Group();
     cylinder(wood, [0,0,0], [.025,.55,-.02], .19, .145, bark, 9);
     cylinder(wood, [.025,.55,-.02], [0,1.83,0], .145, .105, bark, 9);
@@ -38,17 +39,17 @@ export function orchard(scene) {
     return {data, geometry, transforms:[]};
   });
   const dummy = new THREE.Object3D(), color = new THREE.Color();
-  const leaves = [], hulls = [];
-  for (let row = 0; row < 12; row++) {
+  const leaves = [], hulls = [], trees=planting();
+  group.userData.treeCount=trees.length;group.userData.variantCount=variants.length;
+  for (let row = 0; row < ORCHARD.rows; row++) {
     const leafData = [], hullData = [];
-    for (let n = 0; n < 12; n++) {
-      const x = (row - 5.5) * 3.5 + (n % 2 ? 1.05 : -1.05), z = -12 + Math.floor(n / 2) * 4.6;
-      const variant = variants[(row + n) % 4];
-      dummy.position.set(x,0,z); dummy.rotation.set(0,rng() * Math.PI * 2,0); dummy.scale.set( .9 + rng() * .16, .92 + rng() * .16, .9 + rng() * .16); dummy.updateMatrix();
-      const treeMatrix = dummy.matrix.clone(); variant.transforms.push(treeMatrix);
+    for (const tree of trees.filter(t=>t.row===row)) {
+      const variant=variants[tree.variant];
+      dummy.position.set(...tree.position);dummy.rotation.set(0,tree.rotation,0);dummy.scale.set(...tree.scale);dummy.updateMatrix();
+      const treeMatrix=dummy.matrix.clone();variant.transforms.push({matrix:treeMatrix,tone:tree.barkTone});
       for (const l of variant.data.leaves) {
-        dummy.position.set(...l.position); dummy.rotation.set(...l.rotation); dummy.scale.setScalar(l.scale); dummy.updateMatrix();
-        leafData.push({matrix:new THREE.Matrix4().multiplyMatrices(treeMatrix,dummy.matrix), tint:l.tint});
+        dummy.position.set(...l.position); dummy.rotation.set(...l.rotation); dummy.scale.setScalar(l.scale*tree.leafScale); dummy.updateMatrix();
+        leafData.push({matrix:new THREE.Matrix4().multiplyMatrices(treeMatrix,dummy.matrix), tint:l.tint,hue:tree.hue,saturation:tree.saturation,lightness:tree.lightness});
       }
       for (const h of variant.data.hulls) {
         dummy.position.set(...h.position); dummy.rotation.set(.2,h.rotation,.2); dummy.scale.set(.65,1.3,.8); dummy.updateMatrix();
@@ -56,18 +57,18 @@ export function orchard(scene) {
       }
     }
     const foliage = new THREE.InstancedMesh(leafShape,leaf,leafData.length);
-    leafData.forEach((l,i) => { foliage.setMatrixAt(i,l.matrix); color.setHSL(.205 + l.tint * .035,.28 + l.tint * .16,.52 + l.tint * .26); foliage.setColorAt(i,color); });
+    leafData.forEach((l,i) => { foliage.setMatrixAt(i,l.matrix); color.setHSL(l.hue+(l.tint-.5)*.015,l.saturation,l.lightness+l.tint*.15); foliage.setColorAt(i,color); });
     foliage.castShadow = true; foliage.receiveShadow = true; foliage.computeBoundingSphere(); group.add(foliage); leaves.push(foliage);
     const fruit = new THREE.InstancedMesh(hullShape,hull,hullData.length);
     hullData.forEach((matrix,i) => fruit.setMatrixAt(i,matrix)); fruit.computeBoundingSphere();
-    const center = new THREE.Vector3((row-5.5)*3.5,2,0);
+    const center = new THREE.Vector3(rowX(row),2,-1);
     // Subpixel fruit adds no detail to the overview; each onboard view gets nearby fruit.
     fruit.onBeforeRender = (_r,_s,camera) => { fruit.count = camera.position.distanceTo(center) < 32 ? hullData.length : 0; };
     group.add(fruit); hulls.push(fruit);
   }
   for (const variant of variants) {
     const wood = new THREE.InstancedMesh(variant.geometry,bark,variant.transforms.length);
-    variant.transforms.forEach((m,i) => wood.setMatrixAt(i,m)); wood.castShadow = wood.receiveShadow = true; group.add(wood);
+    variant.transforms.forEach((t,i) => {wood.setMatrixAt(i,t.matrix);wood.setColorAt(i,color.setScalar(t.tone));}); wood.castShadow = wood.receiveShadow = true; group.add(wood);
   }
   // Three seeded windbreak forms. Keep EZ-Tree's original asset attribution.
   for (let v = 0; v < 3; v++) {
@@ -95,5 +96,5 @@ export function orchard(scene) {
     }
   }
   scene.add(group);
-  return {group, leaves, hulls, wind(time,enabled) { clock.value = enabled ? time : 0; }};
+  return {group, leaves, hulls, count:trees.length, wind(time,enabled) { clock.value = enabled ? time : 0; }};
 }

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import {box, cylinder, material} from './static-geometry.js';
 import {random} from './almond-geometry.js';
 import {batchStatic} from './batch-geometry.js';
+import {AISLE_COUNT,ORCHARD,aisleX,rowX,planting} from './orchard-layout.js';
 
 function soilTexture() {
   const canvas = document.createElement('canvas'); canvas.width = canvas.height = 512;
@@ -13,26 +14,46 @@ function soilTexture() {
   }
   const t = new THREE.CanvasTexture(canvas); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(22,22); t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=8; return t;
 }
+// Broken edges let soil show through the cover crop and wheel-worn strips.
+function ribbon(parent,x,width,length,mat,rng,y=.012) {
+  const points=[],indices=[];
+  for(let i=0;i<=40;i++) {
+    const z=-16+i/40*length,drift=(rng()-.5)*.07;
+    points.push(x-width*(.35+rng()*.3)+drift,y,z,x+width*(.35+rng()*.3)+drift,y,z);
+    if(i<40){const a=i*2;indices.push(a,a+2,a+1,a+1,a+2,a+3);}
+  }
+  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(points,3));geo.setIndex(indices);geo.computeVertexNormals();
+  const mesh=new THREE.Mesh(geo,mat);mesh.receiveShadow=true;parent.add(mesh);
+}
+function rootTexture() {
+  const c=document.createElement('canvas');c.width=c.height=128;const ctx=c.getContext('2d');
+  const fade=ctx.createRadialGradient(64,64,10,64,64,62);fade.addColorStop(0,'rgba(77,65,39,.5)');fade.addColorStop(.5,'rgba(103,87,51,.24)');fade.addColorStop(1,'rgba(103,87,51,0)');
+  ctx.fillStyle=fade;ctx.fillRect(0,0,128,128);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t;
+}
 function lettering(text, width=512, color='#f2e8c9', background='#34463b') {
   const c=document.createElement('canvas'); c.width=width;c.height=128;const ctx=c.getContext('2d');
   ctx.fillStyle=background;ctx.fillRect(0,0,width,128);ctx.fillStyle=color;ctx.font='600 58px monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,width/2,68);
   const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return new THREE.MeshStandardMaterial({map:t,roughness:.9});
 }
 export function landscape(scene) {
-  const structures=new THREE.Group(),rng=random(194),soil=material(0xddd0af);soil.map=soilTexture();soil.bumpMap=soil.map;soil.bumpScale=.045;
+  const structures=new THREE.Group(),rng=random(194),soil=material(0xf1e5cd);soil.map=soilTexture();soil.bumpMap=soil.map;soil.bumpScale=.045;
   const ground=box(scene,[360,.16,360],[0,-.12,0],soil);ground.castShadow=false;
-  const sand=material(0xc1b08b),grass=material(0x7b8050),dark=material(0x394940),metal=material(0x7f8b7b,.55),cream=material(0xdcd0af),wood=material(0x82745a);
-  for(let row=0;row<12;row++) {
-    const x=(row-5.5)*3.5;
-    // Dry wheel tracks, central cover crop, drip tape on either side of each lane.
-    box(structures,[.62,.012,27],[x,.006,-.5],grass);
-    for(const side of [-1,1]) {
-      box(structures,[.36,.014,28],[x+side*.61,.008,-.5],sand);
-      cylinder(structures,[x+side*1.05,.06,-14],[x+side*1.05,.06,13],.022,.022,dark,5);
-    }
+  const sand=material(0xc1b08b),dark=material(0x394940),metal=material(0x7f8b7b,.55),cream=material(0xdcd0af),wood=material(0x82745a);
+  const wear=material(0xc0b18d);wear.map=soil.map;
+  const cover=material(0x92906b);cover.map=soil.map;
+  for(let aisle=0;aisle<AISLE_COUNT;aisle++) {
+    const x=aisleX(aisle);
+    ribbon(structures,x,.68,30,cover,rng);
+    for(const side of [-1,1])ribbon(structures,x+side*.61,.32,30,wear,rng,.014);
     cylinder(structures,[x,0,14],[x,.9,14],.035,.035,wood);
-    const plaque=box(structures,[.6,.32,.06],[x,.85,14],lettering(String(row+1).padStart(2,'0'),128));plaque.rotation.y=.1;
+    const plaque=box(structures,[.6,.32,.06],[x,.85,14],lettering(String(aisle+1).padStart(2,'0'),128));plaque.rotation.y=.1;
   }
+  for(let row=0;row<ORCHARD.rows;row++) {
+    const x=rowX(row)+.22;
+    cylinder(structures,[x,.045,-16],[x,.045,13.3],.018,.018,dark,5);
+  }
+  const trees=planting(),roots=new THREE.InstancedMesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:rootTexture(),transparent:true,depthWrite:false}),trees.length),rootDummy=new THREE.Object3D();
+  trees.forEach((tree,i)=>{rootDummy.position.set(tree.position[0],.018,tree.position[2]);rootDummy.rotation.set(-Math.PI/2,0,tree.rotation);rootDummy.scale.set(1.5+rng()*.4,1.3+rng()*.5,1);rootDummy.updateMatrix();roots.setMatrixAt(i,rootDummy.matrix);});scene.add(roots);
   box(structures,[65,.02,3.5],[0,.012,16],sand);
   box(structures,[30,.024,7], [0,.015,22],material(0x9f9b80));
   for(let i=0;i<6;i++) {
@@ -65,10 +86,16 @@ export function landscape(scene) {
     hill.position.set(-145+i*29,-4,-95-rng()*35);hill.scale.set(30+rng()*25,8+rng()*12,26+rng()*20);scene.add(hill);
   }
   batchStatic(structures); scene.add(structures);
-  const count=7000,blades=new THREE.InstancedMesh(new THREE.PlaneGeometry(.045,.22),new THREE.MeshStandardMaterial({color:0x929761,side:THREE.DoubleSide,roughness:1}),count),dummy=new THREE.Object3D();
+  const count=8500,blades=new THREE.InstancedMesh(new THREE.PlaneGeometry(.045,.22),new THREE.MeshStandardMaterial({color:0x929761,side:THREE.DoubleSide,roughness:1}),count),dummy=new THREE.Object3D();
   for(let i=0;i<count;i++) {
-    const row=i%12, x=(row-5.5)*3.5+(rng()-.5)*.56;
-    dummy.position.set(x,.08,-13+rng()*26);dummy.rotation.set((rng()-.5)*.4,rng()*Math.PI,(rng()-.5)*.5);dummy.scale.setScalar(.45+rng()*.85);dummy.updateMatrix();blades.setMatrixAt(i,dummy.matrix);
+    const margin=i>=7000,x=margin?(i%2?1:-1)*(23+rng()*1.3):aisleX(i%AISLE_COUNT)+(rng()-.5)*.6;
+    dummy.position.set(x,.08,-15.8+rng()*29.5);dummy.rotation.set((rng()-.5)*.4,rng()*Math.PI,(rng()-.5)*.5);dummy.scale.setScalar(.45+rng()*.85);dummy.updateMatrix();blades.setMatrixAt(i,dummy.matrix);
   }
-  scene.add(blades);return ground;
+  scene.add(blades);
+  // Sparse flowers along the margins leave the cultivated lanes unobstructed.
+  const flowers=new THREE.InstancedMesh(new THREE.SphereGeometry(.035,5,3),material(0xe6d7a4),180);
+  for(let i=0;i<180;i++) {
+    dummy.position.set((i%2?1:-1)*(23+rng()*1.3),.17+rng()*.08,-15.8+rng()*29.5);dummy.scale.set(1,.45,1);dummy.updateMatrix();flowers.setMatrixAt(i,dummy.matrix);
+  }
+  scene.add(flowers);return ground;
 }
