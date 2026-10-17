@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+"""Bounded live experiments through the local API; browser must supply real observations."""
+import argparse
+import json
+import pathlib
+import time
+import urllib.request
+import uuid
+
+BASE='http://127.0.0.1:8765'
+
+def api(route,body=None):
+    req=urllib.request.Request(BASE+route,data=json.dumps(body).encode() if body is not None else None,headers={'Content-Type':'application/json'})
+    with urllib.request.urlopen(req,timeout=60) as response:return json.load(response)
+
+def trial(engine,condition,seed=7):
+    started=time.monotonic();session=None
+    try:
+        state=api('/api/treatment/reset',dict(kind='arm',seed=seed,mode='vision',engine=engine,trial=condition));session=state['id']
+        api('/api/treatment/start',{})
+        while True:
+            state=api('/api/treatment/state')
+            if state['id']!=session: raise RuntimeError('session replaced externally')
+            if state['status'] in ('completed','failed','blocked','aborted','storage_blocked'):break
+            cost=state['inference']['cost']
+            if time.monotonic()-started>=240 or cost is not None and cost>=1:
+                api('/api/treatment/stop',{});state=api('/api/treatment/state');break
+            time.sleep(1)
+        path=pathlib.Path('.runtime/exports');path.mkdir(parents=True,exist_ok=True)
+        (path/f'{session}.json').write_text(json.dumps(api(f'/api/sessions/{session}/export'),indent=2))
+        return dict(session_id=session,engine=engine,trial=condition,seed=seed,status=state['status'],checks=state['checks'],calls=state['inference']['calls'],cost=state['inference']['cost'],wall_seconds=time.monotonic()-started)
+    finally:
+        if session:
+            try:
+                current=api('/api/treatment/state')
+                if current['id']==session and current['status']=='running':api('/api/treatment/stop',{})
+            except Exception:pass
+
+def main():
+    p=argparse.ArgumentParser();g=p.add_mutually_exclusive_group()
+    for flag in ('lidar','alignment','wrist'):g.add_argument('--'+flag,action='store_true')
+    p.add_argument('--engine',choices=['crusoe','nemotron','gemma','gemini']);p.add_argument('--condition',choices=['baseline','known','depth','lidar','alignment','wrist']);p.add_argument('--seed',type=int,default=7)
+    args=p.parse_args()
+    condition=args.condition or next((x for x in ('lidar','alignment','wrist') if getattr(args,x)),None)
+    runs=[(args.engine,condition or 'baseline')] if args.engine else [(engine,condition) for engine in ('nemotron','gemma')] if condition else [('gemini','baseline')]+[(engine,'known') for engine in ('gemini','nemotron','gemma')]+[(engine,'depth') for engine in ('nemotron','gemma')]
+    results=[]
+    try:
+        for engine,condition in runs:
+            result=trial(engine,condition,args.seed);results.append(result);print(json.dumps(result),flush=True)
+    finally:
+        path=pathlib.Path('docs/evaluations');path.mkdir(parents=True,exist_ok=True)
+        (path/f'arm-{uuid.uuid4()}.json').write_text(json.dumps(results,indent=2))
+
+if __name__=='__main__':main()

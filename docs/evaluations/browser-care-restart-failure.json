@@ -1,0 +1,24 @@
+{
+  "session_id": "2c0755a9-866d-48a6-b532-4b4b9bb3e7b4",
+  "seed": 8,
+  "mode": "offline pixels",
+  "status": "paused for renderer defect",
+  "effective_liters": 20.999999999999805,
+  "moisture": 65.00000000000003,
+  "frames": 37,
+  "checks": {
+    "battery": true,
+    "delivery": true,
+    "fertilizer": false,
+    "images": true,
+    "inventory": true,
+    "measured": true,
+    "moisture": true,
+    "pests": false,
+    "preserved": true,
+    "returned": false,
+    "weeds": false
+  },
+  "finding": "Rover hood occluded nearest stems; root selection projected more than 0.19m short. No physical checks were relaxed.",
+  "restart": "Restored same session at 5 effective liters; reached 21 effective liters / 65 percent without repeated delivery"
+}

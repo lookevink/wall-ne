@@ -37,7 +37,7 @@ class Treatment(RecordedWorld):
         request=self.frame_request
         if not request or request['id']!=request_id or request['revision']!=self.revision: raise ValueError('stale or unsolicited frame')
         if not artifact.get('ready'): raise ValueError('frame must be durable')
-        self.frame=dict(id=uid(),request_id=request_id,revision=self.revision,phase=self.phase,camera=request['camera'],dose_sequence=self.dose_sequence,artifact_id=artifact['id'],sim_time=self.time)
+        self.frame=dict(id=uid(),request_id=request_id,revision=self.revision,phase=self.phase,camera=request['camera'],dose_sequence=self.dose_sequence,artifact_id=artifact['id'],content_hash=artifact.get('sha256'),sim_time=self.time)
         self.frames.append(copy.deepcopy(self.frame)); self.frame_request=None
         self.stage_inspections[self.phase]=self.revision
         self.event('observation','T1',frame=self.frame)
@@ -58,7 +58,7 @@ class Treatment(RecordedWorld):
                     available_actions=self.allowed_actions(),resources={k:self.robot[k] for k in ('battery','water','position')},
                     tool=self.tool,frame=copy.deepcopy(self.frame),camera=self.camera(),feedback=self.feedback,
                     sensors=dict(moisture=self.moisture_reading,flow=self.flow,observed_fault=self.observed_fault),
-                    budgets=dict(frames_remaining=self.frame_limit-len(self.frames),commands_remaining=self.decision_limit-self.decisions,time_remaining=300-self.time),history=self.events[-8:])
+                    budgets=dict(frames_remaining=self.frame_limit-len(self.frames),commands_remaining=self.decision_limit-self.decisions,time_remaining=300-self.time),history=[e for e in self.events if e['type']!='fault_injected'][-8:])
 
     def command(self,command_id,robot,action,**args):
         if command_id in self.receipts: return copy.deepcopy(self.receipts[command_id])

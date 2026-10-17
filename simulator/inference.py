@@ -22,7 +22,10 @@ TOOL_HELP={
  'confirm_contact':{'frame_id':'current frame id','evidence':'8..600 characters'},'verify':{},'return':{},'stop':{}
 }
 
-class InferenceError(RuntimeError): pass
+class InferenceError(RuntimeError):
+    def __init__(self,message,metrics=None):
+        super().__init__(message);self.metrics=metrics
+
 
 def parse_response(response):
     try:
@@ -41,7 +44,7 @@ class Adapter:
         self.engine=engine; self.role=role
         self.provider='crusoe' if engine=='crusoe' else 'gateway'
         if self.provider=='crusoe':
-            self.base=os.getenv('CRUSOE_API_BASE_URL','https://api.crusoe.ai/v1')
+            self.base=os.getenv('CRUSOE_API_BASE_URL','https://api.inference.crusoecloud.com/v1')
             self.key=os.getenv('CRUSOE_API_KEY',''); self.timeout=25
             default='nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B' if role=='treatment' else 'nvidia/Nemotron-3-Super-120B-A12B' if role in ('orchestrator','verifier','planner','reviewer') else 'nvidia/Nemotron-3-Nano-30B-A3B'
             env='CRUSOE_VISION_MODEL' if role=='treatment' else 'CRUSOE_ORCHESTRATOR_MODEL' if role in ('orchestrator','verifier','planner','reviewer') else 'CRUSOE_WORKER_MODEL'
@@ -59,10 +62,18 @@ class Adapter:
         started=time.monotonic(); response=None
         try:
             with urllib.request.urlopen(request,timeout=self.timeout) as result: response=json.loads(result.read(2*1024*1024))
-        except urllib.error.HTTPError as exc: raise InferenceError(f'{self.provider} HTTP {exc.code}; no fallback performed') from None
-        except (OSError,ValueError): raise InferenceError(f'{self.provider} unavailable or timed out') from None
-        decision=parse_response(response)
+        except urllib.error.HTTPError as exc:
+            raise InferenceError(f'{self.provider} HTTP {exc.code}; no fallback performed',self.failed_metrics(started)) from None
+        except (OSError,ValueError):
+            raise InferenceError(f'{self.provider} unavailable or timed out',self.failed_metrics(started)) from None
+        try: decision=parse_response(response)
+        except InferenceError as exc:
+            exc.metrics=self.failed_metrics(started);exc.metrics['usage']=response.get('usage') or {};raise
+
         usage=response.get('usage') or {}
         reported=usage.get('cost'); upstream=usage.get('cost_details',{}).get('upstream_inference_cost')
         cost=float(reported)+(float(upstream) if upstream is not None else 0) if reported is not None else None
         return dict(id=uid(),decision=decision,requested_model=self.model,returned_model=response.get('model'),provider=self.provider,response_id=response.get('id'),usage={k:usage[k] for k in ('prompt_tokens','completion_tokens','total_tokens') if k in usage},cost=cost,latency=time.monotonic()-started)
+
+    def failed_metrics(self,started):
+        return dict(id=uid(),status='failed',requested_model=self.model,returned_model=None,provider=self.provider,response_id=None,usage={},cost=None,latency=time.monotonic()-started)

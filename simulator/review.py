@@ -41,6 +41,35 @@ class ReviewService:
         if not review or review[0]['candidate_id']: raise ValueError('one candidate per saved review')
         if not evidence_ids: raise ValueError('supporting evidence IDs required')
         candidate=dict(id=uid(),role=role,text=text,hash=digest(text),parent_id=parent_id,source_review=review_id,status='candidate')
-        self.repository.request('POST','/rest/v1/prompt_versions',candidate)
-        self.repository.request('PATCH',f'/rest/v1/reviews?id=eq.{review_id}',dict(candidate_id=candidate['id']))
+        self.repository.rpc('wallne_candidate',dict(p_candidate=candidate,p_review=review_id))
         return dict(candidate=candidate,diff='\n'.join(difflib.unified_diff(parent[0]['text'].splitlines(),text.splitlines(),fromfile='baseline',tofile='candidate')))
+
+    def review_session(self,session_id,engine='crusoe',robot_id=None,after=0):
+        from .inference import Adapter
+        sessions=self.repository.read('sessions',f'id=eq.{session_id}&limit=1')
+        if not sessions or sessions[0]['status']=='running': raise ValueError('terminal or explicit paused review boundary required')
+        query=f'session_id=eq.{session_id}&sequence=gt.{max(0,int(after))}&order=sequence.desc&limit=100'
+        if robot_id:
+            if robot_id not in ('T1','W1','W2','W3','W4','W5','R1'): raise ValueError('unknown robot')
+            query+=f'&robot_id=eq.{robot_id}'
+        events=list(reversed(self.repository.read('events',query)))
+        evidence=permitted_evidence(events)
+        session=sessions[0];role='treatment' if session['kind']!='fleet' else 'worker'
+        parent_id=session['metadata']['prompt_versions'].get(role)
+        parents=self.repository.read('prompt_versions',f'id=eq.{parent_id}&limit=1') if parent_id else []
+        if not parents: raise ValueError('session has no saved immutable prompt version')
+        obs=dict(role=role,observations=evidence,verification=session['verification'],baseline_prompt=parents[0]['text'],instruction='Review the actual evidence. Return choose_action with action propose_prompt_revision and arguments diagnosis (concise evidence-based), hypothesis (clearly labeled), and prompt (complete revised prompt text). Preserve physical checks, contract, sensor limits and budgets. One candidate only. No hidden target truth is provided.')
+        import base64
+        frames=self.repository.read('artifacts',f'session_id=eq.{session_id}&kind=eq.frame&order=sequence.desc&limit=1')
+        image=None
+        if frames:
+            raw,_=self.repository.artifact_bytes(session_id,frames[0]['id'])
+            image='data:image/png;base64,'+base64.b64encode(raw).decode()
+            obs['frame_artifact_id']=frames[0]['id']
+        response=Adapter(engine,'reviewer').call(obs,image=image,prompt='You review recorded simulation outcomes. Distinguish observed evidence from hypotheses. Do not change physical rules. Propose one bounded prompt revision using the required tool.')
+        decision=response['decision'];args=decision['arguments']
+        if decision['action']!='propose_prompt_revision' or not all(isinstance(args.get(k),str) for k in ('diagnosis','hypothesis','prompt')): raise ValueError('invalid review proposal')
+        review=dict(id=uid(),session_id=session_id,evidence=dict(sequence_ids=[e['sequence'] for e in evidence],robot_id=robot_id),diagnosis=dict(summary=args['diagnosis'][:3000],hypothesis=args['hypothesis'][:2000],inference=response),candidate_id=None)
+        self.repository.request('POST','/rest/v1/reviews',review)
+        candidate=self.create_candidate(role,parent_id,args['prompt'],review['id'],review['evidence']['sequence_ids'])
+        return dict(review=review,**candidate)

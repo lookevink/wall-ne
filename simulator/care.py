@@ -16,7 +16,7 @@ class PlantCare(Treatment):
         # Rejection sampling provides actual geometric separation.
         for i in range(count):
             for _ in range(1000):
-                x,z=rng.uniform(-1.05,1.05),rng.uniform(1.15,2.2)
+                x,z=rng.uniform(-1.05,1.05),rng.uniform(.95,1.65)
                 if all(math.hypot(x-p['position'][0],z-p['position'][2])>=.4 for p in self.weeds+self.protected): break
             else: raise ValueError('cannot place inventory')
             self.weeds.append(dict(id=f'weed{i}',position=[x,.08,z],form=rng.choice(['grass','rosette','thistle']),size=rng.uniform(.8,1.1),leaves=rng.randint(9,15),rotation=rng.random()*math.tau,removed=False))

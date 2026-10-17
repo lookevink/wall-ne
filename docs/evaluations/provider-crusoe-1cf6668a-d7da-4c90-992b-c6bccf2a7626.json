@@ -1,0 +1,20 @@
+{
+  "id": "be0ddc37-454c-400e-bb89-ef56df0bb20b",
+  "decision": {
+    "action": "capture_image",
+    "arguments": {},
+    "rationale": "Inspecting the simulated orchard scene to assess the environment before any robot actions."
+  },
+  "requested_model": "nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B",
+  "returned_model": "nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B",
+  "provider": "crusoe",
+  "response_id": "chatcmpl-8cec89ecae050710",
+  "usage": {
+    "prompt_tokens": 857,
+    "completion_tokens": 230,
+    "total_tokens": 1087
+  },
+  "cost": null,
+  "latency": 1.767545167,
+  "status": "compatible"
+}

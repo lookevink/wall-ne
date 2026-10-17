@@ -16,6 +16,7 @@ from .manipulation import Manipulation
 from .treatment_runtime import TreatmentRuntime
 from .persistence import Repository,StorageError
 from .review import ReviewService
+from .evaluation import Campaigns
 
 ROOT=pathlib.Path(__file__).resolve().parent.parent
 WORLDS={'irrigation':Treatment,'care':PlantCare,'arm':Manipulation}
@@ -24,7 +25,7 @@ class App:
     def __init__(self):
         self.repository=Repository(); self.fleet=Runtime(repository=self.repository)
         self.treatment=TreatmentRuntime(repository=self.repository)
-        self.reset_lock=threading.Lock()
+        self.reset_lock=threading.Lock(); self.campaigns=Campaigns(self)
 
     def reset(self,treatment,body):
         with self.reset_lock:
@@ -51,10 +52,10 @@ class App:
                 old.pause('aborted' if old.world.status not in ('completed','failed','blocked','aborted') else old.world.status)
                 if old.storage_error: raise ValueError('session replacement paused by storage failure')
             old.close()
-            runtime=(TreatmentRuntime if treatment else Runtime)(world,self.repository,dict(mode=mode,engine=engine,speed=speed))
+            runtime=(TreatmentRuntime if treatment else Runtime)(world,self.repository,dict(mode=mode,engine=engine,speed=speed,**({"prompt_version":body['prompt_version']} if body.get('prompt_version') else {})))
             if treatment: self.treatment=runtime
             else: self.fleet=runtime
-            runtime.persist()
+            with runtime.lock: runtime.persist()
             return runtime.snapshot()
 
 class Handler(BaseHTTPRequestHandler):
@@ -143,6 +144,11 @@ class Handler(BaseHTTPRequestHandler):
                 import uuid
                 version=str(uuid.UUID(path.split('/')[-2])); evaluation=str(uuid.UUID(body['evaluation_id']))
                 return self.send(app.repository.rpc('wallne_activate',dict(p_version=version,p_evaluation=evaluation,p_rollback=action=='rollback')))
+            if path=='/api/evaluations': return self.send(app.campaigns.start(**body))
+            if path.startswith('/api/sessions/') and action=='review':
+                import uuid
+                sid=str(uuid.UUID(path.split('/')[-2]))
+                return self.send(ReviewService(app.repository).review_session(sid,**body))
             if path=='/api/prompt-candidates': return self.send(ReviewService(app.repository).create_candidate(**body))
             allowed={'reset','start','pause','breakdown','false-claim','retry','abort','stop','clog','fault','frame','depth','resume','command'}
             if action not in allowed or path not in ('/api/'+action,'/api/treatment/'+action): return self.send({'error':'unknown route'},404)
@@ -156,11 +162,13 @@ class Handler(BaseHTTPRequestHandler):
             elif action=='command': return self.send(runtime.command(body.get('robot','T1' if treatment else 'orchestrator'),body['action'],body.get('arguments',{}),body.get('command_id')))
             elif action in ('clog','fault') and treatment:
                 with runtime.lock:
+                    if runtime.storage_error: raise ValueError('storage_blocked')
                     tool=body.get('tool','nozzle')
                     if tool not in ('nozzle','gripper','fertilizer','vacuum'): raise ValueError('invalid tool')
                     runtime.world.faults[tool]=True; runtime.world.event('fault_injected',tool=tool); runtime.persist()
             elif action=='breakdown' and not treatment:
                 with runtime.lock:
+                    if runtime.storage_error: raise ValueError('storage_blocked')
                     for robot in body.get('robots',['W1','W2']):
                         if robot not in ('W1','W2','W3','W4','W5'): raise ValueError('invalid worker')
                         runtime.world.breakdown(robot)

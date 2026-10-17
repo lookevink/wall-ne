@@ -1,4 +1,7 @@
 """Supabase Data/Storage API. Errors are sanitized before crossing the API boundary."""
+import copy
+import http.client
+import threading
 import gzip
 import hashlib
 import json
@@ -18,25 +21,58 @@ class Repository:
         self.bucket=os.getenv('SUPABASE_STORAGE_BUCKET','robot-session-artifacts')
         self.writer=uid()
         self.leases={}
+        self.connections=threading.local()
 
     def request(self, method, path, data=None, content_type='application/json'):
         if not self.url or not self.key: raise StorageError('Supabase backend credentials are missing')
         body=data if isinstance(data,bytes) else canonical(data).encode() if data is not None else None
         headers={'apikey':self.key,'Authorization':'Bearer '+self.key,'Content-Type':content_type,'Prefer':'return=representation'}
-        req=urllib.request.Request(self.url+path,data=body,method=method,headers=headers)
+        url=urllib.parse.urlsplit(self.url)
+        connection=getattr(self.connections,'connection',None)
+        if connection is None:
+            cls=http.client.HTTPSConnection if url.scheme=='https' else http.client.HTTPConnection
+            connection=cls(url.hostname,url.port,timeout=10)
+            self.connections.connection=connection
         try:
-            with urllib.request.urlopen(req,timeout=10) as response:
-                raw=response.read(16*1024*1024)
-                return json.loads(raw) if 'json' in response.headers.get('Content-Type','') else raw
-        except urllib.error.HTTPError as exc:
-            raise StorageError(f'Supabase {method} failed (HTTP {exc.code})') from None
-        except (OSError,ValueError):
+            connection.request(method,(url.path.rstrip('/')+path),body=body,headers=headers)
+            response=connection.getresponse(); raw=response.read(16*1024*1024)
+            if response.status>=400:
+                label=f'Supabase {method} failed (HTTP {response.status})'
+                try:
+                    message=json.loads(raw).get('message','')
+                    for known in ('writer lease held','writer fenced','sequence conflict','event sequence gap','checkpoint sequence mismatch','evidence is append-only'):
+                        if message==known: label='Supabase: '+known
+                except (ValueError,AttributeError): pass
+                raise StorageError(label)
+            return json.loads(raw) if 'json' in response.getheader('Content-Type','') else raw
+        except StorageError:
+            raise
+        except (OSError,ValueError,http.client.HTTPException):
+            connection.close(); self.connections.connection=None
             raise StorageError('Supabase connection unavailable') from None
 
     def rpc(self,name,args):
         return self.request('POST','/rest/v1/rpc/'+name,args)
 
     def create(self,world,config):
+        if not hasattr(world,'prompt_texts'):
+            import uuid
+            from .inference import PROMPT
+            texts={}; versions_by_role={}
+            for role in world.prompt_versions:
+                override=config.get('prompt_version')
+                query=f'id=eq.{override}&limit=1' if override else f'role=eq.{role}&status=eq.active&limit=1'
+                versions=self.read('prompt_versions',query)
+                if versions:
+                    version=versions[0]
+                    if version['role']!=role: raise StorageError('Prompt role mismatch')
+                else:
+                    if override: raise StorageError('Unknown prompt version')
+                    version=dict(id=str(uuid.uuid5(uuid.NAMESPACE_URL,role+PROMPT)),role=role,text=PROMPT,hash=digest(PROMPT),status='active')
+                    existing=self.read('prompt_versions',f'id=eq.{version["id"]}&limit=1')
+                    if not existing: self.request('POST','/rest/v1/prompt_versions',version)
+                versions_by_role[role]=version['id'];texts[role]=version['text']
+            world.prompt_versions=versions_by_role;world.prompt_texts=texts
         meta=dict(id=world.id,kind=world.kind,seed=world.seed,contract=getattr(world,'contract',{}),contract_hash=getattr(world,'contract_hash',''),version=world.version,configuration=config,prompt_versions=world.prompt_versions)
         self.rpc('wallne_create',{'p_session':meta})
         return self.lease(world.id)
@@ -65,14 +101,14 @@ class Repository:
         # Full event history lives in events; checkpoints retain bounded policy history.
         state['events']=state['events'][-100:]
         return dict(session_id=world.id,batch_id=uid(),writer=self.writer,fence=self.leases[world.id]['fence'],expected_sequence=expected,
-                    sequence=world.seq,revision=world.revision,status=world.status,events=[e for e in world.events if e['sequence']>expected],
-                    actions=list(world.receipts.values()),robots=robots,artifacts=artifacts,state=state,integrity_hash=digest(state),verification=world.verify())
+                    sequence=world.seq,revision=world.revision,status=world.status,events=copy.deepcopy([e for e in world.events if e['sequence']>expected]),
+                    actions=list(world.receipts.values()),robots=copy.deepcopy(robots),artifacts=copy.deepcopy(artifacts),state=state,integrity_hash=digest(state),verification=world.verify())
 
     def commit(self,batch):
         return self.rpc('wallne_commit',{'p_batch':batch})
 
     def read(self,table,query=''):
-        if table not in ('sessions','events','actions','checkpoints','artifacts','robot_sessions','reviews','prompt_versions','evaluations','prompt_activations'): raise ValueError('invalid table')
+        if table not in ('sessions','events','actions','checkpoints','artifacts','robot_sessions','reviews','prompt_versions','evaluations','prompt_activations','evaluation_campaigns'): raise ValueError('invalid table')
         return self.request('GET','/rest/v1/'+table+'?'+query)
 
     def sessions(self):

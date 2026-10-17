@@ -4,7 +4,7 @@ import time
 from .runtime import Runtime
 from .treatment import Treatment,PixelController
 from .common import uid
-from .inference import Adapter,InferenceError,TOOL_HELP
+from .inference import Adapter,InferenceError,TOOL_HELP,PROMPT
 from .png import decode_url
 from . import lidar
 
@@ -18,6 +18,15 @@ class TreatmentRuntime(Runtime):
     def start(self):
         if self.world.kind=='arm' and self.config['mode']!='vision': raise ValueError('arm experiments require live vision; scripted diagnostics are tests only')
         self.started_wall=time.monotonic(); super().start()
+
+    def restore(self,session):
+        super().restore(session)
+        with self.lock:
+            self.pixels=None; self.image=None; self.frame_bytes={}
+            self.capture_started=None;self.depth_started=None
+            self.world.frame=None;self.world.frame_request=None;self.world.depth_request=None
+            self.world.event('observation_required_after_restore','T1')
+            self.persist()
 
     def accept_frame(self,body):
         with self.lock:
@@ -49,13 +58,14 @@ class TreatmentRuntime(Runtime):
             return {'accepted':True}
 
     def step(self,elapsed):
+        if self.storage_error: return
         w=self.world
-        if self.started_wall and time.monotonic()-self.started_wall>240 and w.kind=='arm':
+        if self.active_wall>240 and w.kind=='arm':
             w.status='blocked'; w.feedback='240 wall-second experiment cap'; w.event('blocked',reason=w.feedback); self.persist(); return
         if self.inference and sum(r['cost'] or 0 for r in self.inference)>=1:
             w.status='blocked'; w.feedback='Reported cost cap'; w.event('blocked',reason=w.feedback); self.persist(); return
         if w.robot['action']:
-            dt=min(elapsed,.1)*4
+            dt=min(elapsed,.5)*4
             while dt>1e-8:
                 part=min(.05,dt); dt-=part; w.tick(part); self.telemetry.sample(w,self.epoch)
             if not w.robot['action']: self.persist()
@@ -92,9 +102,10 @@ class TreatmentRuntime(Runtime):
                 self.consecutive_invalid=0 if receipt['accepted'] else self.consecutive_invalid+1
                 if self.consecutive_invalid>=3: w.status='blocked'; w.feedback='Three rejected actions without new progress'
             except InferenceError as exc:
+                if exc.metrics: self.inference.append(exc.metrics)
                 self.failures['T1']=self.failures.get('T1',0)+1; w.event('inference_error','T1',error=str(exc))
                 if self.failures['T1']>=3: w.status='blocked'; w.feedback=str(exc)
             self.persist(); return
         obs=w.observations(); obs['tool_arguments']={k:TOOL_HELP[k] for k in w.allowed_actions() if k in TOOL_HELP}
-        self.futures['T1']=(w.id,self.executor.submit(Adapter(self.config['engine']).call,obs,self.image))
+        self.futures['T1']=(w.id,self.executor.submit(Adapter(self.config['engine']).call,obs,self.image,getattr(w,'prompt_texts',{}).get('treatment',PROMPT)))
         self.waiting='inference_wait'

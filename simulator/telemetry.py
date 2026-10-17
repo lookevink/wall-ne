@@ -1,5 +1,6 @@
 """Sequenced health and sampled actual movement, independent of inference."""
 import time
+import copy
 from .common import utc
 
 UNITS=dict(coordinates='x right / y up / z toward rover',position='m',joints='deg',quaternion='xyzw',force='N',water='L',fertilizer='simulated g')
@@ -19,10 +20,10 @@ class Telemetry:
             envelope=dict(schema_version=1,session_id=world.id,robot_id=key,resume_epoch=epoch,sequence=self.sequences[key],wall_utc=utc(),elapsed=now-self.started,sim_time=world.time,revision=world.revision,prompt_version=world.prompt_versions,action_id=(v.get('action') or {}).get('id'),task_id=(v.get('action') or {}).get('zone'))
             health=dict(envelope,position=v['position'],battery=v['battery'],reserve=20,water=v.get('water'),lifecycle=v['lifecycle'],waiting_reason=waiting,fault=v.get('fault'),last_progress_revision=world.revision)
             if world.kind=='arm':
-                health.update(joints=world.joints,tool_pose=world.tool_pose(),opening=world.opening,force=world.force,contact=world.holding,load=world.load,holding=world.holding,collision=world.collision)
-            self.latest[key]=health
-            self.motion.append(health)
-            if heartbeat: world.event('heartbeat',key,telemetry=health)
+                health.update(joints=world.joints,tool_pose=world.tool_pose(),opening=world.opening,force=world.force,contact=world.holding,load=world.load,holding=world.holding,extracted=world.extracted,deposited=world.deposited,collision=world.collision)
+            self.latest[key]=copy.deepcopy(health)
+            self.motion.append(copy.deepcopy(health))
+            if heartbeat: world.event('heartbeat',key,telemetry=copy.deepcopy(health))
         if heartbeat: self.last_heartbeat=now
 
     def flush(self,repo,world):
