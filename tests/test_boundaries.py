@@ -48,7 +48,7 @@ class BoundaryTests(unittest.TestCase):
         w=Mission(rows=0);w.status='running'
         with patch('threading.Thread.start'),patch.object(Runtime,'persist',return_value=True):
             runtime=Runtime(world=w,config={'mode':'live','engine':'crusoe','speed':8})
-        with patch('simulator.runtime.Adapter',FakeAdapter):
+        with patch('simulator.runtime.Adapter',FakeAdapter),patch.object(Runtime,'persist',return_value=True):
             # Resolve mocked role calls synchronously without real network or background physics.
             class Immediate:
                 def submit(self,fn,*args):
@@ -76,12 +76,14 @@ class BoundaryTests(unittest.TestCase):
         class Response:
             def __enter__(self):return self
             def __exit__(self,*args):pass
-            def read(self,*args):return json.dumps({'choices':[], 'usage':{'cost':1.5,'total_tokens':42}}).encode()
+            def read(self,*args):return json.dumps({'id':'response-known','model':'returned-known','choices':[], 'usage':{'cost':1.5,'total_tokens':42}}).encode()
         adapter=Adapter('gemini');adapter.key='test-only'
         with patch('urllib.request.urlopen',return_value=Response()):
             with self.assertRaises(InferenceError) as failure:adapter.call({})
         self.assertEqual(failure.exception.metrics['cost'],1.5)
         self.assertEqual(failure.exception.metrics['usage']['total_tokens'],42)
+        self.assertEqual(failure.exception.metrics['response_id'],'response-known')
+        self.assertEqual(failure.exception.metrics['returned_model'],'returned-known')
 
     def test_invalid_fleet_planner_is_bounded(self):
         import concurrent.futures
@@ -101,3 +103,8 @@ class BoundaryTests(unittest.TestCase):
                 runtime.futures['planner']=(w.id,f);runtime._live()
             self.assertEqual(w.status,'blocked');self.assertEqual(runtime.failures['planner'],3)
             self.assertEqual(len(runtime.inference),3);runtime.close()
+
+    def test_postgres_cursor_variable_fraction(self):
+        from simulator.common import cursor_timestamp
+        self.assertEqual(cursor_timestamp('2026-10-17T18:12:49.16929+00:00'),'2026-10-17T18:12:49.169290+00:00')
+        self.assertEqual(cursor_timestamp('2026-10-17T18:12:49Z'),'2026-10-17T18:12:49+00:00')

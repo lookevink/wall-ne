@@ -1,0 +1,20 @@
+{
+  "session_id": "61523a82-fada-4904-9a14-4a45f7a23d24",
+  "seed": 7,
+  "engine": "gemma",
+  "trial": "baseline",
+  "status": "blocked",
+  "checks": {
+    "battery": true,
+    "collected": false,
+    "extracted": false,
+    "images": false,
+    "inventory": true,
+    "preserved": true,
+    "returned": false
+  },
+  "calls": 13,
+  "cost": null,
+  "wall_seconds": 258.625027084,
+  "selection": "browser UI"
+}

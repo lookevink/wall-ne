@@ -81,3 +81,12 @@ class RecordedWorld:
 
     def snapshot(self):
         return self.checkpoint()
+
+
+def cursor_timestamp(value):
+    """Postgres may omit trailing fractional zeros; Python 3.9 needs six digits."""
+    import re
+    from datetime import datetime
+    value=value.replace('Z','+00:00')
+    value=re.sub(r'\.(\d{1,6})(?=[+-]\d{2}:\d{2}$)',lambda m:'.'+m.group(1).ljust(6,'0'),value)
+    return datetime.fromisoformat(value).isoformat()

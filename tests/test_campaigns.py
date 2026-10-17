@@ -25,3 +25,20 @@ class CampaignTests(unittest.TestCase):
         runtime.start.assert_not_called();self.assertFalse(campaign['passed'])
         self.assertEqual(campaign['results'][0]['session_id'],'child')
         self.assertEqual(campaign['results'][0]['status'],'blocked')
+
+    def test_over_budget_and_pending_success_cannot_qualify(self):
+        for cost,pending in ((1.5,0),(.5,1),(None,0)):
+            runtime=Mock(config={'code_hash':'frozen'},storage_error=None,world=types.SimpleNamespace(status='completed'),futures={})
+            runtime.snapshot.return_value=dict(checks={'preserved':True,'inventory':True,'battery':True},status='completed',decisions=1,inference={'cost':cost,'pending_calls':pending})
+            app=Mock(treatment=runtime);app.reset.return_value={'id':'child'}
+            service=Campaigns(app);campaign=self.campaign()
+            with patch.object(service,'finalize'):service.run(campaign)
+            self.assertFalse(campaign['passed']);self.assertFalse(campaign['results'][0]['passed'])
+
+    def test_sensor_code_change_during_final_child_invalidates_comparison(self):
+        runtime=Mock(config={'treatment_code_hash':'frozen'},storage_error=None,world=types.SimpleNamespace(status='completed'),futures={})
+        runtime.snapshot.return_value=dict(checks={'preserved':True,'inventory':True,'battery':True},status='completed',decisions=1,inference={'cost':.1,'pending_calls':0})
+        app=Mock(treatment=runtime);app.reset.return_value={'id':'child'}
+        service=Campaigns(app);campaign=self.campaign();campaign['manifest']['treatment_code_hash']='frozen'
+        with patch.object(service,'finalize'),patch('simulator.evaluation.treatment_implementation_hash',return_value='changed'):service.run(campaign)
+        self.assertFalse(campaign['passed']);self.assertIn('Implementation changed',campaign['reason']);self.assertEqual(len(campaign['results']),1)

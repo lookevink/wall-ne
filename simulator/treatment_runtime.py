@@ -2,6 +2,7 @@
 import base64
 import time
 from .runtime import Runtime
+from .engine import TERMINAL
 from .treatment import Treatment,PixelController
 from .common import uid
 from .inference import Adapter,InferenceError,TOOL_HELP,PROMPT
@@ -31,6 +32,7 @@ class TreatmentRuntime(Runtime):
     def accept_frame(self,body):
         with self.lock:
             if self.storage_error: raise ValueError('storage_blocked')
+            if self.world.status in TERMINAL: raise ValueError('terminal sessions are read-only')
             if body.get('mission_id')!=self.world.id: raise ValueError('cross-mission frame')
             req=self.world.frame_request
             if not req or body.get('request_id')!=req['id'] or req['revision']!=self.world.revision: raise ValueError('stale capture request')
@@ -48,6 +50,7 @@ class TreatmentRuntime(Runtime):
     def accept_depth(self,body):
         with self.lock:
             if self.storage_error: raise ValueError('storage_blocked')
+            if self.world.status in TERMINAL: raise ValueError('terminal sessions are read-only')
             if body.get('mission_id')!=self.world.id or not self.world.depth_request: raise ValueError('cross-mission/unsolicited depth')
             req=self.world.depth_request
             if self.world.revision!=req['revision']: raise ValueError('stale scan')
@@ -103,7 +106,10 @@ class TreatmentRuntime(Runtime):
             del self.futures['T1']
             if session!=w.id: return
             try:
-                result=future.result(); self.inference.append(result); self.failures['T1']=0
+                result=self.consume('T1',future); self.inference.append(result); self.failures['T1']=0
+                if sum(r['cost'] or 0 for r in self.inference)>=1:
+                    w.status='blocked';w.feedback='Reported cost cap'
+                    w.event('inference_discarded','T1',result=result,reason=w.feedback);self.persist();return
                 decision=result['decision']; w.event('decision','T1',result=result,frame_id=w.frame['id'],prompt_version=w.prompt_versions)
                 receipt=w.command(uid(),'T1',decision['action'],**decision['arguments'])
                 self.consecutive_invalid=0 if receipt['accepted'] else self.consecutive_invalid+1
@@ -115,5 +121,5 @@ class TreatmentRuntime(Runtime):
                 if self.failures['T1']>=3: w.status='blocked'; w.feedback=str(exc)
             self.persist(); return
         obs=w.observations(); obs['tool_arguments']={k:TOOL_HELP[k] for k in w.allowed_actions() if k in TOOL_HELP}
-        self.futures['T1']=(w.id,self.executor.submit(self.adapter('treatment').call,obs,self.image,getattr(w,'prompt_texts',{}).get('treatment',PROMPT)))
+        self.dispatch('T1','treatment',obs,self.image)
         self.waiting='inference_wait'

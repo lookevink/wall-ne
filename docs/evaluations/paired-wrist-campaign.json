@@ -1,0 +1,164 @@
+{
+  "campaign": {
+    "baseline_id": "a9075fb7-f20d-567b-977a-f192352cd8c0",
+    "candidate_id": "cf79647c-5560-4ce7-9898-2fc6d81e2645",
+    "created_at": "2026-10-17T18:33:33.068445+00:00",
+    "id": "e0650fd8-f9b9-4be5-97b2-eb19bb4a8a00",
+    "manifest": {
+      "checks": 7,
+      "code_hash": "47b6d47a810b5250de9d0f80a6012c1ae33ab2da0f1885fd86014aef1b3c7b88",
+      "command_cap": 50,
+      "cost_cap": 1,
+      "engine": "gemini",
+      "kind": "arm",
+      "models": {
+        "orchestrator": "google/gemini-3.1-pro-preview",
+        "planner": "google/gemini-3.1-pro-preview",
+        "retriever": "google/gemini-3.1-pro-preview",
+        "treatment": "google/gemini-3.1-pro-preview",
+        "verifier": "google/gemini-3.1-pro-preview",
+        "worker": "google/gemini-3.1-pro-preview"
+      },
+      "physical_rules": "wall-ne/1",
+      "provider_base": "https://ai-gateway.vercel.sh/v1",
+      "scenarios": [
+        "seed7",
+        "seed11",
+        "seed23",
+        "seed8"
+      ],
+      "seeds": [
+        7,
+        11,
+        23,
+        8
+      ],
+      "source_code_hash": "fff333798a54cd18abc3530ea6b4c88a11ee404b9e3fafc08ff592c3e157be06",
+      "source_session": "10cb1d93-c726-4d0a-9026-8ab15857a8c9",
+      "treatment_code_hash": "142bf7fd5053317a9df2f75a6dabe14e83ec9324bdf9148a5a07bbba66d3025f",
+      "trial": "wrist",
+      "wall_cap": 240,
+      "withheld_case": "seed8",
+      "withheld_condition": "protected clover preservation"
+    },
+    "reason": "Implementation changed since frozen campaign manifest",
+    "results": [
+      {
+        "commands": 8,
+        "cost": null,
+        "hard_violations": 0,
+        "passed": false,
+        "regressions_passed": false,
+        "scenario": "seed7",
+        "session_id": "79578e0e-9ebf-47d8-9c9f-c1ef12aacceb",
+        "status": "blocked",
+        "variant": "baseline"
+      },
+      {
+        "commands": 4,
+        "cost": 0.22026600000000002,
+        "hard_violations": 0,
+        "passed": false,
+        "regressions_passed": false,
+        "scenario": "seed7",
+        "session_id": "04022ea4-9f25-4525-a295-a4be14afdb0b",
+        "status": "aborted",
+        "variant": "candidate"
+      },
+      {
+        "commands": 0,
+        "cost": null,
+        "hard_violations": 0,
+        "passed": false,
+        "reason": "Implementation changed since frozen campaign manifest",
+        "regressions_passed": false,
+        "scenario": "seed11",
+        "session_id": "63bbcc61-4b70-4a7b-b286-3237da248b71",
+        "status": "blocked",
+        "variant": "baseline"
+      }
+    ],
+    "status": "completed"
+  },
+  "evaluation": {
+    "baseline_id": "a9075fb7-f20d-567b-977a-f192352cd8c0",
+    "candidate_id": "cf79647c-5560-4ce7-9898-2fc6d81e2645",
+    "created_at": "2026-10-17T18:39:38.502547+00:00",
+    "id": "e0650fd8-f9b9-4be5-97b2-eb19bb4a8a00",
+    "manifest": {
+      "checks": 7,
+      "code_hash": "47b6d47a810b5250de9d0f80a6012c1ae33ab2da0f1885fd86014aef1b3c7b88",
+      "command_cap": 50,
+      "cost_cap": 1,
+      "engine": "gemini",
+      "kind": "arm",
+      "models": {
+        "orchestrator": "google/gemini-3.1-pro-preview",
+        "planner": "google/gemini-3.1-pro-preview",
+        "retriever": "google/gemini-3.1-pro-preview",
+        "treatment": "google/gemini-3.1-pro-preview",
+        "verifier": "google/gemini-3.1-pro-preview",
+        "worker": "google/gemini-3.1-pro-preview"
+      },
+      "physical_rules": "wall-ne/1",
+      "provider_base": "https://ai-gateway.vercel.sh/v1",
+      "scenarios": [
+        "seed7",
+        "seed11",
+        "seed23",
+        "seed8"
+      ],
+      "seeds": [
+        7,
+        11,
+        23,
+        8
+      ],
+      "source_code_hash": "fff333798a54cd18abc3530ea6b4c88a11ee404b9e3fafc08ff592c3e157be06",
+      "source_session": "10cb1d93-c726-4d0a-9026-8ab15857a8c9",
+      "treatment_code_hash": "142bf7fd5053317a9df2f75a6dabe14e83ec9324bdf9148a5a07bbba66d3025f",
+      "trial": "wrist",
+      "wall_cap": 240,
+      "withheld_case": "seed8",
+      "withheld_condition": "protected clover preservation"
+    },
+    "passed": false,
+    "reason": "Implementation changed since frozen campaign manifest",
+    "results": [
+      {
+        "commands": 8,
+        "cost": null,
+        "hard_violations": 0,
+        "passed": false,
+        "regressions_passed": false,
+        "scenario": "seed7",
+        "session_id": "79578e0e-9ebf-47d8-9c9f-c1ef12aacceb",
+        "status": "blocked",
+        "variant": "baseline"
+      },
+      {
+        "commands": 4,
+        "cost": 0.22026600000000002,
+        "hard_violations": 0,
+        "passed": false,
+        "regressions_passed": false,
+        "scenario": "seed7",
+        "session_id": "04022ea4-9f25-4525-a295-a4be14afdb0b",
+        "status": "aborted",
+        "variant": "candidate"
+      },
+      {
+        "commands": 0,
+        "cost": null,
+        "hard_violations": 0,
+        "passed": false,
+        "reason": "Implementation changed since frozen campaign manifest",
+        "regressions_passed": false,
+        "scenario": "seed11",
+        "session_id": "63bbcc61-4b70-4a7b-b286-3237da248b71",
+        "status": "blocked",
+        "variant": "baseline"
+      }
+    ]
+  }
+}

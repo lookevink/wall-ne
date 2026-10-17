@@ -3,7 +3,7 @@ import concurrent.futures
 import copy
 import threading
 import time
-from .common import uid
+from .common import uid,digest
 from .engine import Mission,TERMINAL
 from .agents import DemoController
 from .persistence import Repository,StorageError
@@ -19,12 +19,12 @@ class Runtime:
         self.config.setdefault('trial',getattr(self.world,'trial',None))
         self.committed=0; self.epoch=0; self.persisted=False; self.storage_error=None; self.pending=None
         self.telemetry=Telemetry(); self.controller=DemoController(); self.executor=concurrent.futures.ThreadPoolExecutor(max_workers=7)
-        self.futures={}; self.inference=[]; self.failures={}; self.retry_after={}; self.waiting=None; self.closed=False; self.last_commit=0; self.active_wall=0
+        self.futures={}; self.requests={}; self.inference=[]; self.failures={}; self.retry_after={}; self.waiting=None; self.closed=False; self.last_commit=0; self.active_wall=0
         self.thread=threading.Thread(target=self.loop,daemon=True); self.thread.start()
 
     def persist(self):
         try:
-            self.world.runtime_state=dict(config=self.config,inference=self.inference,failures=self.failures,active_wall=self.active_wall)
+            self.world.runtime_state=dict(config=self.config,inference=self.inference,failures=self.failures,active_wall=self.active_wall,pending_requests=self.requests)
             if not self.persisted:
                 lease=self.repository.create(self.world,self.config); self.epoch=lease['resume_epoch']; self.persisted=True
             if self.persisted and self.last_commit and time.monotonic()-self.last_commit>15:
@@ -74,6 +74,8 @@ class Runtime:
     def restore(self,session):
         with self.lock:
             if self.persisted and self.world.status=='running': raise ValueError('pause the current session before restoring another')
+            self.collect_inactive_calls()
+            if self.futures: raise ValueError('wait for outstanding inference accounting before restoring')
             rows=self.repository.read('sessions',f'id=eq.{session}&limit=1')
             if not rows or (rows[0]['kind']=='fleet')!=(self.world.kind=='fleet'): raise ValueError('session belongs to a different runtime family')
             if rows[0].get('status') in TERMINAL: raise ValueError('terminal sessions are read-only; create a new session')
@@ -89,6 +91,12 @@ class Runtime:
             durable_runtime=state.get('runtime_state',{})
             self.inference=durable_runtime.get('inference',[]);self.failures=durable_runtime.get('failures',{})
             self.active_wall=durable_runtime.get('active_wall',0)
+            self.requests={}
+            for robot,request in durable_runtime.get('pending_requests',{}).items():
+                unresolved=dict(id=uid(),request_id=request['id'],status='interrupted_unknown',usage={},cost=None)
+                self.inference.append(unresolved)
+                self.world.event('inference_interrupted',robot,request=request,result=unresolved)
+
             for _,future in self.futures.values(): future.cancel()
             self.futures={};self.waiting=None
             self.committed=lease['sequence']; self.epoch=lease['resume_epoch']; self.persisted=True
@@ -103,6 +111,31 @@ class Runtime:
         adapter.model=self.config['models'][role];adapter.base=self.config['provider_base']
         return adapter
 
+    def dispatch(self,robot,role,observation,image=None):
+        if self.storage_error or self.world.status!='running': return False
+        adapter=self.adapter(role)
+        request=dict(id=uid(),session_id=self.world.id,role=role,model=adapter.model,
+                     prompt_version=self.world.prompt_versions.get(role),observation_hash=digest(observation),
+                     input_event_sequence=self.world.seq,frame=copy.deepcopy(observation.get('frame')),
+                     telemetry_sequences={key:value.get('sequence') for key,value in self.telemetry.latest.items()},
+                     image_hash=digest(image) if image else None)
+        self.requests[robot]=request
+        self.world.event('inference_requested',robot,request=request)
+        if not self.persist(): return False
+        prompt=getattr(self.world,'prompt_texts',{}).get(role,PROMPT)
+        def call():
+            try:
+                result=adapter.call(observation,image,prompt);result['request_id']=request['id'];return result
+            except InferenceError as exc:
+                if not exc.metrics:exc.metrics=adapter.failed_metrics(time.monotonic())
+                exc.metrics['request_id']=request['id'];raise
+        self.futures[robot]=(self.world.id,self.executor.submit(call))
+        return True
+
+    def consume(self,robot,future):
+        self.requests.pop(robot,None)
+        return future.result()
+
     def _demo(self):
         decisions=self.controller.decisions(self.world.observations())
         for robot,action,args in decisions:
@@ -114,10 +147,12 @@ class Runtime:
         now=time.monotonic()
         for robot,(session,future) in list(self.futures.items()):
             if not future.done(): continue
+            if session!=self.world.id: continue
+            if self.world.status!='running':
+                self.collect_inactive_calls();return
             del self.futures[robot]
-            if session!=self.world.id or self.world.status!='running': continue
             try:
-                result=future.result(); self.inference.append(result)
+                result=self.consume(robot,future); self.inference.append(result)
                 decision=result['decision']; args=decision['arguments']
                 self.world.event('decision',robot,result=result,prompt_version=self.world.prompt_versions)
                 if robot=='planner':
@@ -130,23 +165,24 @@ class Runtime:
                     receipt=self.world.command(uid(),robot,decision['action'],**args)
                     if not receipt['accepted']: raise InferenceError('Rejected model command: '+receipt['reason'])
                 self.failures[robot]=0
-                self.persist()
+                if not self.persist(): return
             except InferenceError as exc:
                 if exc.metrics: self.inference.append(exc.metrics)
                 self.failures[robot]=self.failures.get(robot,0)+1; self.world.event('inference_error',robot,error=str(exc))
                 self.retry_after[robot]=time.monotonic()+min(8,2**self.failures[robot])
                 if self.failures[robot]>=3: self.world.status='blocked'
-                self.persist()
+                if not self.persist(): return
+        if self.storage_error or self.world.status!='running': return
         obs=self.world.observations()
         obs['telemetry']=copy.deepcopy(self.telemetry.latest)
         # Deterministic feasible option enumeration constrains role calls, but does not choose for a model.
         if not getattr(self.world,'planned',False):
             if 'planner' not in self.futures and self.world.status=='running' and now>=self.retry_after.get('planner',0):
-                self.futures['planner']=(self.world.id,self.executor.submit(self.adapter('planner').call,dict(role='contract planner',observation=obs,instruction='Use choose_action action accept_contract with arguments {} to pin this fixed valid contract. You cannot weaken coverage, reserve, deadlines or acceptance checks.'),None,getattr(self.world,'prompt_texts',{}).get('planner',PROMPT)))
+                self.dispatch('planner','planner',dict(role='contract planner',observation=obs,instruction='Use choose_action action accept_contract with arguments {} to pin this fixed valid contract. You cannot weaken coverage, reserve, deadlines or acceptance checks.'))
             return
         if all(self.world.verify().values()):
             if 'verifier' not in self.futures and self.world.status=='running' and now>=self.retry_after.get('verifier',0):
-                self.futures['verifier']=(self.world.id,self.executor.submit(self.adapter('verifier').call,dict(role='independent verifier explanation',observation=obs,checks=self.world.verify(),instruction='Explain the independent checks concisely; use choose_action action verify with arguments {}. Code determines success.'),None,getattr(self.world,'prompt_texts',{}).get('verifier',PROMPT)))
+                self.dispatch('verifier','verifier',dict(role='independent verifier explanation',observation=obs,checks=self.world.verify(),instruction='Explain the independent checks concisely; use choose_action action verify with arguments {}. Code determines success.'))
             return
         candidates=self.controller.decisions(obs)
         grouped={}
@@ -156,8 +192,7 @@ class Runtime:
             if robot in self.futures or self.world.status!='running' or now<self.retry_after.get(robot,0): continue
             role='orchestrator' if robot=='orchestrator' else 'retriever' if robot=='R1' else 'worker'
             permitted=dict(observation=obs,role=role,robot=robot,feasible_options=options)
-            future=self.executor.submit(self.adapter(role).call,permitted,None,getattr(self.world,'prompt_texts',{}).get(role,PROMPT))
-            self.futures[robot]=(self.world.id,future)
+            if not self.dispatch(robot,role,permitted): return
 
     def step(self,elapsed):
         if self.storage_error: return
@@ -213,7 +248,7 @@ class Runtime:
                 if not future.done(): continue
                 del self.futures[robot]
                 if session!=self.world.id or future.cancelled(): continue
-                try: result=future.result()
+                try: result=self.consume(robot,future)
                 except InferenceError as exc: result=exc.metrics
                 except Exception: result=None
                 if result:

@@ -78,7 +78,7 @@ class Adapter:
         try: decision=parse_response(response)
         except InferenceError as exc:
             exc.metrics=self.failed_metrics(started);exc.metrics['usage']={k:v for k,v in (response.get('usage') or {}).items() if k in ('prompt_tokens','completion_tokens','total_tokens')}
-            exc.metrics['cost']=cost
+            exc.metrics.update(cost=cost,response_id=response.get('id'),returned_model=response.get('model'))
             choices=response.get('choices') or []
             exc.metrics['response_summary']=[dict(finish_reason=c.get('finish_reason'),tool_names=[t.get('function',{}).get('name') for t in (c.get('message',{}).get('tool_calls') or [])]) for c in choices[:2]]
             raise

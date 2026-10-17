@@ -1,0 +1,20 @@
+{
+  "session_id": "88fef967-4f4c-4721-a13b-139697e3de02",
+  "seed": 7,
+  "engine": "gemini",
+  "trial": "baseline",
+  "status": "blocked",
+  "checks": {
+    "battery": true,
+    "collected": false,
+    "extracted": false,
+    "images": false,
+    "inventory": true,
+    "preserved": false,
+    "returned": false
+  },
+  "calls": 19,
+  "cost": 0.373382,
+  "wall_seconds": 246.482128833,
+  "selection": "browser UI"
+}

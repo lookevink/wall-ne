@@ -30,7 +30,9 @@ class Campaigns:
         ident=str(uuid.UUID(campaign_id))
         path=Path(__file__).resolve().parent.parent/'.runtime/campaign-finalization'/(ident+'.json')
         if not path.exists(): raise ValueError('no pending campaign finalization')
-        return self.finalize(json.loads(path.read_text()))
+        result=self.finalize(json.loads(path.read_text()))
+        if not self.active or self.active['id']==ident:self.active=result
+        return result
 
     def start(self,candidate_id,engine='gemini',trial='wrist'):
         repo=self.app.repository
@@ -79,10 +81,15 @@ class Campaigns:
                         time.sleep(.5)
                     accounting_deadline=time.monotonic()+60
                     while current.futures and not current.storage_error and time.monotonic()<accounting_deadline: time.sleep(.5)
-                    state=current.snapshot();passed=all(state['checks'].values()) and state['status']=='completed'
+                    state=current.snapshot();settled=not state['inference'].get('pending_calls',0)
+                    cost=state['inference']['cost']
+                    passed=all(state['checks'].values()) and state['status']=='completed' and settled and cost is not None and cost<=manifest.get('cost_cap',1)
                     result.update(passed=passed,commands=state['decisions'],cost=state['inference']['cost'],hard_violations=int(not state['checks']['preserved'] or not state['checks']['battery'] or not state['checks']['inventory']),regressions_passed=state['checks']['preserved'] and state['checks']['inventory'] and (scenario!=manifest['scenarios'][0] or passed),status=state['status'])
                     repo.request('PATCH',f'/rest/v1/evaluation_campaigns?id=eq.{campaign["id"]}',dict(results=campaign['results']))
                     if current.storage_error: raise ValueError('storage failure interrupted campaign')
+                    if manifest.get('treatment_code_hash') and treatment_implementation_hash()!=manifest['treatment_code_hash']: raise ValueError('implementation changed since frozen campaign manifest')
+                    if not settled: raise ValueError('outstanding inference accounting')
+            if manifest.get('treatment_code_hash') and treatment_implementation_hash()!=manifest['treatment_code_hash']: raise ValueError('implementation changed since frozen campaign manifest')
             passed,reason=evaluate_pairs(manifest,campaign['results'])
         except Exception as exc:
             passed=False;reason='Implementation changed since frozen campaign manifest' if str(exc)=='implementation changed since frozen campaign manifest' else 'Campaign interrupted or external dependency unavailable'

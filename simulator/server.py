@@ -8,7 +8,7 @@ import threading
 import urllib.parse
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from .common import load_env,canonical,uid,digest
-from .engine import Mission
+from .engine import Mission,TERMINAL
 from .runtime import Runtime
 from .treatment import Treatment
 from .care import PlantCare
@@ -114,10 +114,23 @@ class Handler(BaseHTTPRequestHandler):
             if path.startswith('/api/sessions/'):
                 return self.session_get(path,query)
             if path in ('/api/reviews','/api/prompt-versions','/api/evaluations','/api/evaluation-campaigns'):
-                rows=app.repository.read(path.rsplit('/',1)[1].replace('-','_'),'order=created_at.desc&limit=50')
+                import uuid
+                cursor=query.get('before',[None])[0];ident=query.get('before_id',[None])[0]
+                from .common import cursor_timestamp
+                where=''
+                if cursor:
+                    cursor=urllib.parse.quote(cursor_timestamp(cursor),safe=':-.')
+                    where=f'or=(created_at.lt.{cursor},and(created_at.eq.{cursor},id.lt.{str(uuid.UUID(ident))}))&' if ident else f'created_at=lt.{cursor}&'
+                rows=app.repository.read(path.rsplit('/',1)[1].replace('-','_'),where+'order=created_at.desc,id.desc&limit=50')
                 if path=='/api/evaluation-campaigns' and app.campaigns.active:
                     rows=[dict(r,status=app.campaigns.active['status']) if r['id']==app.campaigns.active['id'] else r for r in rows]
                 return self.send(rows)
+            for collection in ('reviews','prompt-versions','evaluations','evaluation-campaigns'):
+                if path.startswith('/api/'+collection+'/'):
+                    import uuid
+                    ident=str(uuid.UUID(path.rsplit('/',1)[1]))
+                    rows=app.repository.read(collection.replace('-','_'),f'id=eq.{ident}&limit=1')
+                    return self.send(rows[0] if rows else {'error':'record not found'},200 if rows else 404)
             if path.startswith('/api/'): return self.send({'error':'unknown route'},404)
             if '\x00' in path or '\\' in path or '..' in path.split('/'): raise ValueError('invalid static path')
             if path.startswith('/vendor/ez-tree/'):
@@ -175,6 +188,10 @@ class Handler(BaseHTTPRequestHandler):
             if path.startswith('/api/prompt-versions/') and action in ('activate','rollback'):
                 import uuid
                 version=str(uuid.UUID(path.split('/')[-2])); evaluation=str(uuid.UUID(body['evaluation_id']))
+                if action=='activate':
+                    from .common import treatment_implementation_hash
+                    saved=app.repository.read('evaluations',f'id=eq.{evaluation}&limit=1')
+                    if not saved or saved[0]['manifest'].get('treatment_code_hash')!=treatment_implementation_hash(): raise ValueError('evaluation implementation no longer matches current treatment code')
                 return self.send(app.repository.rpc('wallne_activate',dict(p_version=version,p_evaluation=evaluation,p_rollback=action=='rollback')))
             if path=='/api/evaluations': return self.send(app.campaigns.start(**body))
             if path=='/api/evaluations/retry': return self.send(app.campaigns.retry(body['campaign_id']))
@@ -198,15 +215,17 @@ class Handler(BaseHTTPRequestHandler):
             elif action in ('clog','fault') and treatment:
                 with runtime.lock:
                     if runtime.storage_error: raise ValueError('storage_blocked')
+                    if runtime.world.status in TERMINAL: raise ValueError('terminal sessions are read-only')
                     tool=body.get('tool','nozzle')
                     if tool not in ('nozzle','gripper','fertilizer','vacuum'): raise ValueError('invalid tool')
                     runtime.world.faults[tool]=True; runtime.world.event('fault_injected',tool=tool); runtime.persist()
             elif action=='breakdown' and not treatment:
                 with runtime.lock:
                     if runtime.storage_error: raise ValueError('storage_blocked')
-                    for robot in body.get('robots',['W1','W2']):
-                        if robot not in ('W1','W2','W3','W4','W5'): raise ValueError('invalid worker')
-                        runtime.world.breakdown(robot)
+                    if runtime.world.status in TERMINAL: raise ValueError('terminal sessions are read-only')
+                    robots=body.get('robots',['W1','W2'])
+                    if not isinstance(robots,list) or not robots or len(robots)>5 or any(robot not in ('W1','W2','W3','W4','W5') for robot in robots): raise ValueError('invalid workers')
+                    for robot in dict.fromkeys(robots): runtime.world.breakdown(robot)
                     runtime.persist()
             elif action=='false-claim' and not treatment: return self.send(runtime.command('orchestrator','claim_complete'))
             else: raise ValueError('action unavailable in this mode')

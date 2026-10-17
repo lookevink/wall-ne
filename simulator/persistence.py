@@ -118,9 +118,9 @@ class Repository:
     def sessions(self,before=None,before_id=None):
         query='select=*&order=started_at.desc,id.desc&limit=50'
         if before:
-            from datetime import datetime
+            from .common import cursor_timestamp
             import uuid
-            stamp=datetime.fromisoformat(before.replace('Z','+00:00')).isoformat()
+            stamp=cursor_timestamp(before)
             ident=str(uuid.UUID(before_id))
             query+='&or=(started_at.lt.'+urllib.parse.quote(stamp,safe=':-.')+',and(started_at.eq.'+urllib.parse.quote(stamp,safe=':-.')+',id.lt.'+ident+'))'
         return self.read('sessions',query)
