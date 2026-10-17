@@ -20,6 +20,7 @@ from .orchard_care import OrchardCare
 from .fleet_care import FleetCareWorld,FleetCareRuntime,result_outcome
 from .almanac import Season,DayClock
 from . import timelapse
+from .film import Film
 from .treatment_runtime import TreatmentRuntime
 from .persistence import Repository,StorageError
 from .review import ReviewService
@@ -134,14 +135,29 @@ class App:
     def epoch_view(self):
         with self.season_lock:
             view=self.clock.view();season=self.season;view.update(history=copy.deepcopy(season.history[-14:]),notice=self.season_notice,plan=dict(self.plan))
-        live=self.day_outcomes(self.fleet) if season.day else {}
-        conditions=season.conditions()
-        view['trees']=[dict(index=c['index'],row=c['tree']['row'],position=c['tree']['position'],morning_moisture=c['moisture'],
-                            moisture=live.get(c['index'],{}).get('moisture',c['moisture']),weed_age=c['weed']['age'],weed_size=c['weed']['size'],
-                            weed_removed=bool(live.get(c['index'],{}).get('weed_removed')),pests=c['pests'],
-                            pests_remaining=live.get(c['index'],{}).get('pests_remaining',c['pests']),prescription=c['prescription'],
-                            cared=bool(live.get(c['index'],{}).get('cared'))) for c in conditions]
+        view['trees']=season.view_trees(self.day_outcomes(self.fleet) if season.day else {})
         return view
+
+    def start_film(self,body):
+        """Generate a deterministic season film and initialize its frame iterator."""
+        seed=body.get('seed',7);days=body.get('days',14)
+        if type(seed)!=int or not 0<=seed<=100000: raise ValueError('seed must be 0..100000')
+        film=Film(seed,days);reel=body.get('reel')
+        if reel is not None:timelapse.write_manifest(reel,dict(kind='season_film',controller='scripted',seed=seed,days=days,frames=film.total,fps=30))
+        self.film=dict(film=film,frames=film.frames(),next=0,reel=reel)
+        return dict(seed=seed,days=days,total=film.total,reel=reel)
+
+    def film_frames(self,body):
+        film=getattr(self,'film',None);start=body.get('start');count=body.get('count',10)
+        if not film or body.get('reel')!=film['reel']: raise ValueError('start the film first')
+        if type(start)!=int or type(count)!=int or not 1<=count<=60: raise ValueError('invalid frame range')
+        if start<film['next']:film.update(frames=film['film'].frames(),next=0)  # deterministic replay to a resumed index
+        frames=[]
+        for state in film['frames']:
+            film['next']+=1
+            if film['next']>start:frames.append(state)
+            if len(frames)==count:break
+        return dict(start=start,frames=frames,total=film['film'].total)
 
     def reset(self,treatment,body,season=None):
         with self.reset_lock:
@@ -331,6 +347,8 @@ class Handler(BaseHTTPRequestHandler):
             if path=='/api/next-day': return self.send(app.next_day(body))
             if path=='/api/season': return self.send(app.new_season(body))
             if path=='/api/epoch': return self.send(app.pace(body))
+            if path=='/api/film/start': return self.send(app.start_film(body))
+            if path=='/api/film/frames': return self.send(app.film_frames(body))
             if path=='/api/timelapse/frame': return self.send(timelapse.save_frame(body.get('reel'),body.get('index'),body.get('data_url'),body.get('meta')))
             if path=='/api/timelapse/render': return self.send(timelapse.render(body.get('reel'),body.get('fps',30)))
             allowed={'continue-care','reset','start','pause','breakdown','false-claim','retry','abort','stop','clog','fault','frame','depth','resume','command'}
