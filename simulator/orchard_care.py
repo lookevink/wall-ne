@@ -7,6 +7,7 @@ from .treatment import Treatment
 from .arm import ik
 from .camera import project_ground, ray
 from .common import digest, distance, finite
+from .almanac import PEST_SLOTS, care_trees
 
 CARE_GUIDE='''CARE MISSION: Complete each assigned tree; navigation and dock service are automatic after verification. Only the current stage's actions are available. Fresh images arrive AUTOMATICALLY after physical changes. Do not request another image to inspect what is already in the current image. Once no caterpillars remain visible, call next_stage for independent verification. EVERY tool call must include frame_id copied from the current frame, including inspect_tree, water_tree, fertilize_tree, next_stage and verify.
 INSPECTION: inspect_tree records the fresh image and moisture/prescription meters.
@@ -25,21 +26,24 @@ class OrchardCare(OrchardManipulation):
     wall_limit=5400
     cost_limit=10
 
-    def __init__(self,seed=7,tree_count=10,worker='W1',assigned_task=None):
+    def __init__(self,seed=7,tree_count=10,worker='W1',assigned_task=None,conditions=None):
         if type(tree_count) is not int or not 1<=tree_count<=10:raise ValueError('tree_count must be 1..10')
         super().__init__(seed)
         self.mission_type='full_care';self.task_index=0;self.completed_trees=[];self.service_log=[]
-        # Front boundary trees have a clear approach from the public south apron.
-        trees=sorted((t for t in TREES if t['column']==12),key=lambda t:abs(t['row']-6))[:tree_count]
         self.tasks=[]
-        for i,tree in enumerate(trees):
-            specimen=Manipulation(seed+i,'precision');x,_,z=tree['position'];prefix=f'tree{i}-'
-            weed=copy.deepcopy(specimen.weed);weed['render_seed']=(seed+i)*101;protected=copy.deepcopy(specimen.protected)
+        for i,tree in enumerate(care_trees(tree_count)):
+            # A season day fixes each tree's morning weed, pests, soil and prescription.
+            day=conditions[i] if conditions else None
+            specimen=Manipulation(day['weed']['specimen_seed'] if day else seed+i,'precision');x,_,z=tree['position'];prefix=f'tree{i}-'
+            weed=copy.deepcopy(specimen.weed);weed['render_seed']=day['weed']['specimen_seed']*101%2**31 if day else (seed+i)*101;protected=copy.deepcopy(specimen.protected)
+            if day:weed.update(size=day['weed']['size'],leaves=day['weed']['leaves'])
             for plant in [weed,*protected]:
                 plant['id']=prefix+plant['id'];plant['position'][0]+=x;plant['position'][2]+=z
-            pests=[dict(id=prefix+f'pest{j}',position=[x+(-.075 if j else .075),.45+j*.28,z+.205],removed=False) for j in range(2)]
+            if day:pests=[dict(id=prefix+f'pest{j}',position=[x+dx,y,z+.205],removed=False) for j,(dx,y) in enumerate(PEST_SLOTS[:day['pests']])]
+            else:pests=[dict(id=prefix+f'pest{j}',position=[x+(-.075 if j else .075),.45+j*.28,z+.205],removed=False) for j in range(2)]
             beneficial=[dict(id=prefix+'ladybird',position=[x-.08,1.15,z+.205])]
-            self.tasks.append(dict(tree=tree,weed=weed,protected=protected,pests=pests,beneficial=beneficial,prescription=18+(seed+i)%5))
+            self.tasks.append(dict(tree=tree,weed=weed,protected=protected,pests=pests,beneficial=beneficial,prescription=day['prescription'] if day else 18+(seed+i)%5))
+            if day:self.tasks[-1]['moisture']=day['moisture']
         if assigned_task is not None:self.tasks=[copy.deepcopy(assigned_task)]
         if worker not in self.parked or self.parked[worker]['role']!='worker':raise ValueError('unknown care worker')
         self.robot=copy.deepcopy(self.parked[worker]);self.robot.update(lifecycle='idle',water=30.)
@@ -63,7 +67,7 @@ class OrchardCare(OrchardManipulation):
         self.inventory_hash=digest(dict(weed=self.weed,protected=self.protected))
         self.initial_inventory=copy.deepcopy(dict(weed=self.weed,protected=self.protected))
         self.prescription=task['prescription'];self.fertilizer_delivered=0.;self.fertilizer_effective=0.;self.fertilizer_meter=None
-        self.moisture=23.;self.effective=0.;self.delivered=0.;self.flow=None;self.moisture_reading=None;self.aim=None
+        self.moisture=task.get('moisture',23.);self.effective=0.;self.delivered=0.;self.flow=None;self.moisture_reading=None;self.aim=None
         self.care_completed={};self.inspection=None;self.stage_verified=False
         self.holding=False;self.extracted=False;self.deposited=False;self.grip_origin=None;self.load=0.;self.force=0.;self.opening=.12
         self.alignment=None;self.contact_ack=None;self.must_reopen=False;self.missed_grasp=None;self.crown_projection=None;self.nonempty_scan=False;self.scan=None;self.depth_request=None
@@ -164,7 +168,7 @@ class OrchardCare(OrchardManipulation):
         elif action=='remove_pest':self.remove_pest(args)
         elif action=='next_stage':
             self.fresh(args['frame_id'])
-            if self.phase=='irrigation':okay=65-1e-6<=self.moisture<=67+1e-6 and self.effective>=21-1e-6 and self.moisture_reading is not None and self.moisture_reading['dose_sequence']==self.dose_sequence
+            if self.phase=='irrigation':okay=65-1e-6<=self.moisture<=67+1e-6 and self.effective>=(65-self.tasks[self.task_index].get('moisture',23.))/2-1e-6 and self.moisture_reading is not None and self.moisture_reading['dose_sequence']==self.dose_sequence
             elif self.phase=='fertilizer':okay=abs(self.fertilizer_effective-self.prescription)<1e-6 and self.fertilizer_meter is not None
             else:okay=all(p['removed'] for p in self.pests)
             if not okay or self.damage:raise ValueError('independent care checks reject stage clearance')
@@ -186,6 +190,12 @@ class OrchardCare(OrchardManipulation):
                 else:self.feedback='Tree incomplete: '+str(checks)
             self.event('verification','W1',checks=checks)
         else:super()._action(action,args)
+
+    def tree_outcome(self):
+        """Measured end state of the current tree, whether or not its care finished."""
+        done=any(t['task_index']==self.task_index for t in self.completed_trees)
+        return dict(moisture=round(self.moisture,3),fertilizer=round(self.fertilizer_effective,3),weed_removed=bool(self.extracted or done),
+                    pests_remaining=sum(not p['removed'] for p in self.pests),cared=done)
 
     def read_application(self):
         self.fertilizer_meter=dict(prescription=self.prescription,delivered=self.fertilizer_delivered,effective=self.fertilizer_effective,revision=self.revision)

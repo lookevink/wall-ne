@@ -100,6 +100,35 @@
 .dialog-body .event {color:#645942;border-color:#c9bda4}
 .dialog-body .notice.visible {margin-bottom:18px}
 .dialog-body .robot-name,.dialog-body .robot-detail,.dialog-body .bar {display:block}
+/* Orchard day: a sun (or moon) on its daylight arc, the hour and the air. */
+.epoch {margin-left:auto;display:flex;align-items:center;gap:13px;padding:10px 16px 10px 12px;position:relative}
+.epoch-arc {width:58px;height:33px;flex-shrink:0;overflow:visible}
+.epoch-arc .arc-track {fill:none;stroke:#d6c7a655;stroke-width:1.4;stroke-dasharray:2 3}
+.epoch-arc line {stroke:#d6c7a640;stroke-width:1}
+.epoch-arc .sun {fill:#ffc75a;filter:drop-shadow(0 0 4px #ffb43aaa)}
+.epoch-arc .moon {fill:#d9e2f5;filter:drop-shadow(0 0 4px #b9c8ee99)}
+.epoch-readout {display:grid;gap:2px}
+.epoch-readout small {font:9px ui-monospace,monospace;letter-spacing:1.5px;color:#e9a08f}
+.epoch-readout strong {font:500 25px 'Helvetica Neue',Arial,sans-serif;letter-spacing:-.6px;color:#fff4d8;font-variant-numeric:tabular-nums;line-height:1}
+.epoch-meta {display:grid;gap:3px;font:9px ui-monospace,monospace;color:#c3bba8;letter-spacing:.3px;white-space:nowrap}
+.epoch-meta span:first-child {color:#f3e6c9;font-size:10px;text-transform:uppercase;letter-spacing:1px}
+.rec-badge {position:absolute;top:-9px;right:12px;background:#c92f26;color:#fff0d9;border:1px solid #ee8170;border-radius:6px;padding:3px 6px;font:700 8px ui-monospace,monospace;letter-spacing:1px;animation:rec 1.6s ease-in-out infinite}
+@keyframes rec {50% {opacity:.55}}
+@media (prefers-reduced-motion:reduce) {.rec-badge {animation:none}}
+.settings-grid.pair label:nth-child(2) {grid-row:auto}
+.settings-grid label.check {display:flex;align-items:center;gap:9px;align-self:end;min-height:38px}
+.settings-grid label.check input {width:auto;min-height:0;margin:0}
+.dialog-body code {font:11px ui-monospace,monospace;background:#e1d7c3;border-radius:4px;padding:1px 4px}
+.almanac {display:grid;font-size:11px;color:#5d5544}
+.almanac-row {display:grid;grid-template-columns:42px minmax(90px,1.4fr) 1.2fr 62px 70px 76px;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid #d8ccb4}
+.almanac-row.head {font:9px ui-monospace,monospace;color:#8d806a;letter-spacing:.5px;text-transform:uppercase;padding-top:0}
+.almanac-row .soil {position:relative;display:flex;align-items:center;gap:8px;font:10px ui-monospace,monospace}
+.almanac-row .soil i {display:block;height:6px;border-radius:3px;background:linear-gradient(90deg,#a68b5b,#5f7e8a);flex:0 0 auto;max-width:60%}
+.almanac-row .soil b {position:absolute;top:-3px;width:1px;height:12px;background:#8d4a35;transform:translateX(-.5px)}
+.almanac-row .pests {color:#7b4f8d;letter-spacing:1px}
+.almanac-row .pass {color:#557536;font-weight:600}
+.season-log .event {grid-template-columns:52px 70px 1fr auto}
+.season-log .caption {margin:0}
 @media(max-width:1000px) {
   .camera-workspace {grid-template-columns:minmax(0,1fr) clamp(164px,27vw,260px)}
   .top-hud {left:16px;right:16px;top:16px}.bottom-hud {left:16px;right:16px;bottom:16px}
@@ -125,6 +154,8 @@
   .fleet-page .feed-title {padding:10px 7px 22px;font-size:8px;letter-spacing:0}.fleet-page .feed-title span {font-size:7px;letter-spacing:0}
   .feed-state {padding:22px 7px 9px;font-size:8px;flex-wrap:wrap}.feed-indicator {width:4px;height:4px;margin-right:4px}
   .compass {right:17px;top:115px}.dialog-head,.dialog-body {padding:20px}
+  .top-hud {flex-wrap:wrap}.epoch {margin-left:0;width:100%;padding:7px 10px;gap:9px;border-radius:13px}.epoch-arc {width:42px;height:24px}.epoch-readout strong {font-size:20px}
+  .epoch-meta span:last-child {display:none}.almanac-row {grid-template-columns:34px 1fr 1fr 44px;font-size:10px}.almanac-row>:nth-child(5),.almanac-row>:nth-child(6) {display:none}
 }
 @media(max-height:560px) {
   .bottom-hud {bottom:12px;gap:8px}.mission-hud {padding:10px}.mission-actions {margin-top:8px;padding-top:8px}

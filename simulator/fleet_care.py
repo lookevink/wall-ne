@@ -12,11 +12,17 @@ from .inference import InferenceError
 ORCHESTRATION='''You orchestrate Wall-ne's five equipped orchard workers W1-W5. Mobilize every worker, including W5. Assign ten distinct trees for complete care. Choose one feasible option using choose_action: assign with row (task index) and vehicle, or claim_complete with {} after all independent checks pass. Workers execute live visual inspection, watering, fertilizer, pest removal and articulated weed extraction, then service at their docks. Each tree has exactly one owner; never duplicate active assignments. Prefer idle workers that have not yet participated, then assign remaining trees to available workers. Traffic reservations are enforced by the runtime. A blocked worker is an incident, never a completed tree. Continue assigning remaining trees to healthy available workers; failed workers remain unavailable for this run. R1 is the recovery vehicle, not a fitted plant-care worker. Do not instruct workers with hidden target coordinates.'''
 
 
+def result_outcome(result):
+    """A finished worker's measured tree state; older results only record completed care."""
+    tree=(result.get('completed_trees') or [None])[0]
+    return result.get('outcome') or (dict(moisture=tree['moisture'],fertilizer=tree['fertilizer'],weed_removed=True,pests_remaining=0,cared=True) if tree else None)
+
+
 class FleetCareWorld(Mission):
-    def __init__(self,seed=7,tree_count=10):
+    def __init__(self,seed=7,tree_count=10,conditions=None):
         super().__init__(seed)
         self.arena='orchard';self.mission_type='fleet_care';self.phase='orchestration'
-        self.tasks=OrchardCare(seed,tree_count).tasks;self.task_inventory_hash=digest(self.tasks)
+        self.tasks=OrchardCare(seed,tree_count,conditions=conditions).tasks;self.task_inventory_hash=digest(self.tasks)
         self.zones={};self.assignments={};self.worker_sessions={};self.results={}
         self.vehicles['W5']['lifecycle']='idle'
         self.contract=dict(goal=f'All five workers: fully care for {tree_count} orchard trees, collect weeds and return to docks',tree_count=tree_count,reserve=25,wall_limit=5400,cost_limit=10)
@@ -103,7 +109,7 @@ class FleetCareRuntime(Runtime):
             if rows and rows[0]['status'] in TERMINAL:
                 saved=self.repository.restore(a['session_id']);w=OrchardCare.restore(saved)
                 a['status']=w.status
-                self.world.results[w.id]=dict(status=w.status,checks=w.verify(),worker=a['vehicle'],completed_trees=w.completed_trees,inference=saved.get('runtime_state',{}).get('inference',[]))
+                self.world.results[w.id]=dict(status=w.status,checks=w.verify(),worker=a['vehicle'],completed_trees=w.completed_trees,inference=saved.get('runtime_state',{}).get('inference',[]),outcome=w.tree_outcome())
                 self.world.vehicles[a['vehicle']]=copy.deepcopy(w.robot)
                 if w.status!='completed':self.world.status='blocked';self.world.feedback=f'{a["vehicle"]}: saved worker outcome {w.status}'
                 continue
@@ -193,7 +199,7 @@ class FleetCareRuntime(Runtime):
                     self.pause('blocked');self.world.feedback=f'{worker}: storage failure';self.persist();return
                 if w.status in TERMINAL and assignment['status']!=w.status:
                     assignment['status']=w.status
-                    self.world.results[w.id]=dict(status=w.status,checks=w.verify(),worker=worker,completed_trees=copy.deepcopy(w.completed_trees),inference=copy.deepcopy(child.inference))
+                    self.world.results[w.id]=dict(status=w.status,checks=w.verify(),worker=worker,completed_trees=copy.deepcopy(w.completed_trees),inference=copy.deepcopy(child.inference),outcome=w.tree_outcome())
                     self.world.event('worker_finished',worker,status=w.status,checks=w.verify(),session_id=w.id)
                     if w.status!='completed':
                         self.world.feedback=f'{worker} stopped: {w.feedback}. Healthy workers continue.'
@@ -203,6 +209,19 @@ class FleetCareRuntime(Runtime):
         total_cost+=sum(r.get('cost') or 0 for sid,result in self.world.results.items() if sid not in active for r in result['inference'])
         if total_cost>=self.world.contract['cost_limit']:
             self.pause('blocked');self.world.feedback='Fleet reported-cost cap';self.persist()
+
+    def day_outcomes(self):
+        """Measured end state per care-task index; unattempted trees are absent."""
+        with self.lock:
+            live={child.world.id:child for child in self.children.values()};outcomes={}
+            for i,a in self.world.assignments.items():
+                sid=a.get('session_id')
+                if sid in live:
+                    with live[sid].lock:outcomes[int(i)]=live[sid].world.tree_outcome()
+                elif sid in self.world.results:
+                    outcome=result_outcome(self.world.results[sid])
+                    if outcome:outcomes[int(i)]=outcome
+            return outcomes
 
     def coordinate_traffic(self):
         if self.navigation_owner:
