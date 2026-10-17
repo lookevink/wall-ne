@@ -1,0 +1,138 @@
+[
+  {
+    "export_error": null,
+    "session_id": "c29fcb66-988e-4fd8-9463-1495439c3bbe",
+    "engine": "crusoe",
+    "trial": "precision",
+    "seed": 7,
+    "status": "completed",
+    "feedback": "Physical stage verified; return home",
+    "checks": {
+      "battery": true,
+      "collected": true,
+      "extracted": true,
+      "images": true,
+      "inventory": true,
+      "preserved": true,
+      "returned": true
+    },
+    "calls": 15,
+    "failed_calls": 1,
+    "pending_calls": 0,
+    "inference_seconds": 112.05563458399998,
+    "cost": null,
+    "model": "google/gemma-4-31b-it",
+    "provider_routes": {
+      "treatment": {
+        "failures": 0,
+        "fallback": false
+      }
+    },
+    "provider_policy": {
+      "after_failures": 2,
+      "engine": "gemma",
+      "models": {
+        "orchestrator": "nvidia/nemotron-3-super-120b-a12b",
+        "planner": "nvidia/nemotron-3-super-120b-a12b",
+        "retriever": "nvidia/nemotron-3-nano-30b-a3b",
+        "treatment": "google/gemma-4-31b-it",
+        "verifier": "nvidia/nemotron-3-super-120b-a12b",
+        "worker": "nvidia/nemotron-3-nano-30b-a3b"
+      },
+      "provider_base": "https://ai-gateway.vercel.sh/v1"
+    },
+    "treatment_code_hash": "c0efbff023be50eb90645c074eefdb4985bfb45ede07a4cc42dc53a9b3a34074",
+    "wall_seconds": 157.059614958,
+    "controller_progress": {
+      "guidance": "Progress counts new viewpoints and actual contact/recovered contact/extraction/collection/return, not image count or revision increments.",
+      "incidents": 0,
+      "last_action": "verify",
+      "milestones": [
+        "contact",
+        "extracted",
+        "collected",
+        "returned"
+      ],
+      "previous_physical": {
+        "collected": true,
+        "contact": false,
+        "extracted": true,
+        "returned": true
+      },
+      "recovery_required": false,
+      "stagnant_actions": 0,
+      "steps": [
+        "656e3c3768f40c8e4d844f761c0b83b6ce70e51801f2641635e4897eb4144664",
+        "405e61b767f72fcd50e7eac9402168bce7291e9eec7e5012bee516b1b6600d77",
+        "9376ccc1bf23955e589e77c6a341a013cbbadec9b5f80c1f701af374804ab688",
+        "c4687eb6893d1b52b9df20da408b98ca13efe8d38a94062181e93051671efa2e",
+        "c4687eb6893d1b52b9df20da408b98ca13efe8d38a94062181e93051671efa2e",
+        "44f486a543b2b873d6a4c80129ae3b967b0aa55067ae7fd2f2af487c13e0b8c7",
+        "481f708c48c1f739e541e8f19076585a81311773ade2c5433acf95dfc762278e",
+        "b0593a57b689d08058c73a01955bbb13cdeb0e9d81e121fbe239e9fa9ae7900f",
+        "eef99a26b8595897a91d94539c34ef2496fae1879b507d60f67b5aff1ef04257",
+        "76a62b44efe6ba92964486c473130592a216ae2dc37def9c284cf02f59b57179",
+        "3d8ba97295665e9a8fbdeb103cbec2f60c2fa0be0daaaa7634a8e019d07e8bc5",
+        "7b5c22ea99670fc251c4334998105a64edde2968f712d1272950ae0ad8d30137",
+        "f4f79c58975935a5f56ad9d94ea78c4df2ddde082a0f5543fa747765ea79fc24",
+        "3d75ad3aafdb5fee1496dc7fe08813e34c2a3c2cd887fa3e4185b38e7dac4249",
+        "31b3f9802d0b5fb6342e33d322ecf8fa8386b65c461f43bd4d7b68ad9a152fa2"
+      ],
+      "views": [
+        [
+          0,
+          0.8000000000000002,
+          2.2,
+          -2.5444437451708134e-14,
+          0,
+          0
+        ],
+        [
+          0.28,
+          0.40000000000000024,
+          1.63,
+          0,
+          0,
+          0
+        ],
+        [
+          0.2700000000000001,
+          0.13000000000000003,
+          1.6199999999999999,
+          0,
+          1.5902773407317584e-15,
+          -3.975693351829397e-16
+        ],
+        [
+          0.27,
+          0.32999999999999996,
+          1.6200000000000003,
+          3.1805546814635168e-15,
+          -1.5902773407317584e-15,
+          0
+        ],
+        [
+          0.9500000000000004,
+          0.8000000000000004,
+          2.5,
+          -3.1805546814635168e-15,
+          6.3611093629270335e-15,
+          -3.1805546814635176e-15
+        ],
+        [
+          0.9500000000000004,
+          0.8000000000000004,
+          6.7,
+          -3.1805546814635168e-15,
+          6.3611093629270335e-15,
+          -3.1805546814635176e-15
+        ]
+      ]
+    },
+    "physical_milestones": {
+      "holding": false,
+      "extracted": true,
+      "deposited": true
+    }
+  }
+]

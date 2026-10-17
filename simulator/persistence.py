@@ -65,11 +65,11 @@ class Repository:
             texts={}; versions_by_role={}
             for role in world.prompt_versions:
                 override=config.get('prompt_version')
-                if getattr(world,'trial',None)=='fieldcrew' and role=='treatment' and not override:
-                    from .fieldcrew_profile import PROMPT as fieldcrew_prompt
-                    override=str(uuid.uuid5(uuid.NAMESPACE_URL,role+fieldcrew_prompt))
+                if getattr(world,'trial',None)=='precision' and role=='treatment' and not override:
+                    from .precision_profile import PROMPT as precision_prompt
+                    override=str(uuid.uuid5(uuid.NAMESPACE_URL,role+precision_prompt))
                     if not self.read('prompt_versions',f'id=eq.{override}&limit=1'):
-                        self.request('POST','/rest/v1/prompt_versions',dict(id=override,role=role,text=fieldcrew_prompt,hash=digest(fieldcrew_prompt),status='candidate'))
+                        self.request('POST','/rest/v1/prompt_versions',dict(id=override,role=role,text=precision_prompt,hash=digest(precision_prompt),status='candidate'))
                     config['prompt_version']=override
                 query=f'id=eq.{override}&limit=1' if override else f'role=eq.{role}&status=eq.active&limit=1'
                 versions=self.read('prompt_versions',query)

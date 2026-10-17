@@ -327,7 +327,7 @@ Implement six selectable experiment conditions with unchanged contact/acceptance
 | `alignment` | Same LiDAR plus explicit fresh visual assessment and contact acknowledgment |
 | `wrist` | Same staged protocol, with RGB/LiDAR rigidly mounted on the tool |
 
-`scan_lidar(u,v,span,frame_id)` requires normalized u/v in 0..1, span .04..0.5 (default .24). Clip the selected square to the image; generate 169 ordered rays. Browser returns first visible mesh hits, respecting foliage alpha cutouts, arm occlusion and layer visibility. Ignore display-only overlays. Return `[u,v,x,y,z]` rows, null misses, frame/revision and bounds; no object IDs or target snapping. Validate count, finiteness, request/frame/revision identity, distance .05..6 m and lateral ray error ≤.005 m atomically. Scans from an earlier scene revision remain visible but are labeled stale after motion. A later empty scan does not erase the prior nonempty-scan prerequisite.
+`scan_lidar(u,v,span,frame_id)` requires normalized u/v in 0..1, span .04..0.5 (default .24). Clip the selected square to the image; generate 169 ordered rays. Browser returns first visible mesh hits, respecting foliage alpha cutouts, arm occlusion and layer visibility. Ignore display-only overlays. Return `[u,v,x,y,z]` rows, null misses, frame/revision and bounds; no object IDs or target snapping. Validate count, finiteness, request/frame/revision identity, distance .05..6 m and lateral ray error ≤.005 m atomically. Scans from a different scene revision remain visible but are labeled stale after motion. A later empty scan does not erase the prior nonempty-scan prerequisite.
 
 Staged tools:
 

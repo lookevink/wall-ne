@@ -1,0 +1,16 @@
+{
+  "cause": "Tool schema made rx/ry/rz optional but Cartesian parser required them. The response omitted all three.",
+  "response_id": "b098f659f0b14aee81547c546efe8c1e",
+  "tool_calls": [
+    {
+      "id": "call_759ff836635249f1970239c6",
+      "index": 0,
+      "type": "function",
+      "function": {
+        "name": "treatment_action",
+        "arguments": "{\"action\": \"move_arm\", \"reason\": \"Approaching above the weed stem based on LiDAR points (approx x=0.1, z=0.18) at a safe height of y=0.4.\", \"x\": 0.1, \"y\": 0.4, \"z\": 0.18, \"zone\": \"extraction\"}"
+      }
+    }
+  ],
+  "fix": "Explicit optional zero-degree vertical orientation; preserve bounded rejected tool output. No robot actions executed by this diagnostic."
+}

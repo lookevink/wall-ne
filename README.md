@@ -30,9 +30,9 @@ Use a dedicated test project when running persistence integration tests; they cr
 
 - **Fleet:** “Rule-based demo” is deterministic and makes no model calls. “Live Crusoe roles” uses separate bounded planner, orchestrator, worker/retriever and verifier calls. Python decides whether any command or completion claim is valid.
 - **Irrigation / complete care:** “Offline PNG heuristic” finds stylized color components in actual browser PNGs. Live multimodal mode receives the same camera image and permitted sensor readings. Keep the treatment page open to supply observations.
-- **Manipulation:** select a live provider and one of six sensor conditions. `known` is explicitly a supplied-coordinate diagnostic. It is not evidence of visual localization. Wrist and alignment modes enforce visual assessment plus independently measured contact/load before lifting.
+- **Manipulation:** select a live provider and a sensor condition. `known` is explicitly a supplied-coordinate diagnostic. It is not evidence of visual localization. Wrist and alignment modes enforce visual assessment plus independently measured contact/load before lifting.
 
-Crusoe is primary; live treatment defaults to Gemma 4. Two consecutive provider/protocol failures switch the affected role to its pinned AI Gateway fallback for the rest of the session. Physical misses and rejected actions do not trigger fallback. Gemini, Nemotron VL and Gemma remain explicit Gateway comparison conditions. See [the FieldCrew transfer and routing notes](docs/FIELDCREW.md). `AI_GATEWAY_KEY` is accepted as an alias for `AI_GATEWAY_API_KEY`. Missing credentials, failed inference and exhausted budgets produce blocked results; there is no silent offline fallback.
+Crusoe is primary; live treatment defaults to Gemma 4. Two consecutive provider/protocol failures switch the affected role to its pinned AI Gateway fallback for the rest of the session. Physical misses and rejected actions do not trigger fallback. Gemini, Nemotron VL and Gemma remain explicit Gateway comparison conditions. See [the wrist control and routing notes](docs/WRIST_CONTROL.md). `AI_GATEWAY_KEY` is accepted as an alias for `AI_GATEWAY_API_KEY`. Missing credentials, failed inference and exhausted budgets produce blocked results; there is no silent offline fallback.
 
 ## Recovery and evidence
 

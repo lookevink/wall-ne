@@ -9,7 +9,7 @@ from tests.test_treatment import frame
 
 class ProviderRoutingTests(unittest.TestCase):
     def runtime(self):
-        w=Manipulation(7,'fieldcrew');w.status='running';frame(w)
+        w=Manipulation(7,'precision');w.status='running';frame(w)
         with patch('threading.Thread.start'):
             r=TreatmentRuntime(w,config=dict(mode='vision',engine='crusoe'))
         self.addCleanup(r.close)

@@ -40,7 +40,7 @@ def parse_response(response,tool_name='choose_action',allowed_actions=None):
             action=parsed.pop('action',None);reason=parsed.pop('reason',None)
             if not isinstance(reason,str) or len(reason)>1200 or action not in allowed_actions:raise ValueError()
             if action=='move_arm' and 'joints' not in parsed:
-                parsed['pose']=[parsed.pop(k) for k in ('x','y','z','rx','ry','rz')]
+                parsed['pose']=[parsed.pop(k) for k in ('x','y','z')]+[parsed.pop(k,0) for k in ('rx','ry','rz')]
             parsed=dict(action=action,arguments=parsed,rationale=reason)
         if not isinstance(parsed,dict) or set(parsed)-{'action','arguments','rationale'} or not isinstance(parsed.get('action'),str) or not isinstance(parsed.get('arguments'),dict): raise ValueError()
         if 'rationale' in parsed and (not isinstance(parsed['rationale'],str) or len(parsed['rationale'])>1200): raise ValueError()
@@ -71,14 +71,14 @@ class Adapter:
         content=[dict(type='text',text=canonical(observation))]
         if image:
             for png in (image if isinstance(image,list) else [image])[:3]: content.append(dict(type='image_url',image_url={'url':png}))
-        flat=observation.get('trial')=='fieldcrew'
+        flat=observation.get('trial')=='precision'
         tool_name='treatment_action' if flat else 'choose_action'
         schema=TOOLS
         if flat:
-            fields={k:v for k,v in ARGUMENT_FIELDS.items() if k!='pose'}
+            fields={k:ARGUMENT_FIELDS[k] for k in ('u','v','span','frame_id','opening','force','joints','stem_between_fingers','depth_consistent','evidence')}
             fields.update({k:dict(type='number') for k in ('x','y','z','rx','ry','rz')})
             fields.update(action=dict(type='string',enum=observation['available_actions']),reason=dict(type='string'))
-            schema=[dict(type='function',function=dict(name=tool_name,description='Execute one available action. move_arm requires x,y,z,rx,ry,rz. set_gripper requires opening and force. Assess/confirm require current frame_id and evidence.',parameters=dict(type='object',properties=fields,required=['action','reason'],additionalProperties=False)))]
+            schema=[dict(type='function',function=dict(name=tool_name,description='Execute one available action. move_arm requires x,y,z in WORLD METERS. Optional rx,ry,rz default to zero (gripper straight DOWN). set_gripper requires opening and force. Assess/confirm require current frame_id and evidence.',parameters=dict(type='object',properties=fields,required=['action','reason'],additionalProperties=False)))]
         body=dict(model=self.model,messages=[dict(role='system',content=prompt),dict(role='user',content=content)],tools=schema,tool_choice='required' if flat else {'type':'function','function':{'name':tool_name}},temperature=.1,max_tokens=4096)
         request=urllib.request.Request(self.base.rstrip('/')+'/chat/completions',data=canonical(body).encode(),headers={'Authorization':'Bearer '+self.key,'Content-Type':'application/json'},method='POST')
         started=time.monotonic(); response=None
@@ -103,6 +103,8 @@ class Adapter:
             exc.metrics.update(cost=cost,response_id=response.get('id'),returned_model=response.get('model'))
             choices=response.get('choices')
             exc.metrics['response_summary']=[dict(finish_reason=c.get('finish_reason')) for c in choices[:2] if isinstance(c,dict)] if isinstance(choices,list) else []
+            # Preserve bounded tool output, excluding free-form reasoning and images.
+            exc.metrics['tool_response']=repr([c.get('message',{}).get('tool_calls') for c in choices[:2] if isinstance(c,dict) and isinstance(c.get('message'),dict)])[:12000] if isinstance(choices,list) else None
             raise
 
         return dict(id=uid(),decision=decision,requested_model=self.model,returned_model=response.get('model'),provider=self.provider,response_id=response.get('id'),usage={k:usage[k] for k in ('prompt_tokens','completion_tokens','total_tokens') if k in usage},cost=cost,latency=time.monotonic()-started)

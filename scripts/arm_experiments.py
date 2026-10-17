@@ -49,7 +49,7 @@ def trial(engine,condition,seed=7,expected=None):
 def main():
     p=argparse.ArgumentParser();g=p.add_mutually_exclusive_group()
     for flag in ('lidar','alignment','wrist'):g.add_argument('--'+flag,action='store_true')
-    p.add_argument('--engine',choices=['crusoe','nemotron','gemma','gemini']);p.add_argument('--condition',choices=['baseline','known','depth','lidar','alignment','wrist','fieldcrew']);p.add_argument('--seed',type=int,default=7)
+    p.add_argument('--engine',choices=['crusoe','nemotron','gemma','gemini']);p.add_argument('--condition',choices=['baseline','known','depth','lidar','alignment','wrist','precision']);p.add_argument('--seed',type=int,default=7)
     args=p.parse_args()
     condition=args.condition or next((x for x in ('lidar','alignment','wrist') if getattr(args,x)),None)
     runs=[(args.engine,condition or 'baseline')] if args.engine else [(engine,condition) for engine in ('nemotron','gemma')] if condition else [('gemini','baseline')]+[(engine,'known') for engine in ('gemini','nemotron','gemma')]+[(engine,'depth') for engine in ('nemotron','gemma')]

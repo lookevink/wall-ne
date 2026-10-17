@@ -23,7 +23,7 @@ def box_contains(p,center,half):
 
 def robot_surface(p,pose,opening,base_position,profile=None):
     points=pose['points'];r=pose['rotation']
-    if profile=='fieldcrew':
+    if profile=='precision':
         if any(segment_distance(p,a,b)<=.061 for a,b in zip(points,points[1:])):return True
         joints=[(points[0],.075),(add(points[0],[0,.08,0]),.075),(points[1],.075)]
         joints += [(add(points[2],scale(sub(points[3],points[2]),i*.27)),.075*(1-i*.15)) for i in range(3)]

@@ -1,5 +1,5 @@
 {
-  "condition": "fieldcrew",
+  "condition": "precision",
   "purpose": "Diagnostic first-surface visibility; target positions used only by probes, never model control",
   "finger_tolerance_m": 0.004,
   "stem_region_tolerance_m": 0.03,

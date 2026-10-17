@@ -1,4 +1,4 @@
-// Transferred from FieldCrew; see docs/FIELDCREW.md for provenance.
+// Compact wrist-camera manipulation geometry.
 import * as THREE from 'three';
 
 export class ManipulatorView {
