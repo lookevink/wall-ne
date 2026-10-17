@@ -57,7 +57,7 @@ python3 -m scripts.timelapse --list
 
 ### Season film
 
-`/film.html` renders a deterministic multi-day film as a 2×2 grid: overview, care-row close-up, W3's onboard camera and an almanac panel. Frames come from `simulator/film.py`, which steps the season in fixed simulated-time increments. A scripted controller reads simulator truth and issues the ordinary care commands, so arm kinematics, collision checks and per-tree checks still decide every outcome. No model is called and nothing is persisted as evidence, so a film is a presentation of the simulation, not of live model performance. The same seed always produces the same frames. Rendering is promise-driven, so it also runs in headless Chrome. Add `&reel=<id>&from=<n>` to resume an interrupted reel. The reel's `manifest.json` records the seed, day count and controller.
+`/film.html` renders a deterministic multi-day film as a 2×2 grid: overview, care-row close-up, W3's onboard camera and an almanac panel. Frames come from `simulator/film.py`, which steps the season in fixed simulated-time increments. A scripted controller reads simulator truth and issues the ordinary care commands, so arm kinematics, collision checks and per-tree checks still decide every outcome. The same seed always produces the same frames. Rendering is promise-driven, so it also runs in headless Chrome. Add `&reel=<id>&from=<n>` to resume an interrupted reel. The reel's `manifest.json` records the seed, day count and controller.
 
 ## Recovery and evidence
 

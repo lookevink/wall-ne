@@ -2,8 +2,7 @@ import * as THREE from 'three';
 import {FleetScene} from './scene.js';
 import {api} from './ui.js';
 
-// Offline season film. Every frame is drawn from a server-computed state, never from
-// wall-clock time, so the same seed renders the same film.
+// Every frame is drawn from a server-computed state, so the same seed renders the same film.
 const W=960,H=540,$=id=>document.getElementById(id);
 const PHASES={night:'Night',dawn:'Dawn',sunrise:'Sunrise',morning:'Morning',midday:'Midday',afternoon:'Afternoon','golden hour':'Golden hour',dusk:'Dusk'};
 const view=new FleetScene($('stage')),renderer=view.renderer;renderer.setPixelRatio(1);

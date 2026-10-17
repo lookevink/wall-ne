@@ -3,8 +3,7 @@
 The script reads simulator truth (weed, basin and pest positions) and issues the
 ordinary care commands, so arm kinematics, collision checks, metering and every
 per-tree check still decide each outcome. Simulated time advances in fixed
-steps, so a seed always yields the same frames. Nothing here is persisted as
-mission evidence and no model is called.
+steps, so a seed always yields the same frames.
 """
 import copy
 import math

@@ -1,8 +1,4 @@
-"""Operator timelapse reels: browser-rendered overview frames kept locally and stitched with ffmpeg.
-
-Reels are presentation output, not mission evidence. They never feed a model
-and are never uploaded.
-"""
+"""Operator timelapse reels: browser-rendered overview frames kept locally and stitched with ffmpeg."""
 import base64
 import json
 import pathlib

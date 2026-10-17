@@ -139,7 +139,7 @@ class App:
         return view
 
     def start_film(self,body):
-        """A deterministic scripted season for presentation; independent of the live fleet and storage."""
+        """Generate a deterministic season film and initialize its frame iterator."""
         seed=body.get('seed',7);days=body.get('days',14)
         if type(seed)!=int or not 0<=seed<=100000: raise ValueError('seed must be 0..100000')
         film=Film(seed,days);reel=body.get('reel')
