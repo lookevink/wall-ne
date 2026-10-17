@@ -12,12 +12,20 @@ class SavedRepository:
     def __init__(self,w,config):
         self.state=w.checkpoint();self.config=config;self.kind=w.kind;self.sequence=w.seq
     def read(self,table,query):
-        if table=='sessions':return [dict(kind=self.kind,metadata={'configuration':self.config})]
+        if table=='sessions':return [dict(kind=self.kind,status=self.state['status'],metadata={'configuration':self.config})]
         return []
     def restore(self,session):return copy.deepcopy(self.state)
     def lease(self,session):return {'sequence':self.sequence,'resume_epoch':2}
 
 class RecoveryTests(unittest.TestCase):
+    def test_terminal_outcomes_cannot_be_reopened_or_relabeled(self):
+        w=Mission();w.status='completed';repo=SavedRepository(w,dict(mode='demo',engine='crusoe'))
+        with patch('threading.Thread.start'),patch.object(Runtime,'persist',return_value=True):
+            runtime=Runtime(world=w,repository=repo)
+            runtime.pause('aborted');self.assertEqual(w.status,'completed')
+            with self.assertRaises(ValueError):runtime.restore(w.id)
+            runtime.close()
+
     def test_frozen_live_configuration_survives_restore(self):
         w=Mission();w.runtime_state=dict(inference=[{'cost':.12}],failures={'W1':1},active_wall=20)
         repo=SavedRepository(w,dict(mode='live',engine='gemini',speed=4,models={'worker':'test-pinned'},provider_base='https://example.invalid/v1'))

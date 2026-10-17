@@ -52,6 +52,7 @@ class Runtime:
     def pause(self,status='paused'):
         with self.lock:
             if self.storage_error: raise ValueError('storage_blocked; retry the pending batch first')
+            if self.world.status in TERMINAL: return
             self.world.status=status; self.world.event(status)
             self.persist()
 
@@ -60,7 +61,8 @@ class Runtime:
             # Renew the same writer lease; never overwrite another writer's session.
             if self.persisted: self.repository.lease(self.world.id)
             if self.persist():
-                self.world.status='paused'; self.world.event('storage_recovered'); self.persist()
+                if self.world.status not in TERMINAL:self.world.status='paused'
+                self.world.event('storage_recovered'); self.persist()
 
     def command(self,robot,action,args=None,command_id=None):
         with self.lock:
@@ -71,8 +73,10 @@ class Runtime:
 
     def restore(self,session):
         with self.lock:
+            if self.persisted and self.world.status=='running': raise ValueError('pause the current session before restoring another')
             rows=self.repository.read('sessions',f'id=eq.{session}&limit=1')
             if not rows or (rows[0]['kind']=='fleet')!=(self.world.kind=='fleet'): raise ValueError('session belongs to a different runtime family')
+            if rows[0].get('status') in TERMINAL: raise ValueError('terminal sessions are read-only; create a new session')
             config=copy.deepcopy(rows[0]['metadata']['configuration'])
             if config.get('mode') in ('live','vision') and ('models' not in config or 'provider_base' not in config): raise ValueError('saved live session lacks exact model pins; create a new session')
             state=self.repository.restore(session); lease=self.repository.lease(session)
