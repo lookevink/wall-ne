@@ -2,8 +2,9 @@
 """One predeclared five-run series: same model, camera, prompt, mechanics and caps."""
 import json
 import pathlib
+import sys
 import uuid
-from simulator.common import load_env,treatment_implementation_hash,utc
+from simulator.common import load_env,treatment_implementation_hash,utc,budget
 from simulator.inference import Adapter
 from simulator.persistence import Repository
 from scripts.arm_experiments import trial,api
@@ -13,7 +14,9 @@ def main():
     from simulator.precision_profile import PROMPT
     prompt={'id':str(uuid.uuid5(uuid.NAMESPACE_URL,'treatment'+PROMPT))}
     expected=dict(model=adapter.model,provider_base=adapter.base,treatment_code_hash=treatment_implementation_hash(),prompt_version=prompt['id'])
-    series=dict(id=str(uuid.uuid4()),created_at=utc(),status='running',manifest=dict(engine='crusoe',trial='precision',arena='orchard',seeds=[7,7,11,23,8],wall_cap_seconds=240,reported_cost_cap_dollars=1,command_cap=50,condition=expected,purpose='Post-change repeatability and held-out accuracy; not a causal before/after comparison or prompt promotion'),results=[])
+    # Optional seed list argument, e.g. 7,7,7,11,23,8; repeats of one seed measure repeatability, the others held-out accuracy.
+    seeds=[int(s) for s in sys.argv[1].split(',')] if len(sys.argv)>1 else [7,7,11,23,8]
+    series=dict(id=str(uuid.uuid4()),created_at=utc(),status='running',manifest=dict(engine='crusoe',trial='precision',arena='orchard',seeds=seeds,wall_cap_seconds=budget('WALL_CAP'),reported_cost_cap_dollars=budget('COST_CAP'),command_cap=50,condition=expected,purpose='Post-change repeatability and held-out accuracy; not a causal before/after comparison or prompt promotion'),results=[])
     path=pathlib.Path('docs/evaluations')/('wrist-repeatability-'+series['id']+'.json')
     def save():path.write_text(json.dumps(series,indent=2))
     # Avoid replacing unrelated operator work.

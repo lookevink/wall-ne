@@ -1,0 +1,828 @@
+{
+  "id": "ed71f406-4b64-4619-ac66-5f39c50e7bc6",
+  "created_at": "2026-10-17T19:32:09.004013+00:00",
+  "status": "completed",
+  "manifest": {
+    "engine": "crusoe",
+    "trial": "precision",
+    "arena": "orchard",
+    "seeds": [
+      7,
+      7,
+      7,
+      11,
+      23,
+      8
+    ],
+    "wall_cap_seconds": 3600.0,
+    "reported_cost_cap_dollars": 1.0,
+    "command_cap": 50,
+    "condition": {
+      "model": "google/gemma-4-31b-it",
+      "provider_base": "https://api.inference.crusoecloud.com/v1",
+      "treatment_code_hash": "16bac89f211aa5b48848db5abbae288d34a83e2297e63e43d9530914f91551e6",
+      "prompt_version": "9dbe48a3-9145-5502-8be2-db5cd315de98"
+    },
+    "purpose": "Post-change repeatability and held-out accuracy; not a causal before/after comparison or prompt promotion"
+  },
+  "results": [
+    {
+      "export_error": null,
+      "session_id": "6fcd89ab-b138-4eb6-8b71-dc95a97dc57f",
+      "engine": "crusoe",
+      "trial": "precision",
+      "arena": "orchard",
+      "seed": 7,
+      "status": "completed",
+      "feedback": "Physical stage verified; return home",
+      "checks": {
+        "battery": true,
+        "collected": true,
+        "extracted": true,
+        "images": true,
+        "inventory": true,
+        "preserved": true,
+        "returned": true
+      },
+      "calls": 13,
+      "failed_calls": 0,
+      "pending_calls": 0,
+      "inference_seconds": 97.72578612800001,
+      "cost": null,
+      "model": "google/gemma-4-31b-it",
+      "provider_routes": {
+        "treatment": {
+          "failures": 0,
+          "fallback": false
+        }
+      },
+      "provider_policy": null,
+      "treatment_code_hash": "16bac89f211aa5b48848db5abbae288d34a83e2297e63e43d9530914f91551e6",
+      "wall_seconds": 149.194798292,
+      "controller_progress": {
+        "guidance": "Progress counts new viewpoints and actual contact/recovered contact/extraction/collection/return, not image count or revision increments.",
+        "incidents": 0,
+        "last_action": "verify",
+        "milestones": [
+          "contact",
+          "extracted",
+          "collected",
+          "returned"
+        ],
+        "previous_physical": {
+          "collected": true,
+          "contact": false,
+          "extracted": true,
+          "returned": true
+        },
+        "recovery_required": false,
+        "stagnant_actions": 0,
+        "steps": [
+          "6b9e5903f36e2765392b7368dc48fed0456792b10966e54adcb1d8fb046969f3",
+          "76e9502e1b343bd3626afbde22a0f377880e48053c1e9d124e7ba1a60ecf278a",
+          "c2e08cf1cc7f24b067e2085ba0dcbbd78b3d48b2b25814e770652e0b7f8f935f",
+          "652875a76864a5d8264f111e81022083cb2884c5f18c539a1efbe8582631e676",
+          "89fc19f65a8642e6d1042b42527923cfbc8674b54f722f957487fb25054ff8e1",
+          "3bb8f6185e4765f98f01c13f0c027d8d3cf19caa2be35c86d167a0a54bf72b98",
+          "dbe6e4b1d414dcc888a6d560e639a2e6a8a6ea3b5ac8f738d0fe0a72fc4a9cca",
+          "53f3fbf456d25e7a4b658b098692e94a6191e2340ddb4d2013e3ef77639d74ea",
+          "fb3e2d21be2fd487ed236daf14aa03f34b8fd3692563b5ce90aa62aeb60e771c",
+          "3d05b511a0110637b20d7d7be1a64418dbdfcf9405fc375d4314896ba5978a5f",
+          "12ef447c9a396b17088bc7fcdb0ff35a3ca44df850c5924be9e56269902588d7",
+          "f1ddfa7b0e85104b9d0b3006f4f1d8bf5a6ab690533e1d634ebe7fce4f043743",
+          "6b8a8d6199f53ac3705db476bbd7327c2a845e95cf0dc2a50de60dc444791e3a",
+          "e38050f6c8ecbd51d31dc0b0321247f4f0bab7bcfe691e5f78da0d14e6dcfcda",
+          "2946905f8d4ca6bf2529b4e48f09eb49bfe032b221374d2d4b3fa5346ff4af0d"
+        ],
+        "views": [
+          [
+            -7.5,
+            0.8,
+            19.4,
+            0,
+            0,
+            0
+          ],
+          [
+            0.038016108395531774,
+            0.8,
+            14.857117920322342,
+            0,
+            0,
+            0
+          ],
+          [
+            0.31999999999999995,
+            0.4,
+            14.28,
+            -2.5444437451708134e-14,
+            1.5902773407317584e-15,
+            -4.770832022195275e-15
+          ],
+          [
+            0.31999999999999995,
+            0.13000000000000003,
+            14.28,
+            3.1805546814635168e-15,
+            0,
+            0
+          ],
+          [
+            0.3199999999999999,
+            0.32999999999999996,
+            14.28,
+            0,
+            1.5902773407317584e-15,
+            0
+          ],
+          [
+            0.9880161083955321,
+            0.8000000000000006,
+            15.157117920322342,
+            0,
+            -9.54166404439055e-15,
+            0
+          ],
+          [
+            -6.55,
+            0.8000000000000006,
+            19.7,
+            0,
+            -9.54166404439055e-15,
+            0
+          ]
+        ]
+      },
+      "physical_milestones": {
+        "holding": false,
+        "extracted": true,
+        "deposited": true
+      },
+      "index": 0
+    },
+    {
+      "export_error": null,
+      "session_id": "b95a510f-ef6e-4cf5-97cc-aebe916bb52e",
+      "engine": "crusoe",
+      "trial": "precision",
+      "arena": "orchard",
+      "seed": 7,
+      "status": "completed",
+      "feedback": "Physical stage verified; return home",
+      "checks": {
+        "battery": true,
+        "collected": true,
+        "extracted": true,
+        "images": true,
+        "inventory": true,
+        "preserved": true,
+        "returned": true
+      },
+      "calls": 13,
+      "failed_calls": 0,
+      "pending_calls": 0,
+      "inference_seconds": 100.23425554099998,
+      "cost": null,
+      "model": "google/gemma-4-31b-it",
+      "provider_routes": {
+        "treatment": {
+          "failures": 0,
+          "fallback": false
+        }
+      },
+      "provider_policy": null,
+      "treatment_code_hash": "16bac89f211aa5b48848db5abbae288d34a83e2297e63e43d9530914f91551e6",
+      "wall_seconds": 167.99159966599998,
+      "controller_progress": {
+        "guidance": "Progress counts new viewpoints and actual contact/recovered contact/extraction/collection/return, not image count or revision increments.",
+        "incidents": 0,
+        "last_action": "verify",
+        "milestones": [
+          "contact",
+          "extracted",
+          "collected",
+          "returned"
+        ],
+        "previous_physical": {
+          "collected": true,
+          "contact": false,
+          "extracted": true,
+          "returned": true
+        },
+        "recovery_required": false,
+        "stagnant_actions": 0,
+        "steps": [
+          "6b9e5903f36e2765392b7368dc48fed0456792b10966e54adcb1d8fb046969f3",
+          "76e9502e1b343bd3626afbde22a0f377880e48053c1e9d124e7ba1a60ecf278a",
+          "c2e08cf1cc7f24b067e2085ba0dcbbd78b3d48b2b25814e770652e0b7f8f935f",
+          "652875a76864a5d8264f111e81022083cb2884c5f18c539a1efbe8582631e676",
+          "8345de296ee545e681ff6f045eb4c2b83fc23290acd373bc2efb8db521393ea5",
+          "ceacb15755ee97389845e12a03212bba1871e423a5c084593928292b5259ff9f",
+          "2d4d35811e5f88199a42c3d70a6e371e2ec84b45252112a3c21578e27cf7ef44",
+          "6a8c212001a84a1ca086fce7c3adc87707594265940d039494654c3b2eddd9de",
+          "4bec85ed6781d06d07a787b6891a8d81c8c59bfb246e725d7b65a090f93aa369",
+          "c4aa1a89caa7a84efc095179899e28e68c7b6965919397a6ca22f0e22d5f12b2",
+          "12ef447c9a396b17088bc7fcdb0ff35a3ca44df850c5924be9e56269902588d7",
+          "f1ddfa7b0e85104b9d0b3006f4f1d8bf5a6ab690533e1d634ebe7fce4f043743",
+          "6b8a8d6199f53ac3705db476bbd7327c2a845e95cf0dc2a50de60dc444791e3a",
+          "e38050f6c8ecbd51d31dc0b0321247f4f0bab7bcfe691e5f78da0d14e6dcfcda",
+          "2946905f8d4ca6bf2529b4e48f09eb49bfe032b221374d2d4b3fa5346ff4af0d"
+        ],
+        "views": [
+          [
+            -7.5,
+            0.8,
+            19.4,
+            0,
+            0,
+            0
+          ],
+          [
+            0.038016108395531774,
+            0.8,
+            14.857117920322342,
+            0,
+            0,
+            0
+          ],
+          [
+            0.30999999999999994,
+            0.4,
+            14.280000000000001,
+            3.1805546814635168e-15,
+            0,
+            7.951386703658794e-16
+          ],
+          [
+            0.31000000000000005,
+            0.13000000000000003,
+            14.28,
+            0,
+            -1.5902773407317584e-15,
+            0
+          ],
+          [
+            0.31,
+            0.32999999999999996,
+            14.28,
+            0,
+            0,
+            7.951386703658792e-16
+          ],
+          [
+            0.9880161083955321,
+            0.8000000000000006,
+            15.157117920322342,
+            0,
+            -6.3611093629270335e-15,
+            0
+          ],
+          [
+            -6.55,
+            0.8000000000000006,
+            19.7,
+            0,
+            -6.3611093629270335e-15,
+            0
+          ]
+        ]
+      },
+      "physical_milestones": {
+        "holding": false,
+        "extracted": true,
+        "deposited": true
+      },
+      "index": 1
+    },
+    {
+      "export_error": null,
+      "session_id": "9f594a5b-d089-4e4a-9a59-6149aee18589",
+      "engine": "crusoe",
+      "trial": "precision",
+      "arena": "orchard",
+      "seed": 7,
+      "status": "completed",
+      "feedback": "Physical stage verified; return home",
+      "checks": {
+        "battery": true,
+        "collected": true,
+        "extracted": true,
+        "images": true,
+        "inventory": true,
+        "preserved": true,
+        "returned": true
+      },
+      "calls": 14,
+      "failed_calls": 0,
+      "pending_calls": 0,
+      "inference_seconds": 117.83949675100013,
+      "cost": null,
+      "model": "google/gemma-4-31b-it",
+      "provider_routes": {
+        "treatment": {
+          "failures": 0,
+          "fallback": false
+        }
+      },
+      "provider_policy": null,
+      "treatment_code_hash": "16bac89f211aa5b48848db5abbae288d34a83e2297e63e43d9530914f91551e6",
+      "wall_seconds": 190.43371841700002,
+      "controller_progress": {
+        "guidance": "Progress counts new viewpoints and actual contact/recovered contact/extraction/collection/return, not image count or revision increments.",
+        "incidents": 0,
+        "last_action": "verify",
+        "milestones": [
+          "contact",
+          "extracted",
+          "collected",
+          "returned"
+        ],
+        "previous_physical": {
+          "collected": true,
+          "contact": false,
+          "extracted": true,
+          "returned": true
+        },
+        "recovery_required": false,
+        "stagnant_actions": 0,
+        "steps": [
+          "6b9e5903f36e2765392b7368dc48fed0456792b10966e54adcb1d8fb046969f3",
+          "76e9502e1b343bd3626afbde22a0f377880e48053c1e9d124e7ba1a60ecf278a",
+          "c2e08cf1cc7f24b067e2085ba0dcbbd78b3d48b2b25814e770652e0b7f8f935f",
+          "652875a76864a5d8264f111e81022083cb2884c5f18c539a1efbe8582631e676",
+          "89fc19f65a8642e6d1042b42527923cfbc8674b54f722f957487fb25054ff8e1",
+          "8345de296ee545e681ff6f045eb4c2b83fc23290acd373bc2efb8db521393ea5",
+          "ceacb15755ee97389845e12a03212bba1871e423a5c084593928292b5259ff9f",
+          "2d4d35811e5f88199a42c3d70a6e371e2ec84b45252112a3c21578e27cf7ef44",
+          "6a8c212001a84a1ca086fce7c3adc87707594265940d039494654c3b2eddd9de",
+          "4bec85ed6781d06d07a787b6891a8d81c8c59bfb246e725d7b65a090f93aa369",
+          "c4aa1a89caa7a84efc095179899e28e68c7b6965919397a6ca22f0e22d5f12b2",
+          "12ef447c9a396b17088bc7fcdb0ff35a3ca44df850c5924be9e56269902588d7",
+          "f1ddfa7b0e85104b9d0b3006f4f1d8bf5a6ab690533e1d634ebe7fce4f043743",
+          "6b8a8d6199f53ac3705db476bbd7327c2a845e95cf0dc2a50de60dc444791e3a",
+          "e38050f6c8ecbd51d31dc0b0321247f4f0bab7bcfe691e5f78da0d14e6dcfcda",
+          "2946905f8d4ca6bf2529b4e48f09eb49bfe032b221374d2d4b3fa5346ff4af0d"
+        ],
+        "views": [
+          [
+            -7.5,
+            0.8,
+            19.4,
+            0,
+            0,
+            0
+          ],
+          [
+            0.038016108395531774,
+            0.8,
+            14.857117920322342,
+            0,
+            0,
+            0
+          ],
+          [
+            0.31999999999999995,
+            0.4,
+            14.28,
+            -2.5444437451708134e-14,
+            1.5902773407317584e-15,
+            -4.770832022195275e-15
+          ],
+          [
+            0.31000000000000005,
+            0.13000000000000003,
+            14.28,
+            0,
+            -1.5902773407317584e-15,
+            0
+          ],
+          [
+            0.31,
+            0.32999999999999996,
+            14.28,
+            0,
+            0,
+            7.951386703658792e-16
+          ],
+          [
+            0.9880161083955321,
+            0.8000000000000006,
+            15.157117920322342,
+            0,
+            -6.3611093629270335e-15,
+            0
+          ],
+          [
+            -6.55,
+            0.8000000000000006,
+            19.7,
+            0,
+            -6.3611093629270335e-15,
+            0
+          ]
+        ]
+      },
+      "physical_milestones": {
+        "holding": false,
+        "extracted": true,
+        "deposited": true
+      },
+      "index": 2
+    },
+    {
+      "export_error": null,
+      "session_id": "2ba25d01-dd2a-43c6-8ebf-1b05ab8426e1",
+      "engine": "crusoe",
+      "trial": "precision",
+      "arena": "orchard",
+      "seed": 11,
+      "status": "blocked",
+      "feedback": "Three rejected actions without new progress",
+      "checks": {
+        "battery": true,
+        "collected": false,
+        "extracted": false,
+        "images": false,
+        "inventory": true,
+        "preserved": true,
+        "returned": false
+      },
+      "calls": 29,
+      "failed_calls": 0,
+      "pending_calls": 0,
+      "inference_seconds": 207.16152716500028,
+      "cost": null,
+      "model": "google/gemma-4-31b-it",
+      "provider_routes": {
+        "treatment": {
+          "failures": 0,
+          "fallback": false
+        }
+      },
+      "provider_policy": null,
+      "treatment_code_hash": "16bac89f211aa5b48848db5abbae288d34a83e2297e63e43d9530914f91551e6",
+      "wall_seconds": 334.003927958,
+      "controller_progress": {
+        "guidance": "Change viewpoint or grasp pose by at least 2 cm or 3 degrees; reopen first after a miss. Repeated capture/scan/assessment at the same pose cannot recover. Stop if no safe alternative.",
+        "incidents": 2,
+        "last_action": "motion_completed",
+        "milestones": [],
+        "previous_physical": {
+          "collected": false,
+          "contact": false,
+          "extracted": false,
+          "returned": false
+        },
+        "recovery_required": true,
+        "stagnant_actions": 5,
+        "steps": [
+          "6b9e5903f36e2765392b7368dc48fed0456792b10966e54adcb1d8fb046969f3",
+          "76e9502e1b343bd3626afbde22a0f377880e48053c1e9d124e7ba1a60ecf278a",
+          "c2e08cf1cc7f24b067e2085ba0dcbbd78b3d48b2b25814e770652e0b7f8f935f",
+          "652875a76864a5d8264f111e81022083cb2884c5f18c539a1efbe8582631e676",
+          "9326838ea370220492950f2c0e540ca9ed9860b2fbdd720736df2aa1a475b80f",
+          "599c8ef1ad4255cbf5b82487ba0a6c54a58050465e4702deb89d097ab223a485",
+          "599c8ef1ad4255cbf5b82487ba0a6c54a58050465e4702deb89d097ab223a485",
+          "599c8ef1ad4255cbf5b82487ba0a6c54a58050465e4702deb89d097ab223a485",
+          "599c8ef1ad4255cbf5b82487ba0a6c54a58050465e4702deb89d097ab223a485",
+          "599c8ef1ad4255cbf5b82487ba0a6c54a58050465e4702deb89d097ab223a485",
+          "2ec385c64507f9283883667768d30777c22b0e5cc363f879a8950b274f32e1fa",
+          "dd91cee09165d223d92a57cfad849d0e1d30fa53818c396abd2f4764ea4f5708",
+          "0973ea46e6bbb0ba47e6cdfe23767300182161943e7da523415098cec50a8200",
+          "760f963626954818724c13b59fbfceb0c751ee4a4f30cc25e692057422e50e30",
+          "a8060e7041f18bd0f1b15d4e9251e76e240cfc9b0f2ab5b9db5293b5b1dbd0ca",
+          "8db6b98eb4f215862a3ff63d6406ab3e62891bec3917137396b2ffd751eb851b",
+          "466a203fd8aeb0c2a6967156b0c596c2574830c6e9ec5c24a87fad6c7ae58be2",
+          "9ee9fceb76470c90945fdbd8d533645db4a523dcb89ff9851c975fc3275fac8c",
+          "d75108d91a39e35a8240f1748a66ea17221e62ceb9ef6dd3d82a9fceaa854043",
+          "8db6b98eb4f215862a3ff63d6406ab3e62891bec3917137396b2ffd751eb851b",
+          "8620a2c135bcadf9e4a22be5690828e476cfcee0dbcf6a616f4cae6cfc5a1355",
+          "d75108d91a39e35a8240f1748a66ea17221e62ceb9ef6dd3d82a9fceaa854043",
+          "466a203fd8aeb0c2a6967156b0c596c2574830c6e9ec5c24a87fad6c7ae58be2",
+          "9ee9fceb76470c90945fdbd8d533645db4a523dcb89ff9851c975fc3275fac8c",
+          "d75108d91a39e35a8240f1748a66ea17221e62ceb9ef6dd3d82a9fceaa854043",
+          "30b970034815d43ecc46f770afd739c12c8754fbb4d31852e9ec220d3eb796ec"
+        ],
+        "views": [
+          [
+            -7.5,
+            0.8,
+            19.4,
+            0,
+            0,
+            0
+          ],
+          [
+            0.038016108395531774,
+            0.8,
+            14.857117920322342,
+            0,
+            0,
+            0
+          ],
+          [
+            -0.4099999999999999,
+            0.3999999999999998,
+            14.29,
+            3.1805546814635176e-15,
+            -1.5902773407317584e-15,
+            0
+          ],
+          [
+            -0.4299999999999999,
+            0.3999999999999998,
+            14.32,
+            -3.1805546814635168e-15,
+            0,
+            0
+          ],
+          [
+            -0.42000000000000004,
+            0.13000000000000003,
+            14.3,
+            0,
+            0,
+            -7.951386703658792e-16
+          ]
+        ]
+      },
+      "physical_milestones": {
+        "holding": false,
+        "extracted": false,
+        "deposited": false
+      },
+      "index": 3
+    },
+    {
+      "export_error": null,
+      "session_id": "9bdc10ea-ad05-4999-be60-818a29b36f9a",
+      "engine": "crusoe",
+      "trial": "precision",
+      "arena": "orchard",
+      "seed": 23,
+      "status": "completed",
+      "feedback": "Physical stage verified; return home",
+      "checks": {
+        "battery": true,
+        "collected": true,
+        "extracted": true,
+        "images": true,
+        "inventory": true,
+        "preserved": true,
+        "returned": true
+      },
+      "calls": 14,
+      "failed_calls": 0,
+      "pending_calls": 0,
+      "inference_seconds": 92.82422379099955,
+      "cost": null,
+      "model": "google/gemma-4-31b-it",
+      "provider_routes": {
+        "treatment": {
+          "failures": 0,
+          "fallback": false
+        }
+      },
+      "provider_policy": null,
+      "treatment_code_hash": "16bac89f211aa5b48848db5abbae288d34a83e2297e63e43d9530914f91551e6",
+      "wall_seconds": 153.942727084,
+      "controller_progress": {
+        "guidance": "Progress counts new viewpoints and actual contact/recovered contact/extraction/collection/return, not image count or revision increments.",
+        "incidents": 0,
+        "last_action": "verify",
+        "milestones": [
+          "contact",
+          "extracted",
+          "collected",
+          "returned"
+        ],
+        "previous_physical": {
+          "collected": true,
+          "contact": false,
+          "extracted": true,
+          "returned": true
+        },
+        "recovery_required": false,
+        "stagnant_actions": 0,
+        "steps": [
+          "6b9e5903f36e2765392b7368dc48fed0456792b10966e54adcb1d8fb046969f3",
+          "76e9502e1b343bd3626afbde22a0f377880e48053c1e9d124e7ba1a60ecf278a",
+          "c2e08cf1cc7f24b067e2085ba0dcbbd78b3d48b2b25814e770652e0b7f8f935f",
+          "652875a76864a5d8264f111e81022083cb2884c5f18c539a1efbe8582631e676",
+          "f43a47663086d2f01a6a049a0051b5e9872192aa60fcabea399c8ceff95bd829",
+          "1a41b4823688b6891363f62675299e97223904e5b1e8232accb94efa66cf4006",
+          "e77253bc6a84839ef86ded8fcb8b0153f0fc81d867e1019250bdb7a7a2604dee",
+          "67e1a1b6dc59e76f00e1f715c93bdd79b5ba2fa56907c5add9672829222e90e2",
+          "885efdc7c885ba0a8e7df7d710186908b7ee727c0737f9b5083e6ed611a428cf",
+          "d3dcb82ad7d78935cf34a3c74920d3cb4dc1a033c3ddb4fd20340b0531c2c3f9",
+          "34d3f9c8e7ff92edba04d25b06e89f68e72a681c3e0f6e8d3c2b957400889284",
+          "12ef447c9a396b17088bc7fcdb0ff35a3ca44df850c5924be9e56269902588d7",
+          "f1ddfa7b0e85104b9d0b3006f4f1d8bf5a6ab690533e1d634ebe7fce4f043743",
+          "6b8a8d6199f53ac3705db476bbd7327c2a845e95cf0dc2a50de60dc444791e3a",
+          "e38050f6c8ecbd51d31dc0b0321247f4f0bab7bcfe691e5f78da0d14e6dcfcda",
+          "2946905f8d4ca6bf2529b4e48f09eb49bfe032b221374d2d4b3fa5346ff4af0d"
+        ],
+        "views": [
+          [
+            -7.5,
+            0.8,
+            19.4,
+            0,
+            0,
+            0
+          ],
+          [
+            0.038016108395531774,
+            0.8,
+            14.857117920322342,
+            0,
+            0,
+            0
+          ],
+          [
+            -0.08999999999999998,
+            0.4,
+            14.119999999999997,
+            0,
+            0,
+            1.987846675914698e-16
+          ],
+          [
+            -0.09999999999999995,
+            0.1299999999999994,
+            14.120000000000001,
+            0,
+            -1.1927080055488188e-15,
+            0
+          ],
+          [
+            -0.09999999999999998,
+            0.32999999999999974,
+            14.12,
+            0,
+            0,
+            0
+          ],
+          [
+            0.9880161083955321,
+            0.8000000000000006,
+            15.157117920322342,
+            0,
+            -6.3611093629270335e-15,
+            0
+          ],
+          [
+            -6.55,
+            0.8000000000000006,
+            19.7,
+            0,
+            -6.3611093629270335e-15,
+            0
+          ]
+        ]
+      },
+      "physical_milestones": {
+        "holding": false,
+        "extracted": true,
+        "deposited": true
+      },
+      "index": 4
+    },
+    {
+      "export_error": null,
+      "session_id": "4905a3d6-6417-48f5-a578-2dac89741fbd",
+      "engine": "crusoe",
+      "trial": "precision",
+      "arena": "orchard",
+      "seed": 8,
+      "status": "completed",
+      "feedback": "Physical stage verified; return home",
+      "checks": {
+        "battery": true,
+        "collected": true,
+        "extracted": true,
+        "images": true,
+        "inventory": true,
+        "preserved": true,
+        "returned": true
+      },
+      "calls": 13,
+      "failed_calls": 0,
+      "pending_calls": 0,
+      "inference_seconds": 114.7415897100002,
+      "cost": null,
+      "model": "google/gemma-4-31b-it",
+      "provider_routes": {
+        "treatment": {
+          "failures": 0,
+          "fallback": false
+        }
+      },
+      "provider_policy": null,
+      "treatment_code_hash": "16bac89f211aa5b48848db5abbae288d34a83e2297e63e43d9530914f91551e6",
+      "wall_seconds": 184.45247429100004,
+      "controller_progress": {
+        "guidance": "Progress counts new viewpoints and actual contact/recovered contact/extraction/collection/return, not image count or revision increments.",
+        "incidents": 0,
+        "last_action": "verify",
+        "milestones": [
+          "contact",
+          "extracted",
+          "collected",
+          "returned"
+        ],
+        "previous_physical": {
+          "collected": true,
+          "contact": false,
+          "extracted": true,
+          "returned": true
+        },
+        "recovery_required": false,
+        "stagnant_actions": 0,
+        "steps": [
+          "6b9e5903f36e2765392b7368dc48fed0456792b10966e54adcb1d8fb046969f3",
+          "76e9502e1b343bd3626afbde22a0f377880e48053c1e9d124e7ba1a60ecf278a",
+          "c2e08cf1cc7f24b067e2085ba0dcbbd78b3d48b2b25814e770652e0b7f8f935f",
+          "652875a76864a5d8264f111e81022083cb2884c5f18c539a1efbe8582631e676",
+          "5eab8fd9c41465c5d813b9363f9953fe23cbca66509139036e1a8b1f0e1ece1b",
+          "56c4ee52d63e4196feb485a71c49616320fe198f2a9b0362d08eb5e8892b5fcd",
+          "a380a80c5f0ee865b61e4d5d0f2e65863782982637e135ec85b261229ba9333b",
+          "b027f7da8a3bdbeb5fbee2e697b58ebc43d5d2cf0dab693d7068f98894309793",
+          "b616310e73988aa997901c11f92a32c07056a29223324826382262f1dac8fb3f",
+          "acc05f085db44ff262d4e7db70d376f21b6751548050d3ba648d6078cdbb3f5e",
+          "12ef447c9a396b17088bc7fcdb0ff35a3ca44df850c5924be9e56269902588d7",
+          "f1ddfa7b0e85104b9d0b3006f4f1d8bf5a6ab690533e1d634ebe7fce4f043743",
+          "6b8a8d6199f53ac3705db476bbd7327c2a845e95cf0dc2a50de60dc444791e3a",
+          "e38050f6c8ecbd51d31dc0b0321247f4f0bab7bcfe691e5f78da0d14e6dcfcda",
+          "2946905f8d4ca6bf2529b4e48f09eb49bfe032b221374d2d4b3fa5346ff4af0d"
+        ],
+        "views": [
+          [
+            -7.5,
+            0.8,
+            19.4,
+            0,
+            0,
+            0
+          ],
+          [
+            0.038016108395531774,
+            0.8,
+            14.857117920322342,
+            0,
+            0,
+            0
+          ],
+          [
+            0.46,
+            0.3999999999999996,
+            14.21,
+            0,
+            1.5902773407317584e-15,
+            0
+          ],
+          [
+            0.4600000000000002,
+            0.13000000000000025,
+            14.209999999999999,
+            0,
+            0,
+            -7.951386703658792e-16
+          ],
+          [
+            0.46000000000000013,
+            0.3300000000000004,
+            14.21,
+            -3.180554681463516e-15,
+            -1.5902773407317584e-15,
+            7.951386703658792e-16
+          ],
+          [
+            0.9880161083955321,
+            0.8000000000000006,
+            15.157117920322342,
+            0,
+            -6.3611093629270335e-15,
+            0
+          ],
+          [
+            -6.55,
+            0.8000000000000006,
+            19.7,
+            0,
+            -6.3611093629270335e-15,
+            0
+          ]
+        ]
+      },
+      "physical_milestones": {
+        "holding": false,
+        "extracted": true,
+        "deposited": true
+      },
+      "index": 5
+    }
+  ],
+  "complete_missions": 5,
+  "repeatable_across_series": false
+}

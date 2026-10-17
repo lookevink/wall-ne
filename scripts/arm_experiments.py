@@ -2,12 +2,15 @@
 """Bounded live experiments through the local API; browser must supply real observations."""
 import argparse
 import json
+import os
 import pathlib
 import time
 import urllib.request
 import uuid
 
-BASE='http://127.0.0.1:8765'
+BASE=os.getenv('WALLNE_BASE','http://127.0.0.1:8765')
+# Runner-side safety net; the server enforces the same WALLNE_* budgets.
+WALL_CAP=float(os.getenv('WALLNE_WALL_CAP','3600'));COST_CAP=float(os.getenv('WALLNE_COST_CAP','1'))
 
 def api(route,body=None):
     req=urllib.request.Request(BASE+route,data=json.dumps(body).encode() if body is not None else None,headers={'Content-Type':'application/json'})
@@ -27,7 +30,7 @@ def trial(engine,condition,seed=7,expected=None):
             if state['id']!=session: raise RuntimeError('session replaced externally')
             if state['status'] in ('completed','failed','blocked','aborted','storage_blocked'):break
             cost=state['inference']['cost']
-            if time.monotonic()-started>=240 or cost is not None and cost>=1:
+            if time.monotonic()-started>=WALL_CAP or cost is not None and cost>=COST_CAP:
                 api('/api/stop',{});state=api('/api/state');break
             time.sleep(1)
         # Await accounting only. No new actions are allowed after the terminal boundary.

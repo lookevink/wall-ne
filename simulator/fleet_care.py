@@ -178,7 +178,7 @@ class FleetCareRuntime(Runtime):
         options=self.world.options()
         if all(self.world.verify().values()):options=[dict(action='claim_complete',arguments={})]
         if options:
-            obs=self.world.observations();obs['feasible_options']=options
+            obs=self.world.observations();obs['feasible_options']=options;obs['fleet_health']=self.telemetry.health(time.monotonic(),self.failures);obs['open_incidents']=copy.deepcopy(list(self.telemetry.incidents.values()))
             self.dispatch('orchestrator','orchestrator',obs)
 
     def sync_workers(self):
