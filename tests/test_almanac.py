@@ -76,6 +76,20 @@ class AlmanacTests(unittest.TestCase):
 
 
 class EpochServerTests(unittest.TestCase):
+    def test_full_care_always_uses_fast_control_even_with_stale_browser_settings(self):
+        from simulator.background_storage import BackgroundRepository
+        app=self.make_app()
+        self.assertEqual(app.plan['care_controller'],'ultra_fast')
+        self.assertEqual(app.plan['speed'],16)
+        with patch.dict('os.environ',{'WALLNE_CARE_CONTROLLER':'standard'}):
+            app.new_season(dict(mission='full_care',care_controller='standard',tree_count=169,speed=16))
+        self.assertEqual(app.plan['care_controller'],'ultra_fast')
+        self.assertEqual(app.fleet.config['care_controller'],'ultra_fast')
+        self.assertIsInstance(app.fleet.repository,BackgroundRepository)
+        child=app.fleet.make_child(0,'W1');self.addCleanup(child.close)
+        self.assertEqual(child.config['care_controller'],'ultra_fast')
+        self.assertIsInstance(child.repository,BackgroundRepository)
+
     def make_app(self):
         from simulator.server import App
         patches=[patch('threading.Thread.start'),patch.object(Runtime,'persist',persisted)]
@@ -98,6 +112,28 @@ class EpochServerTests(unittest.TestCase):
         self.assertEqual(app.season.day,2);self.assertEqual(previous.world.status,'aborted')
         self.assertEqual(app.season.trees[0]['weed']['age'],0);self.assertEqual(app.season.history[-1]['cared'],1)
         self.assertEqual(app.fleet.world.season['previous']['outcomes']['0']['moisture'],65)
+
+    def test_full_orchard_selection_survives_days_and_preserves_existing_trees(self):
+        app=self.make_app()
+        app.new_season(dict(seed=7,mission='full_care',tree_count=169,care_controller='ultra_fast',speed=16))
+        self.assertEqual(len(app.fleet.world.tasks),169)
+        self.assertEqual(len(app.season.conditions()),169)
+        self.assertEqual(app.epoch_view()['plan']['tree_count'],169)
+        self.assertEqual(len({(t['tree']['row'],t['tree']['column']) for t in app.fleet.world.tasks}),169)
+        self.assertEqual([t['tree'] for t in app.fleet.world.tasks[:10]],care_trees(10))
+        app.next_day({})
+        self.assertEqual(len(app.fleet.world.tasks),169)
+        app.next_day(dict(tree_count=10))
+        self.assertEqual(len(app.fleet.world.tasks),10)
+        self.assertEqual(len(app.season.trees),169)  # Unscheduled trees keep living.
+        for invalid in (0,170,True,169.0):
+            with self.assertRaises(ValueError):app.day_plan(dict(tree_count=invalid))
+        season=Season(7).next_day().next_day()
+        old=season.record()['trees']
+        season.ensure_tree_count(169)
+        self.assertEqual(season.trees[:10],old)
+        self.assertEqual(season.trees[10:],Season(7,tree_count=169).next_day().next_day().trees[10:])
+        self.assertEqual(Season.from_record(season.record()).trees,season.trees)
 
     def test_auto_advance_stops_after_two_blocked_days(self):
         app=self.make_app();app.new_season(dict(seed=3,mission='full_care'))

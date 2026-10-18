@@ -52,16 +52,18 @@ class App:
         self.reset_lock=threading.RLock(); self.campaigns=Campaigns(self)
         # The orchard calendar outlives individual missions. Each day's world saves its own conditions.
         self.season=Season(7); self.clock=DayClock(self.season); self.season_lock=threading.Lock()
-        self.plan=dict(mission='full_care',mode='demo',speed=8); self.carry={}; self.season_notice=None; self.blocked_days=0
+        self.plan=dict(mission='full_care',mode='demo',speed=16,care_controller='ultra_fast',tree_count=10); self.carry={}; self.season_notice=None; self.blocked_days=0
         threading.Thread(target=self.season_loop,daemon=True).start()
         if recover_season: threading.Thread(target=self.recover_season,daemon=True).start()
 
     def day_plan(self,body):
-        plan=dict(self.plan,**{k:body[k] for k in ('mission','mode','speed','care_controller') if k in body})
+        plan=dict(self.plan,**{k:body[k] for k in ('mission','mode','speed','care_controller','tree_count') if k in body})
         if plan['mission'] not in ('weeding','watering','full_care'): raise ValueError('unknown orchard mission')
         if plan['speed'] not in (1,4,8,16): raise ValueError('speed must be 1/4/8/16')
         if plan['mission']=='watering' and plan['mode'] not in ('demo','live'): raise ValueError('invalid fleet mode')
         if plan.get('care_controller','standard') not in ('standard','ultra_fast'):raise ValueError('invalid care controller')
+        if plan['mission']=='full_care':plan['care_controller']='ultra_fast'
+        if type(plan.get('tree_count',10)) is not int or not 1<=plan.get('tree_count',10)<=169:raise ValueError('tree_count must be 1..169')
         return plan
 
     def day_outcomes(self,runtime):
@@ -74,6 +76,7 @@ class App:
         """Close the current day, then create and start the given day's mission. Agents are always on."""
         with self.reset_lock:
             plan=self.day_plan(body)
+            if plan['mission']=='full_care':season.ensure_tree_count(plan.get('tree_count',10))
             snapshot=self.reset(False,dict(plan,seed=(season.seed+season.day-1)%100001),season)
             with self.season_lock:
                 self.season=season;self.clock.reset(season);self.carry={};self.plan=plan;self.season_notice=None
@@ -138,7 +141,7 @@ class App:
                 if self.season.day or getattr(self.fleet.world,'season',None): return
                 with self.season_lock:
                     self.season=season;self.clock.reset(season);self.clock.clock=self.clock.night;self.clock.mode='night'
-                    self.carry=saved_outcomes(state);self.season_notice=f'Recovered season {season.seed} at day {season.day}. Next day continues it.'
+                    self.carry=saved_outcomes(state);self.plan['tree_count']=state.get('contract',{}).get('tree_count',10);self.season_notice=f'Recovered season {season.seed} at day {season.day}. Next day continues it.'
         except Exception:
             pass
 
@@ -202,6 +205,7 @@ class App:
             if speed not in (1,4,8,16): raise ValueError('speed must be 1/4/8/16')
             care_controller=body.get('care_controller',os.getenv('WALLNE_CARE_CONTROLLER','standard'))
             if care_controller not in ('standard','ultra_fast'):raise ValueError('invalid care controller')
+            if getattr(world,'mission_type',None)=='fleet_care':care_controller='ultra_fast'
             if care_controller=='ultra_fast' and getattr(world,'mission_type',None)!='fleet_care':care_controller='standard'
             old=self.treatment if treatment else self.fleet
             if old.persisted:

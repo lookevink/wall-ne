@@ -17,6 +17,13 @@ PESTS: The fixed service camera uses a close trunk view. Remove elongated purple
 EXTRACTION: Camera switches to the wrist and the staged grasp instructions apply. Scan actual surfaces; do not use the assigned tree's location as a weed target. After collection, verify completes this tree only if ALL care and preservation checks pass. The rover then goes to the dock for a metered refill, charge and bin unloading before the next tree. At the final dock, verify completes the entire mission. Never stop after only one tree.'''
 
 
+def care_station(tree):
+    x,_,z=tree['position']
+    # Center interior parking between the next two trunks; the old 3.8 m
+    # front-boundary offset would overlap the second trunk inside the orchard.
+    return [x,z+(3.45 if tree['column']<11 else 3.8)]
+
+
 class OrchardCare(OrchardManipulation):
     travel_lane=18.8
     crown_projection_required=True
@@ -27,7 +34,7 @@ class OrchardCare(OrchardManipulation):
     cost_limit=10
 
     def __init__(self,seed=7,tree_count=10,worker='W1',assigned_task=None,conditions=None):
-        if type(tree_count) is not int or not 1<=tree_count<=10:raise ValueError('tree_count must be 1..10')
+        if type(tree_count) is not int or not 1<=tree_count<=169:raise ValueError('tree_count must be 1..169')
         super().__init__(seed)
         self.mission_type='full_care';self.task_index=0;self.completed_trees=[];self.service_log=[]
         self.tasks=[]
@@ -62,7 +69,7 @@ class OrchardCare(OrchardManipulation):
 
     def load_task(self):
         task=copy.deepcopy(self.tasks[self.task_index]);self.orchard.update(tree=task['tree'],arrived=False)
-        x,_,z=task['tree']['position'];self.station=[x,z+3.8]
+        x,_,z=task['tree']['position'];self.station=care_station(task['tree'])
         self.weed=task['weed'];self.protected=task['protected'];self.pests=task['pests'];self.beneficial=task['beneficial']
         self.inventory_hash=digest(dict(weed=self.weed,protected=self.protected))
         self.initial_inventory=copy.deepcopy(dict(weed=self.weed,protected=self.protected))

@@ -30,7 +30,7 @@ export function renderAlmanac(epoch){
     const soil=cell('');soil.className='soil';const bar=document.createElement('i');bar.style.width=`${Math.min(100,t.moisture/70*100)}%`;
     const morning=document.createElement('b');morning.style.left=`${Math.min(100,t.morning_moisture/70*100)}%`;soil.append(bar,morning,document.createTextNode(`${t.moisture.toFixed(0)}%`));
     const status=t.cared?'✓ cared':t.weed_removed||t.pests_remaining<t.pests||t.moisture>t.morning_moisture+.5?'in progress':'—';
-    row.append(cell(`R${t.row+1}`),soil,cell(t.weed_removed?'pulled':`${t.weed_age?`${t.weed_age} d`:'seedling'} · ×${t.weed_size.toFixed(2)}`),
+    row.append(cell(`R${t.row+1} · T${(t.column??12)+1}`),soil,cell(t.weed_removed?'pulled':`${t.weed_age?`${t.weed_age} d`:'seedling'} · ×${t.weed_size.toFixed(2)}`),
       cell(`${'●'.repeat(t.pests_remaining)}${'○'.repeat(Math.max(0,t.pests-t.pests_remaining))}`||'none','pests'),cell(t.prescription?`${t.prescription} g due`:'not due'),cell(status,t.cared?'pass':''));
     return row;
   });
@@ -42,7 +42,7 @@ export function renderSeasonLog(epoch){
   if(!epoch.history.length){const empty=document.createElement('p');empty.className='caption';empty.textContent='No completed days yet.';$('season-log').replaceChildren(empty);return;}
   $('season-log').replaceChildren(...epoch.history.slice().reverse().map(d=>{
     const row=document.createElement('div');row.className='event';
-    for(const text of [`Day ${d.day}`,`${d.cared}/10 cared`,`${d.weeds_pulled} weeds · ${d.pests_removed} pests · ${d.water} L · ${d.fertilizer} g`,`${d.high}°C · ${d.humidity}% RH`]){const span=document.createElement('span');span.textContent=text;row.append(span);}
+    for(const text of [`Day ${d.day}`,`${d.cared}/${d.tree_count??10} cared`,`${d.weeds_pulled} weeds · ${d.pests_removed} pests · ${d.water} L · ${d.fertilizer} g`,`${d.high}°C · ${d.humidity}% RH`]){const span=document.createElement('span');span.textContent=text;row.append(span);}
     return row;
   }));
 }

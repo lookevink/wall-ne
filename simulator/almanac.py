@@ -24,8 +24,9 @@ MATURE=dict(size=1.2,leaves=15)
 
 
 def care_trees(count=10):
-    # Front boundary trees have a clear approach from the public south apron.
-    return sorted((t for t in TREES if t['column']==12),key=lambda t:abs(t['row']-6))[:count]
+    if type(count) is not int or not 1<=count<=len(TREES):raise ValueError('tree_count must be 1..169')
+    # Preserve existing task indices: front boundary first, then successive interior columns.
+    return sorted(TREES,key=lambda t:(-t['column'],abs(t['row']-6),t['row']))[:count]
 
 
 def weather(seed,day):
@@ -76,19 +77,27 @@ def prescription(deficit):
 
 class Season:
     """One orchard's calendar. Day 0 is the night before the first mission."""
-    def __init__(self,seed=7,day=0,trees=None,history=None,previous=None):
+    def __init__(self,seed=7,day=0,trees=None,history=None,previous=None,tree_count=10):
         if type(seed)!=int or not 0<=seed<=100000:raise ValueError('seed must be 0..100000')
         self.seed=seed;self.day=day;self.history=history or [];self.previous=previous
         self.day_of_year=FIRST_DAY+day-1;self.weather=weather(seed,day)
-        self.trees=trees if trees is not None else self.initial_trees()
+        self.trees=trees if trees is not None else self.initial_trees(tree_count)
 
-    def initial_trees(self):
+    def initial_trees(self,count=10):
         trees=[]
-        for i,tree in enumerate(care_trees()):
+        for i,tree in enumerate(care_trees(count)):
             rng=random.Random(self.seed*31337+i)
             trees.append(dict(index=i,tree=copy.deepcopy(tree),moisture=round(rng.uniform(20,40),2),weed=weed_spec(self.seed,0,i,rng.randint(0,3)),
                               pests=rng.randint(1,3),deficit=round(rng.uniform(12,20),2)))
         return trees
+
+    def ensure_tree_count(self,count):
+        care_trees(count)  # Validate before changing the season.
+        if count<=len(self.trees):return
+        # Newly included trees have lived through the same unattended nights.
+        expanded=Season(self.seed,tree_count=count)
+        for _ in range(self.day):expanded=expanded.next_day()
+        self.trees.extend(expanded.trees[len(self.trees):])
 
     def conditions(self):
         """Morning state of each care tree, in care-mission task order."""
@@ -99,7 +108,7 @@ class Season:
         live=live or {};trees=[]
         for c in self.conditions():
             o=live.get(c['index'],{})
-            trees.append(dict(index=c['index'],row=c['tree']['row'],position=c['tree']['position'],morning_moisture=c['moisture'],moisture=o.get('moisture',c['moisture']),
+            trees.append(dict(index=c['index'],row=c['tree']['row'],position=c['tree']['position'],morning_moisture=c['moisture'],moisture=o.get('moisture',c['moisture']),column=c['tree']['column'],
                               weed_age=c['weed']['age'],weed_size=c['weed']['size'],weed_removed=bool(o.get('weed_removed')),pests=c['pests'],
                               pests_remaining=o.get('pests_remaining',c['pests']),prescription=c['prescription'],cared=bool(o.get('cared'))))
         return trees
@@ -114,7 +123,7 @@ class Season:
         today,tonight=self.weather,weather(self.seed,self.day+1)
         dry=min(13,max(2.5,5+.45*(today['high']-28)+.09*(55-today['humidity'])))
         breed=min(.7,max(.1,.3+.03*(today['high']-30)));arrive=min(.7,max(.08,.3+.005*(today['humidity']-50)+.02*(today['high']-30)))
-        trees=[];tally=dict(day=self.day,cared=0,weeds_pulled=0,pests_removed=0,water=0.,fertilizer=0.)
+        trees=[];tally=dict(day=self.day,tree_count=len(self.trees),cared=0,weeds_pulled=0,pests_removed=0,water=0.,fertilizer=0.)
         for t in self.trees:
             rng=random.Random(f'night:{self.seed}:{self.day}:{t["index"]}');o=outcomes.get(t['index'],{})
             end=o.get('moisture',t['moisture']);tally['water']+=max(0,end-t['moisture'])/2

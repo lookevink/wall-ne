@@ -44,7 +44,15 @@ class OrchardManipulation(Manipulation):
     def navigate(self,target,purpose):
         start=self.robot['position']
         lane=getattr(self,'travel_lane',18)
-        route=[[start[0],lane],[target[0],lane],target[:]]
+        front=max(t[1] for t in self.trunks)+.85
+        # Interior stations sit between trunks. Enter/leave through the adjacent
+        # aisle instead of driving along a planted row from the south apron.
+        start_x=start[0]+1.75 if start[1]<front else start[0]
+        target_x=target[0]+1.75 if target[1]<front else target[0]
+        route=([[start_x,start[1]]] if start_x!=start[0] else [])
+        route+=[[start_x,lane],[target_x,lane]]
+        if target_x!=target[0]:route.append([target_x,target[1]])
+        route.append(target[:])
         length=sum(distance(a,b) for a,b in zip([start]+route,route))
         if self.robot['battery']-length*.13<=25:raise ValueError('navigation reserve guard')
         self.robot.update(lifecycle='working',action=dict(kind='navigate',route=route,purpose=purpose,id=uid()))

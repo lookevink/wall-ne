@@ -19,6 +19,29 @@ class FleetCareTests(unittest.TestCase):
         obs=w.observations()
         self.assertNotIn('weed',obs['tasks'][0]);self.assertNotIn('pest0',str(obs))
 
+    def test_all_169_tree_routes_clear_trunks_in_both_directions(self):
+        import math
+        from simulator.orchard_care import OrchardCare,care_station
+        from simulator.almanac import care_trees
+        w=OrchardCare(tree_count=1)
+        home=w.robot['home'][:]
+        def check_route():
+            start=w.robot['position'][:]
+            for end in w.robot['action']['route']:
+                dx,dz=end[0]-start[0],end[1]-start[1];length2=dx*dx+dz*dz
+                for x,z in w.trunks:
+                    t=max(0,min(1,((x-start[0])*dx+(z-start[1])*dz)/length2)) if length2 else 0
+                    self.assertGreaterEqual(math.hypot(x-start[0]-t*dx,z-start[1]-t*dz),.85)
+                start=end
+        for tree in care_trees(169):
+            station=care_station(tree)
+            w.robot['position']=home[:];w.navigate(station,'arrive');check_route()
+            w.robot['position']=station;w.navigate(home,'return');check_route()
+        # Every task, including the final interior tree, is assignable.
+        fleet=FleetCareWorld(tree_count=169);fleet.status='running'
+        self.assertEqual({o['arguments']['row'] for o in fleet.options()},set(range(169)))
+        self.assertTrue(fleet.command(uid(),'orchestrator','assign',row=168,vehicle='W5')['accepted'])
+
     def test_worker_sensor_routing_and_single_navigation_reservation(self):
         with patch('threading.Thread.start'):
             r=FleetCareRuntime(config=dict(mode='vision',engine='crusoe',arena='orchard'))

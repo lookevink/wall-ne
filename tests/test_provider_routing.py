@@ -8,6 +8,46 @@ from simulator.inference import InferenceError,Adapter
 from tests.test_treatment import frame
 
 class ProviderRoutingTests(unittest.TestCase):
+    def test_stale_standard_settings_use_fast_control_and_switch_after_first_429(self):
+        from simulator.fleet_care import FleetCareWorld,FleetCareRuntime
+        with patch('threading.Thread.start'),patch.dict('os.environ',{'WALLNE_GATEWAY_FALLBACK':'0'}):
+            parent=FleetCareRuntime(FleetCareWorld(tree_count=169),config=dict(mode='vision',engine='crusoe',care_controller='standard'))
+            child=parent.make_child(0,'W1')
+        self.addCleanup(parent.close);self.addCleanup(child.close)
+        self.assertEqual(parent.config['care_controller'],'ultra_fast')
+        self.assertIsNotNone(parent.config['fallback'])
+        self.assertEqual(child.config['fallback'],parent.config['fallback'])
+        for runtime,robot,role,model in ((parent,'orchestrator','orchestrator','nvidia/nemotron-3-super-120b-a12b'),
+                                        (child,'W1','treatment','google/gemini-2.5-flash')):
+            runtime.world.status='running'
+            adapter=runtime.adapter(role)
+            runtime.requests[robot]=dict(id='request',role=role,provider=adapter.provider,provider_base=adapter.base,model=adapter.model,fallback=False)
+            future=concurrent.futures.Future()
+            future.set_exception(InferenceError('crusoe HTTP 429; no fallback performed',dict(status='failed',cost=0,usage={})))
+            with self.assertRaises(InferenceError) as caught:runtime.consume(robot,future)
+            self.assertTrue(caught.exception.fallback_activated)
+            self.assertEqual(runtime.adapter(role).provider,'gateway')
+            self.assertEqual(runtime.adapter(role).model,model)
+            self.assertEqual(runtime.world.status,'running')
+
+    def test_full_care_preserves_explicit_disabled_fallback(self):
+        from simulator.fleet_care import FleetCareWorld,FleetCareRuntime
+        with patch('threading.Thread.start'):
+            runtime=FleetCareRuntime(FleetCareWorld(),config=dict(mode='vision',engine='crusoe',fallback=None))
+        self.addCleanup(runtime.close)
+        self.assertIsNone(runtime.config['fallback'])
+
+    def test_saved_standard_full_care_cannot_restore_the_retired_controller(self):
+        from simulator.fleet_care import FleetCareWorld,FleetCareRuntime
+        from tests.test_recovery import SavedRepository
+        with patch('threading.Thread.start'):
+            runtime=FleetCareRuntime(FleetCareWorld(),config=dict(mode='vision',engine='crusoe'))
+        self.addCleanup(runtime.close)
+        runtime.repository=SavedRepository(runtime.world,{**runtime.config,'care_controller':'standard'})
+        with patch.object(runtime.repository,'lease') as lease:
+            with self.assertRaisesRegex(ValueError,'retired Standard control'):runtime.restore(runtime.world.id)
+        lease.assert_not_called()
+
     def runtime(self,fallback=True):
         w=Manipulation(7,'precision');w.status='running';frame(w)
         # The Gateway fallback is opt-in; these routing tests exercise it explicitly.

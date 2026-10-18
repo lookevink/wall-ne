@@ -17,27 +17,30 @@ class Runtime:
         if isinstance(repository,BackgroundRepository):repository=repository.remote
         self.lock=threading.RLock(); self.world=world or Mission(); self.repository=Repository(repository.url,repository.key) if isinstance(repository,Repository) else repository or Repository()
         self.config=copy.deepcopy(config or dict(mode='demo',engine='crusoe',speed=8))
-        explicit_fallback='fallback' in self.config
+        if getattr(self.world,'mission_type',None) in ('fleet_care','full_care'):
+            self.config['care_controller']='ultra_fast'
         self.config.setdefault('models',{role:Adapter(self.config['engine'],role).model for role in ('planner','orchestrator','worker','retriever','verifier','treatment')})
         self.config.setdefault('provider_base',Adapter(self.config['engine']).base)
         # New Crusoe sessions pin their fallback before the first paid call.
         # Restores use saved configuration, never newly introduced defaults.
         if self.config['engine']=='crusoe' and 'fallback' not in self.config:
-            # Off unless WALLNE_GATEWAY_FALLBACK=1: a Crusoe run stays a Crusoe run, and a provider failure blocks visibly.
-            if os.getenv('WALLNE_GATEWAY_FALLBACK','0')!='1': self.config['fallback']=None
-            else:
-                aliases={'nvidia/NVIDIA-Nemotron-3.5-Super-VL':'nvidia/nemotron-3.5-super-vl',
+            aliases={'nvidia/NVIDIA-Nemotron-3.5-Super-VL':'nvidia/nemotron-3.5-super-vl',
                          'nvidia/NVIDIA-Nemotron-3-Super-120B-A12B':'nvidia/nemotron-3-super-120b-a12b',
                          'nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B':'nvidia/nemotron-3-nano-30b-a3b',
                          'nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B':'nvidia/nemotron-3.5-super-vl'}
+            models={role:aliases.get(model,model) for role,model in self.config['models'].items()}
+            # Both care controllers recover immediately from provider failures.
+            # Children inherit this pinned policy; saved/explicit policies stay intact.
+            if getattr(self.world,'mission_type',None) in ('fleet_care','full_care') or self.config.get('care_controller')=='ultra_fast':
+                self.config['fallback']=dict(after_failures=1,engine='gemini',provider_base=Adapter('gemini').base,inference_timeout=15,
+                    models={**models,'treatment':'google/gemini-2.5-flash'})
+            elif os.getenv('WALLNE_GATEWAY_FALLBACK','0')=='1':
                 self.config['fallback']=dict(after_failures=2,engine='gemma',provider_base=Adapter('gemma').base,
-                    models={role:aliases.get(model,model) for role,model in self.config['models'].items()})
+                    models=models)
+            else:self.config['fallback']=None
         if self.config.get('care_controller')=='ultra_fast':
             self.config.setdefault('inference_timeout',6)
             self.config.setdefault('max_tokens',512)
-            if self.config['engine']=='crusoe' and not explicit_fallback:
-                self.config['fallback']=dict(after_failures=1,engine='gemini',provider_base=Adapter('gemini').base,inference_timeout=15,
-                    models={**self.config['models'],'treatment':'google/gemini-2.5-flash'})
         if self.config.get('care_controller')=='ultra_fast' and isinstance(self.repository,Repository):
             self.repository=BackgroundRepository(self.repository)
         self.config.setdefault('trial',getattr(self.world,'trial',None))
@@ -127,7 +130,10 @@ class Runtime:
             else:
                 from .background_storage import BackgroundRepository
                 if isinstance(self.repository,BackgroundRepository):self.repository=Repository(self.repository.url,self.repository.key)
-            state=self.repository.restore(session); lease=self.repository.lease(session)
+            state=self.repository.restore(session)
+            if state.get('mission_type') in ('fleet_care','full_care') and config.get('care_controller')!='ultra_fast':
+                raise ValueError('saved full-care session uses retired Standard control; start a new Ultra Fast session')
+            lease=self.repository.lease(session)
             from .treatment import Treatment
             from .care import PlantCare
             from .manipulation import Manipulation

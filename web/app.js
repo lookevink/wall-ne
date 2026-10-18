@@ -9,7 +9,7 @@ const workerFrames=new Map(),workerDepths=new Map(),workerScenes=new Map();
 const decisionCanvas=document.createElement('canvas');decisionCanvas.width=640;decisionCanvas.height=360;
 try{view=new FleetScene($('viewport'));feeds=new RoverViews(view,$('feeds'));}catch(e){notice(`Renderer unavailable: ${e.message}`);}
 // Agents are always on: a new day or season starts its mission immediately; Pause holds the mission and the clock.
-const plan=()=>({mission:$('mission').value,mode:$('mode').value,speed:Number($('speed').value),care_controller:$('care-controller').value});
+const plan=()=>({mission:$('mission').value,mode:$('mode').value,speed:Number($('speed').value),care_controller:$('care-controller').value,tree_count:Number($('tree-count').value)});
 button('next-day',()=>api('/api/next-day',plan()));
 button('new-season',()=>api('/api/season',{...plan(),seed:Number($('seed').value)}).then(()=>$('orchard-menu').close()));
 button('pause',()=>api(state?.status==='running'?'/api/pause':'/api/start',{}));
@@ -25,7 +25,7 @@ button('export',()=>download(state,`wall-ne-${state.id}.json`));
 button('camera-pause',()=>{view.paused=!view.paused;$('camera-pause').textContent=view.paused?'Resume cameras':'Pause cameras';});
 button('wind',()=>{view.windEnabled=!view.windEnabled;$('wind').textContent=`Wind ${view.windEnabled?'on':'off'}`;});
 $('wind').textContent=`Wind ${view?.windEnabled?'on':'off'}`;
-$('mission').onchange=()=>{$('mode').disabled=$('mission').value!=='watering';$('care-controller').disabled=$('mission').value!=='full_care';};$('mission').onchange();
+$('mission').onchange=()=>{$('mode').disabled=$('mission').value!=='watering';$('care-controller').disabled=$('mission').value!=='full_care';$('tree-count').disabled=$('mission').value!=='full_care';};$('mission').onchange();
 const workerFaults=document.createElement('div');workerFaults.className='small-buttons';workerFaults.setAttribute('aria-label','Individual worker breakdowns');
 for(const id of ['W1','W2','W3','W4','W5']){const control=document.createElement('button');control.textContent=`Break ${id}`;control.dataset.breakdownWorker=id;control.disabled=true;control.onclick=()=>api('/api/breakdown',{robots:[id]}).catch(error=>notice(error.message));workerFaults.append(control);}
 $('breakdown').parentElement.after(workerFaults);
@@ -107,7 +107,7 @@ async function poll(){
     state=await api('/api/state');if(['Failed to fetch','stale capture request','stale or superseded scan frame'].includes($('notice').textContent))notice('');view?.update(state);feeds?.update(state);
     $('status').textContent=state.status.replaceAll('_',' ');$('status').classList.toggle('error',['failed','blocked','storage_blocked'].includes(state.status));
     const arm=state.arena==='orchard',care=['full_care','fleet_care'].includes(state.mission_type),fleetCare=state.mission_type==='fleet_care',vehicles=Object.values(state.vehicles);
-    if(currentSession!==state.id){currentSession=state.id;lastFrame=null;lastDepth=null;const p=state.epoch?.plan;$('mission').value=p?.mission||(care?'full_care':arm?'weeding':'watering');if(p){$('mode').value=p.mode;$('speed').value=String(p.speed);}$('care-controller').value=state.config.care_controller||'standard';$('mission').onchange();$('seed').value=state.epoch?.seed??state.seed;}
+    if(currentSession!==state.id){currentSession=state.id;lastFrame=null;lastDepth=null;const p=state.epoch?.plan;$('mission').value=p?.mission||(care?'full_care':arm?'weeding':'watering');if(p){$('mode').value=p.mode;$('speed').value=String(p.speed);}$('tree-count').value=String(p?.tree_count??state.contract?.tree_count??10);$('care-controller').value='ultra_fast';$('mission').onchange();$('seed').value=state.epoch?.seed??state.seed;}
     renderEpoch(state.epoch);renderAlmanac(state.epoch);renderSeasonLog(state.epoch);
     if(state.epoch?.notice)notice(state.epoch.notice);
     const terminal=['completed','failed','blocked','aborted'].includes(state.status);
@@ -140,7 +140,9 @@ async function poll(){
         if(req&&workerFrames.get(worker)!==req.id&&!sensorPending.has(req.id)){const scene=state,data=view.armControl.capture(req.camera,decisionCanvas);deliver(req.id,api('/api/frame',{arena:'orchard',worker,mission_id:w.id,request_id:req.id,data_url:data}).then(frame=>{workerFrames.set(worker,req.id);workerScenes.set(worker,{frameId:frame.id,state:scene});}));}
         const depth=w.depth_request;
         if(depth&&workerDepths.get(worker)!==depth.id&&!sensorPending.has(depth.id)){
-          const captured=workerScenes.get(worker);if(!captured||captured.frameId!==depth.frame_id)throw new Error('Reload lost the captured fleet scene; pause and resume for fresh observations');
+          // Another open camera tab may own this frame. Keep serving the other
+          // workers; only the capturing tab can raycast its frozen scene.
+          const captured=workerScenes.get(worker);if(!captured||captured.frameId!==depth.frame_id)continue;
           let points;try{view.update(captured.state);points=view.armControl.depth(depth);}finally{view.update(state);}
           deliver(depth.id,api('/api/depth',{arena:'orchard',worker,mission_id:w.id,request_id:depth.id,frame_id:depth.frame_id,revision:depth.revision,points}).then(()=>workerDepths.set(worker,depth.id)));
         }
