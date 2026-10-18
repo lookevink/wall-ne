@@ -21,10 +21,22 @@ def care_station(tree):
     x,_,z=tree['position']
     # Center interior parking between the next two trunks; the old 3.8 m
     # front-boundary offset would overlap the second trunk inside the orchard.
-    return [x,z+(3.45 if tree['column']<11 else 3.8)]
+    from .arm import trajectory
+    from .orchard_manipulation import TREES
+    trunks=[[t['position'][0],t['position'][2]] for t in TREES]
+    parked_z=z+(3.45 if tree['column']<11 else 3.8)
+    for dx in (0,.65,-.65,1.,-1.):
+        base=[x+dx,.8,parked_z-.5]
+        if any(math.hypot(x+dx-tx,parked_z-tz)<.85 for tx,tz in trunks):continue
+        joints=ik([x+dx,.8,parked_z-1.6,0,0,0],base)
+        try:trajectory(joints,joints,base,trunks)
+        except ValueError:continue
+        return [x+dx,parked_z]
+    raise ValueError('No clear chassis and carried-arm parking pose')
 
 
 class OrchardCare(OrchardManipulation):
+    continuous_care=True
     travel_lane=18.8
     crown_projection_required=True
     frame_limit=600
@@ -37,6 +49,7 @@ class OrchardCare(OrchardManipulation):
         if type(tree_count) is not int or not 1<=tree_count<=169:raise ValueError('tree_count must be 1..169')
         super().__init__(seed)
         self.mission_type='full_care';self.task_index=0;self.completed_trees=[];self.service_log=[]
+        self.recovery=None;self.recovery_attempts=0
         self.tasks=[]
         for i,tree in enumerate(care_trees(tree_count)):
             # A season day fixes each tree's morning weed, pests, soil and prescription.
@@ -112,7 +125,7 @@ class OrchardCare(OrchardManipulation):
             if self.fertilizer_meter['effective']>=self.fertilizer_meter['prescription']-1e-6:return actions+['next_stage']
             return actions+['aim_nozzle']+(['fertilize_tree'] if self.aim is not None else [])
         if self.phase=='pests':return actions+['remove_pest','next_stage']
-        return super().allowed_actions()
+        return super().allowed_actions()+(['recover_view'] if not self.holding else [])
 
     def observations(self):
         obs=super().observations()
@@ -123,6 +136,9 @@ class OrchardCare(OrchardManipulation):
         obs['aimed']=self.aim is not None;obs['nozzle_aim_world']=self.aim
         obs['instructions']=(('CURRENT TASK: wrist extraction. Other care stages are already verified. After depositing, verify starts the checked dock return automatically.\n'+obs['instructions']) if self.phase=='extraction' else CARE_GUIDE+'\n'+obs['instructions'])
         obs['worker']=self.robot['id']
+        obs['recovery']=copy.deepcopy(getattr(self,'recovery',None))
+        obs['recovery_attempts']=getattr(self,'recovery_attempts',0)
+        obs['recovery_history']=copy.deepcopy(getattr(self,'recovery_history',[]))
         obs['instructions']=obs['instructions'].replace('W1',self.robot['id'])
         return obs
 
@@ -151,7 +167,44 @@ class OrchardCare(OrchardManipulation):
 
     def _action(self,action,args):
         if action not in self.allowed_actions():raise ValueError('action unavailable in current care stage')
-        if action=='inspect_tree':
+        if action=='recover_view':
+            self.fresh(args['frame_id'])
+            if not getattr(self,'recovery',None):raise ValueError('camera recovery was not requested')
+            if self.holding or self.opening<.119 or self.must_reopen:raise ValueError('release empty jaws before camera recovery')
+            # Only public robot geometry chooses these observation poses. Every
+            # candidate still passes the same swept-link collision checks.
+            from .arm import trajectory
+            x,z=self.robot['position'];current=self.tool_pose()['position']
+            offsets=[(0,.8,-1.6),(.24,.85,-1.6),(-.24,.85,-1.6),(0,1.,-1.8),(.18,.7,-1.45),(-.18,.7,-1.45)]
+            start=(getattr(self,'recovery_attempts',1)-1)%len(offsets)
+            for dx,y,dz in offsets[start:]+offsets[:start]:
+                target=[x+dx,y,z+dz,0,0,0]
+                if math.dist(current,target[:3])<.03:continue
+                try:
+                    end=ik(target,self.base(),self.joints)
+                    _,duration=trajectory(self.joints,end,self.base(),self.trunks)
+                except ValueError:continue
+                self.robot['action']=dict(kind='arm',start=self.joints[:],end=end,duration=duration,elapsed=0)
+                self.robot['lifecycle']='working';self.alignment=None;self.invalidate()
+                self.recovery['stage']='moving'
+                self.event('recovery_motion_started',self.robot['id'],attempt=self.recovery_attempts,pose=target)
+                break
+            else:
+                # An old navigation checkpoint can already overlap a trunk.
+                # Repeating arm poses cannot escape a rejected starting pose;
+                # translate the chassis with fixed, empty, open jaws instead.
+                from .arm import base_retreat
+                for delta in ((.65,0),(-.65,0),(1.,0),(-1.,0),(0,.6),(0,-.6)):
+                    if self.robot['battery']-math.hypot(*delta)*.13<=25:continue
+                    try:duration=base_retreat(self.joints,self.base(),self.trunks,delta)
+                    except ValueError:continue
+                    self.robot['action']=dict(kind='recover_base',start=[x,z],end=[x+delta[0],z+delta[1]],duration=duration,elapsed=0)
+                    self.robot['lifecycle']='working';self.alignment=None;self.invalidate()
+                    self.recovery['stage']='moving'
+                    self.event('recovery_base_started',self.robot['id'],attempt=self.recovery_attempts,start=[x,z],end=self.robot['action']['end'])
+                    break
+                else:raise ValueError('No checked arm or chassis recovery path; retry another observation')
+        elif action=='inspect_tree':
             self.fresh(args['frame_id']);self.inspection=dict(frame_id=self.frame['id'],revision=self.revision)
             Treatment._action(self,'read_moisture',{});self.read_application();self.phase='irrigation';self.invalidate()
         elif action in ('water_tree','fertilize_tree'):
@@ -194,7 +247,16 @@ class OrchardCare(OrchardManipulation):
                     self.completed_trees.append(dict(task_index=self.task_index,tree=self.orchard['tree'],checks=checks,inspection=self.inspection,stages=copy.deepcopy(self.care_completed),moisture=self.moisture,water=self.delivered,fertilizer=self.fertilizer_effective,completed_at=self.time))
                     self.collected_total+=1;self.stage_verified=True;self.phase='return'
                     self.event('tree_completed','W1',tree_number=self.task_index+1,checks=checks)
-                else:self.feedback='Tree incomplete: '+str(checks)
+                elif self.damage and all(v for k,v in checks.items() if k!='preserved'):
+                    # Care is physically finished, but repeating verification
+                    # cannot undo organism damage. Keep the failed evidence and
+                    # return the worker for service without crediting this tree.
+                    self.stow()
+                    self.task_exception=dict(task_index=self.task_index,checks=copy.deepcopy(checks),damage=copy.deepcopy(self.damage),frame_id=self.frame['id'])
+                    self.collected_total+=1;self.phase='return'
+                    self.feedback='Preservation incident recorded; returning for service and reassignment'
+                    self.event('tree_requires_review',self.robot['id'],**self.task_exception)
+                else:raise ValueError('Tree incomplete: '+str(checks))
             self.event('verification','W1',checks=checks)
         else:super()._action(action,args)
 
@@ -234,6 +296,13 @@ class OrchardCare(OrchardManipulation):
         self.robot['battery']-=.2;self.invalidate()
 
     def physical_step(self,a,step):
+        if a['kind']=='recover_base':
+            a['elapsed']=min(a['duration'],a['elapsed']+step)
+            fraction=a['elapsed']/a['duration']
+            position=[start+(end-start)*fraction for start,end in zip(a['start'],a['end'])]
+            self.robot['battery']-=distance(self.robot['position'],position)*.13
+            self.robot['position']=position;self.update_bin()
+            return fraction>=1
         if a['kind'] in ('care_water','care_fertilizer'):
             amount=min(step*2,a['remaining']);a['remaining']-=amount;a['delivered']+=amount
             x,_,z=self.orchard['tree']['position'];effective=self.aim is not None and math.hypot(self.aim[0]-x,self.aim[2]-z)<.72
@@ -250,7 +319,10 @@ class OrchardCare(OrchardManipulation):
             if a['remaining']>1e-8:return False
             self.service_log.append(dict(task_index=self.task_index,water_refill=30-self.robot['water'],fertilizer_refill=40-self.fertilizer_stock,charge=100-self.robot['battery'],time=self.time))
             self.robot['water']=30.;self.fertilizer_stock=40.;self.robot['battery']=100.;self.unloaded_total=self.collected_total
-            if len(self.completed_trees)==len(self.tasks):
+            if getattr(self,'task_exception',None):
+                self.return_verified=True;self.phase='final';self.status='failed'
+                self.feedback='Preservation incident retained; worker serviced and available for another tree'
+            elif len(self.completed_trees)==len(self.tasks):
                 self.return_verified=True;self.phase='final';self.feedback='All trees treated and bins unloaded. Verify mission at dock.'
             else:
                 self.task_index+=1;self.load_task()

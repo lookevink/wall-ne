@@ -8,6 +8,16 @@ from simulator.inference import InferenceError,Adapter
 from tests.test_treatment import frame
 
 class ProviderRoutingTests(unittest.TestCase):
+    def test_latest_gemini_uses_supported_reasoning_for_fast_tools(self):
+        from simulator.inference import build_request,MODELS
+        observation=dict(controller='ultra_fast',available_actions=['stop'])
+        body=build_request(observation,None,'test',MODELS['gemini'],max_tokens=2048,provider='gateway')
+        self.assertEqual(body['reasoning'],{'effort':'low'})
+        self.assertEqual(body['max_tokens'],2048)
+        self.assertEqual(body['tools'][0]['function']['name'],'stop')
+        legacy=build_request(observation,None,'test','google/gemini-2.5-flash',provider='gateway')
+        self.assertEqual(legacy['reasoning'],{'enabled':False})
+
     def test_stale_standard_settings_use_fast_control_and_switch_after_first_429(self):
         from simulator.fleet_care import FleetCareWorld,FleetCareRuntime
         with patch('threading.Thread.start'),patch.dict('os.environ',{'WALLNE_GATEWAY_FALLBACK':'0'}):
@@ -18,7 +28,7 @@ class ProviderRoutingTests(unittest.TestCase):
         self.assertIsNotNone(parent.config['fallback'])
         self.assertEqual(child.config['fallback'],parent.config['fallback'])
         for runtime,robot,role,model in ((parent,'orchestrator','orchestrator','nvidia/nemotron-3-super-120b-a12b'),
-                                        (child,'W1','treatment','google/gemini-2.5-flash')):
+                                        (child,'W1','treatment','google/gemini-4-argon')):
             runtime.world.status='running'
             adapter=runtime.adapter(role)
             runtime.requests[robot]=dict(id='request',role=role,provider=adapter.provider,provider_base=adapter.base,model=adapter.model,fallback=False)

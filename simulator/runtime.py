@@ -11,6 +11,11 @@ from .persistence import Repository,StorageError
 from .telemetry import Telemetry
 from .inference import Adapter,InferenceError,PROMPT,build_request
 
+def gemini_care_fallback(models):
+    adapter=Adapter('gemini','treatment')
+    return dict(after_failures=1,engine='gemini',provider_base=adapter.base,inference_timeout=30,max_tokens=2048,
+                models={**models,'treatment':adapter.model})
+
 class Runtime:
     def __init__(self,world=None,repository=None,config=None):
         from .background_storage import BackgroundRepository
@@ -32,8 +37,7 @@ class Runtime:
             # Both care controllers recover immediately from provider failures.
             # Children inherit this pinned policy; saved/explicit policies stay intact.
             if getattr(self.world,'mission_type',None) in ('fleet_care','full_care') or self.config.get('care_controller')=='ultra_fast':
-                self.config['fallback']=dict(after_failures=1,engine='gemini',provider_base=Adapter('gemini').base,inference_timeout=15,
-                    models={**models,'treatment':'google/gemini-2.5-flash'})
+                self.config['fallback']=gemini_care_fallback(models)
             elif os.getenv('WALLNE_GATEWAY_FALLBACK','0')=='1':
                 self.config['fallback']=dict(after_failures=2,engine='gemma',provider_base=Adapter('gemma').base,
                     models=models)
@@ -105,6 +109,7 @@ class Runtime:
         with self.lock:
             if self.storage_error: raise ValueError('storage_blocked')
             receipt=self.world.command(command_id or uid(),robot,action,**(args or {}))
+            if action=='stop' and receipt['accepted']:self.world.operator_stopped=True
             self.persist() # Acceptance is durable before the next physical tick.
             return receipt
 
@@ -170,7 +175,8 @@ class Runtime:
         adapter.model=config['models'][role];adapter.base=config['provider_base']
         timeout=config.get('inference_timeout',self.config.get('inference_timeout'))
         if timeout is not None:adapter.timeout=timeout
-        if 'max_tokens' in self.config:adapter.max_tokens=self.config['max_tokens']
+        max_tokens=config.get('max_tokens',self.config.get('max_tokens'))
+        if max_tokens is not None:adapter.max_tokens=max_tokens
         return adapter
 
     def dispatch(self,robot,role,observation,image=None):

@@ -34,6 +34,20 @@ class BackgroundStorageTests(unittest.TestCase):
 
     def batch(self):return dict(session_id='test-outbox',batch_id='immutable-batch',writer=self.remote.writer,fence=3,expected_sequence=0,sequence=5,revision=2)
 
+    def test_local_restart_uses_latest_integrity_checked_checkpoint_without_dropping_backlog(self):
+        from simulator.background_storage import local_restart_checkpoint
+        from simulator.common import digest,canonical
+        from unittest.mock import Mock
+        state=dict(id='test-outbox',seq=5,status='running',runtime_state={'pending_requests':{}})
+        batch=dict(self.batch(),state=state,integrity_hash=digest(state));self.repo.commit(batch)
+        cloud=Mock()
+        self.assertEqual(local_restart_checkpoint(cloud,'test-outbox'),state)
+        cloud.restore.assert_not_called();self.assertEqual(self.repo.status()['pending_operations'],1)
+        batch['state']['seq']=4
+        with self.repo.db:self.repo.db.execute('update queue set payload=?',(canonical(batch),))
+        with self.assertRaisesRegex(StorageError,'integrity'):
+            local_restart_checkpoint(cloud,'test-outbox')
+
     def test_network_wait_does_not_hold_enqueue_lock_and_artifact_precedes_commit(self):
         entered=threading.Event();release=threading.Event();original=self.remote.artifact
         def slow(*args):entered.set();release.wait(2);return original(*args)

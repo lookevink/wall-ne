@@ -63,6 +63,47 @@ class FastControlTests(unittest.TestCase):
         self.assertIsNone(automatic_action(obs))
         self.assertIn('assess_alignment',vision_observation(obs)['available_actions'])
 
+    def test_recovery_returns_to_verified_tree_completion(self):
+        from simulator.treatment_runtime import TreatmentRuntime
+        w=OrchardCare(tree_count=1);w.status='running';w.begin();self.settle(w)
+        with patch('threading.Thread.start'):
+            runtime=TreatmentRuntime(w,config=dict(mode='vision',engine='crusoe',speed=16))
+        self.addCleanup(runtime.close);runtime.persist=lambda:True
+        recovered=False
+        for _ in range(100):
+            if w.status=='completed':break
+            if not w.frame or w.frame['revision']!=w.revision or w.frame['phase']!=w.phase or w.frame_request:frame(w)
+            if w.phase=='extraction' and not recovered:
+                before=(w.moisture,w.fertilizer_effective,[p['removed'] for p in w.pests])
+                runtime.policy_command('stop',{'frame_id':w.frame['id']},'Cannot identify the weed from this view')
+                frame(w);runtime.step(.05)
+                while w.robot['action']:runtime.step(.5)
+                self.assertEqual((w.moisture,w.fertilizer_effective,[p['removed'] for p in w.pests]),before)
+                self.assertIsNone(w.recovery);recovered=True
+                continue
+            obs=w.observations();decision=automatic_action(obs)
+            if decision:action,args=decision
+            else:
+                # Synthetic perception fixture; the production policy only sees RGB.
+                allowed=vision_observation(obs)['available_actions']
+                if w.phase=='pests':
+                    pest=next(p for p in w.pests if not p['removed'])
+                    action='remove_pest';args=dict(zip(('u','v'),project_pixel(w.camera(),pest['position'])))
+                elif 'scan_lidar' in allowed:
+                    action='scan_lidar';args=dict(zip(('u','v'),project_pixel(w.camera(),w.weed['position'])));args['span']=.16
+                elif 'project_ground' in allowed and 'assess_alignment' not in allowed:
+                    action='project_ground';args=dict(zip(('u','v'),project_pixel(w.camera(),w.weed['position'])))
+                else:
+                    action='assess_alignment';args=dict(stem_between_fingers=True,depth_consistent=True,evidence='Synthetic oracle sees fingers and stem')
+                args['frame_id']=w.frame['id']
+            self.act(w,action,args)
+            if w.depth_request:
+                req=w.depth_request;points=[[u,v,*project_ground(req['camera'],u,v)] for u,v in req['rays']]
+                w.accept_depth(req['id'],req['frame_id'],req['revision'],points,dict(id='test-depth',ready=True))
+        self.assertTrue(recovered)
+        self.assertEqual(w.status,'completed',w.feedback)
+        self.assertTrue(all(w.verify().values()),w.verify())
+
     def test_measured_miss_reopens_before_recovery(self):
         w=OrchardCare(tree_count=1);w.phase='extraction';w.status='running';w.nonempty_scan=True;w.must_reopen=True;w.opening=0;frame(w)
         self.assertEqual(automatic_action(w.observations())[0],'open_gripper')
@@ -157,7 +198,8 @@ class FastControlTests(unittest.TestCase):
         self.assertEqual(runtime.adapter('treatment').max_tokens,512)
         self.assertEqual(runtime.config['fallback']['after_failures'],1)
         runtime.provider_routes['treatment']=dict(fallback=True)
-        self.assertEqual(runtime.adapter('treatment').timeout,15)
+        self.assertEqual(runtime.adapter('treatment').timeout,30)
+        self.assertEqual(runtime.adapter('treatment').max_tokens,2048)
 
     def test_fast_presentation_run_uses_declared_wall_budget(self):
         from simulator.fleet_care import FleetCareRuntime

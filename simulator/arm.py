@@ -46,3 +46,44 @@ def trajectory(start,end,base=(0,.8,3.3),trunks=((0,0),)):
                 if p[1]<2.8 and any(math.hypot(p[0]-x,p[2]-z)<.21 for x,z in trunks): raise ValueError('trajectory intersects trunk')
         samples.append(q)
     return samples,max(.4,max(abs(a-b) for a,b in zip(start,end))/45)
+
+
+def clearances(joints,base,trunks):
+    """Ground and per-trunk margins using the trajectory checker geometry."""
+    points=fk(joints,base)['points'];samples=[]
+    for a,b in zip(points,points[1:]):
+        samples.extend(add(a,scale(sub(b,a),t/20)) for t in range(21))
+    low=[p for p in samples if p[1]<2.8]
+    margins=[min(p[1] for p in samples)-.025]
+    bounds=(min(p[0] for p in low),max(p[0] for p in low),min(p[2] for p in low),max(p[2] for p in low)) if low else None
+    for x,z in trunks:
+        if bounds is None:margins.append(math.inf);continue
+        left,right,back,front=bounds
+        outside=math.hypot(max(left-x,0,x-right),max(back-z,0,z-front))-.21
+        # A conservative positive bound avoids testing distant orchard rows.
+        margins.append(outside if outside>=0 else min(math.hypot(p[0]-x,p[2]-z)-.21 for p in low))
+    return margins
+
+
+def base_retreat(joints,base,trunks,delta):
+    """Escape a legacy overlap without deepening it or entering another trunk.
+
+    Joints stay fixed. Check the complete chassis translation at 2 cm intervals;
+    each initially colliding trunk's penetration must decrease monotonically.
+    Once clear, contact with that trunk is forbidden again.
+    """
+    length=math.hypot(*delta)
+    if not .05<=length<=1.3:raise ValueError('recovery translation must be bounded')
+    previous=clearances(joints,base,trunks)
+    if previous[0]<0:raise ValueError('cannot drive an arm intersecting ground')
+    count=math.ceil(length/.02)
+    for i in range(1,count+1):
+        moved=[base[0]+delta[0]*i/count,base[1],base[2]+delta[1]*i/count]
+        if any(math.hypot(moved[0]-x,moved[2]+.5-z)<.85 for x,z in trunks):
+            raise ValueError('recovery chassis intersects trunk')
+        current=clearances(joints,moved,trunks)
+        if any(now<min(0,before)-1e-9 for now,before in zip(current,previous)):
+            raise ValueError('recovery deepens contact or creates a new collision')
+        previous=current
+    if min(previous)<.02:raise ValueError('recovery must finish clear of obstacles')
+    return max(.4,length/.4)

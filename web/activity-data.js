@@ -1,8 +1,8 @@
 // Read-only projections shared by the activity page and its contract tests.
 const noise = new Set(['heartbeat', 'checkpoint']);
-const attention = /error|failed|fault|stall|reject|blocked|breakdown|escalation|loop|slip|dropped|cancelled|timeout/;
+const attention = /error|failed|fault|stall|reject|blocked|breakdown|escalation|loop|slip|dropped|cancelled|timeout|requires_review/;
 export function category(event) {
-  if (event.type === 'incident_resolved' || event.type === 'recovered') return 'recovery';
+  if (event.type === 'incident_resolved' || event.type === 'recovered' || event.type.includes('recovery') || event.type === 'provider_retry') return 'recovery';
   if (event.type === 'incident' || attention.test(event.type) || /blocked|failed|aborted/.test(event.payload?.status || '')) return 'attention';
   if (event.type === 'provider_fallback' || event.type === 'incident_response') return 'recovery';
   return 'activity';

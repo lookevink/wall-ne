@@ -95,7 +95,7 @@ def automatic_action(obs):
 
 def vision_observation(obs):
     """Small stage-specific payload, including only already-public measurements."""
-    keys=('mission_id','kind','status','phase','trial','worker','frame','camera','feedback','sensors','resources',
+    keys=('mission_id','kind','status','phase','trial','worker','frame','camera','feedback','sensors','resources','recovery','recovery_attempts','recovery_history',
           'budgets','controller_progress','current_grasp_step','care_progress','task_tree','tool_pose','base','bin','gripper','protocol','crown_projection','scan','scan_stale')
     result={k:obs[k] for k in keys if k in obs};result['controller']='ultra_fast'
     allowed=obs['available_actions'];phase=obs['phase'];grip=obs.get('gripper',{})
@@ -112,7 +112,7 @@ def vision_observation(obs):
     result['instructions']='''Choose one action using current RGB. Routine care and bounded arm motion run automatically.
 PESTS: choose the candidate ID centered on a visible elongated brown/purple caterpillar (or image u,v if no candidates are offered). Preserve round red ladybirds. Code requests independent stage clearance; you only select a visible pest or stop.
 WEED: choose the root crown where upright grass, serrated rosette or thistle meets soil. Rounded three-leaf clover must be preserved. scan_lidar: u,v at that crown, span=.16. project_ground: refine the visible ROOT/SOIL junction, not a leaf. Both use normalized image coordinates and current frame_id. Never invent world coordinates.
-RECOVERY: If the root is obscured or no local candidate matches, use move_arm to the supplied viewpoint_pose for a new image. Refinement stays within the supplied region around the previously selected crown; never jump to neighboring clover.
+RECOVERY: Use recovery_history to avoid repeating failed targets and visual claims. If the root is obscured or no local candidate matches, use move_arm to the supplied viewpoint_pose for a new image. Refinement stays within the supplied region around the previously selected crown; never jump to neighboring clover. If no safe action is available, stop requests a new recovery approach; the unfinished task remains active.
 ALIGNMENT: assess_alignment only if both inner finger faces and the weed stem are visible and the stem lies between them; depth_consistent must reflect measured geometry. Otherwise project_ground at the correct crown or stop. Evidence is not physical contact; measured holding/load and preservation checks remain mandatory.
 Keep reason brief. Include the current frame_id in every call.'''
     # A bounded spatial sample retains the measured surfaces without repeating a

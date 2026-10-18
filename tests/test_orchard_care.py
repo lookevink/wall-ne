@@ -5,6 +5,26 @@ from tests.test_treatment import frame,command
 
 
 class OrchardCareTests(unittest.TestCase):
+    def test_every_parking_station_clears_chassis_and_carried_arm(self):
+        from simulator.orchard_care import care_station
+        from simulator.orchard_manipulation import TREES
+        from simulator.arm import ik,trajectory
+        import math
+        trunks=[[t['position'][0],t['position'][2]] for t in TREES]
+        for tree in TREES:
+            x,z=care_station(tree);base=[x,.8,z-.5]
+            self.assertTrue(all(math.hypot(x-tx,z-tz)>=.85 for tx,tz in trunks))
+            joints=ik([x,.8,z-1.6,0,0,0],base)
+            trajectory(joints,joints,base,trunks)
+
+    def test_interior_navigation_arrives_with_clear_arm(self):
+        from simulator.fleet_care import FleetCareWorld
+        from simulator.arm import trajectory
+        w=OrchardCare(7,1,'W1',FleetCareWorld(tree_count=169).tasks[13])
+        w.status='running';w.begin();self.settle(w)
+        self.assertEqual(w.phase,'inspection')
+        trajectory(w.joints,w.joints,w.base(),w.trunks)
+
     def settle(self,w):
         for _ in range(12000):
             if not w.robot['action']:return

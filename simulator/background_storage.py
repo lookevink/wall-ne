@@ -12,7 +12,7 @@ import sqlite3
 import threading
 import time
 
-from .common import canonical,uid
+from .common import canonical,uid,digest
 from .persistence import Repository,StorageError
 
 ROOT=pathlib.Path(__file__).resolve().parent.parent/'.runtime'/'outbox'
@@ -165,6 +165,28 @@ def sync_status():
 def ensure_cloud_restore_safe():
     if getattr(RESTORE_CONTEXT,'active',False):return
     if not sync_status()['synced']:raise StorageError('Local background evidence is still syncing; restore is blocked to prevent stale-state replay')
+
+
+def local_restart_checkpoint(repository,session):
+    """Read the newest durable state after the local controller has exited.
+
+    Used only for a new linked startup continuation. The original outbox and
+    writer are untouched and keep replicating their immutable evidence.
+    """
+    with REGISTRY_LOCK:existing=REGISTRY.get(session)
+    if existing is None:raise StorageError('Restart source has no local ownership record')
+    with existing.lock:
+        expected=existing.queued_sequence
+        row=existing.db.execute("select payload from queue where kind='commit' order by id desc limit 1").fetchone()
+        if row:
+            batch=json.loads(row[0]);state=batch['state']
+            if batch['session_id']!=session or batch['sequence']!=expected or batch['integrity_hash']!=digest(state):
+                raise StorageError('Local restart checkpoint integrity mismatch')
+        else:state=None
+    if state is None:state=repository.restore(session)
+    if state['id']!=session or state['seq']!=expected:
+        raise StorageError('Restart checkpoint is behind local durable progress')
+    return state
 
 
 def bind_for_restore(repository,session):

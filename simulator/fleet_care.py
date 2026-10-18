@@ -9,7 +9,7 @@ from .orchard_care import OrchardCare
 from .common import digest, uid, treatment_implementation_hash
 from .inference import InferenceError
 
-ORCHESTRATION='''You orchestrate Wall-ne's five equipped orchard workers W1-W5. Mobilize every worker, including W5. Assign every tree in the mission task list for complete care. Choose one feasible option using choose_action: assign with row (task index) and vehicle, or claim_complete with {} after all independent checks pass. Workers execute live visual inspection, watering, fertilizer, pest removal and articulated weed extraction, then service at their docks. Each tree has exactly one owner; never duplicate active assignments. Prefer idle workers that have not yet participated, then assign remaining trees to available workers. Traffic reservations are enforced by the runtime. A blocked worker is an incident, never a completed tree. Continue assigning remaining trees to healthy available workers; failed workers remain unavailable for this run. R1 is the recovery vehicle, not a fitted plant-care worker. Do not instruct workers with hidden target coordinates.'''
+ORCHESTRATION='''You orchestrate Wall-ne's five equipped orchard workers W1-W5. Mobilize every worker, including W5. Assign every tree in the mission task list for complete care. Choose one feasible option using choose_action: assign with row (task index) and vehicle, or claim_complete with {} after all independent checks pass. Workers execute live visual inspection, watering, fertilizer, pest removal and articulated weed extraction, then service at their docks. Each tree has exactly one owner; never duplicate active assignments. Prefer idle workers that have not yet participated, then assign remaining trees to available workers. Traffic reservations are enforced by the runtime. Recoverable failures trigger another approach on the unfinished task, retaining measured progress and failure history. A blocked attempt is never a completed tree or permanent retirement of its worker. Continue assigning work to other available workers while recovery proceeds. R1 is the recovery vehicle, not a fitted plant-care worker. Do not instruct workers with hidden target coordinates.'''
 
 
 def result_outcome(result):
@@ -30,7 +30,7 @@ class FleetCareWorld(Mission):
         self.prompt_versions={'orchestrator':'fleet-care-v1'}
 
     def options(self):
-        busy={a['vehicle'] for a in self.assignments.values() if a['status']!='completed'}
+        busy={a['vehicle'] for a in self.assignments.values() if a['status'] not in ('completed','requires_review')}
         unused={v for v in self.vehicles if v.startswith('W') and not any(a['vehicle']==v for a in self.assignments.values())}
         available=[v for v in self.vehicles if v.startswith('W') and v not in busy and (not unused or v in unused)]
         return [dict(action='assign',arguments=dict(row=i,vehicle=v)) for i in range(len(self.tasks)) if str(i) not in self.assignments for v in available]
@@ -59,7 +59,11 @@ class FleetCareWorld(Mission):
 
     def verify(self):
         if not hasattr(self,'tasks'):return {}
-        complete=len(self.results)==len(self.tasks) and all(r['status']=='completed' and all(r['checks'].values()) for r in self.results.values())
+        # Old attempts remain evidence. Only the current, verified owner of each
+        # distinct task contributes to completion.
+        complete=len(self.assignments)==len(self.tasks) and all(
+            a['status']=='completed' and (r:=self.results.get(a.get('session_id'))) is not None and
+            r['status']=='completed' and all(r['checks'].values()) for a in self.assignments.values())
         return dict(trees_complete=complete,all_workers_used={a['vehicle'] for a in self.assignments.values()}=={'W1','W2','W3','W4','W5'},
                     care_verified=complete,returned=complete and all(v['position']==v['home'] and v['action'] is None for v in self.vehicles.values()),
                     reserve=all(v['minimum_battery']>25 for v in self.vehicles.values()),inventory=digest(self.tasks)==self.task_inventory_hash and digest(self.contract)==self.contract_hash)
@@ -108,21 +112,29 @@ class FleetCareRuntime(Runtime):
         for child in previous.values():child.close()
         self.children={}
         for i,a in self.world.assignments.items():
-            if a['status']=='completed' or not a.get('session_id'):continue
+            if a['status'] in ('completed','requires_review') or not a.get('session_id'):continue
             rows=self.repository.read('sessions',f'id=eq.{a["session_id"]}&limit=1')
             if rows and rows[0]['status'] in TERMINAL:
                 saved=self.repository.restore(a['session_id']);w=OrchardCare.restore(saved)
-                a['status']=w.status
-                self.world.results[w.id]=dict(status=w.status,checks=w.verify(),worker=a['vehicle'],completed_trees=w.completed_trees,inference=saved.get('runtime_state',{}).get('inference',[]),outcome=w.tree_outcome())
+                incident=w.status=='failed' and getattr(w,'task_exception',None) and w.return_verified and w.robot['position']==w.robot['home'] and w.robot['action'] is None
+                a['status']='requires_review' if incident else w.status
+                self.world.results[w.id]=dict(status=w.status,checks=w.verify(),worker=a['vehicle'],completed_trees=w.completed_trees,inference=saved.get('runtime_state',{}).get('inference',[]),outcome=w.tree_outcome(),exception=copy.deepcopy(getattr(w,'task_exception',None)))
                 self.world.vehicles[a['vehicle']]=copy.deepcopy(w.robot)
-                if w.status!='completed':self.world.status='blocked';self.world.feedback=f'{a["vehicle"]}: saved worker outcome {w.status}'
+                if w.status!='completed' and not incident:
+                    config=copy.deepcopy(rows[0]['metadata']['configuration'])
+                    child=TreatmentRuntime(w,self.repository,config);child.navigation_gate=threading.Event()
+                    child.inference=copy.deepcopy(saved.get('runtime_state',{}).get('inference',[]))
+                    child.provider_routes=copy.deepcopy(saved.get('runtime_state',{}).get('provider_routes',{}))
+                    self.children[a['vehicle']]=child
                 continue
             child=self.make_child(int(i),a['vehicle']);child.restore(a['session_id']);self.children[a['vehicle']]=child
         self.persist()
 
     def make_child(self,index,worker):
         world=OrchardCare(self.world.seed+index,1,worker,self.world.tasks[index])
-        world.wall_limit=900;world.cost_limit=1
+        # The parent enforces the shared mission budget. A difficult tree must
+        # not lose its worker to an unrelated, smaller per-attempt budget.
+        world.wall_limit=self.world.contract['wall_limit'];world.cost_limit=self.world.contract['cost_limit']
         world.robot['minimum_battery']=self.world.vehicles[worker]['minimum_battery']
         config={k:copy.deepcopy(v) for k,v in self.config.items() if k not in ('prompt_version','trial')}
         config.update(mode='vision',arena='orchard',parent_session_id=self.world.id,task_index=index,treatment_code_hash=treatment_implementation_hash())
@@ -130,9 +142,10 @@ class FleetCareRuntime(Runtime):
         return child
 
     def launch_fast_reserved(self):
-        reserved=[(i,a) for i,a in self.world.assignments.items() if a['status']=='reserved']
+        reserved=[(i,a) for i,a in self.world.assignments.items() if a['status']=='reserved' or
+                  a['status']=='recovering' and time.time()>=a.get('retry_at',0)]
         if not reserved:return
-        children=[(i,a,self.make_child(int(i),a['vehicle'])) for i,a in reserved]
+        children=[(i,a,self.make_recovery_child(a) if a['status']=='recovering' else self.make_child(int(i),a['vehicle'])) for i,a in reserved]
         def prepare(item):
             child=item[2]
             with child.lock:
@@ -155,6 +168,44 @@ class FleetCareRuntime(Runtime):
         except Exception:
             for _,_,child in children:child.close()
             raise
+
+    def make_recovery_child(self,assignment):
+        """Continue a failed attempt in a linked session without resetting physics."""
+        previous=self.children[assignment['vehicle']]
+        with previous.lock:
+            state=previous.world.checkpoint();source=state['id']
+            from .fleet_continuation import clone_world
+            world=clone_world(state,OrchardCare,source,state['feedback'])
+            world.receipts={}
+            world.wall_limit=self.world.contract['wall_limit'];world.cost_limit=self.world.contract['cost_limit']
+            # Historical images remain evidence, with their owning session explicit.
+            for f in world.frames:f.setdefault('source_session_id',source)
+            world.recovery_attempts=getattr(world,'recovery_attempts',0)+1
+            world.recovery=(dict(attempt=world.recovery_attempts,reason=state['feedback'],stage='viewpoint')
+                            if world.phase=='extraction' and not world.holding and not world.deposited and not world.robot['action'] else None)
+            world.event('worker_recovery',world.robot['id'],source_session_id=source,reason=state['feedback'],attempt=world.recovery_attempts)
+            config=copy.deepcopy(previous.config);config['continuation_source']=source
+            child=TreatmentRuntime(world,self.repository,config);child.navigation_gate=threading.Event()
+            child.provider_routes=copy.deepcopy(previous.provider_routes)
+            return child
+
+    def schedule_recoveries(self):
+        for assignment in self.world.assignments.values():
+            child=self.children.get(assignment['vehicle'])
+            if not child or assignment.get('session_id')!=child.world.id or assignment['status'] not in ('blocked','failed','aborted'):continue
+            with child.lock:
+                w=child.world
+                # Explicit stop and physical integrity are not transient failures.
+                if getattr(w,'operator_stopped',False) or w.damage or w.robot.get('fault') or w.robot['battery']<=25 or not w.verify()['inventory']:continue
+                child.collect_inactive_calls()
+                if child.futures or child.storage_error:continue
+                # Account late calls before freezing the previous attempt's result.
+                self.world.results[w.id]['inference']=copy.deepcopy(child.inference)
+                attempt=assignment.get('recovery_attempts',0)+1
+                assignment.update(status='recovering',recovery_attempts=attempt,retry_at=time.time()+min(30,2**min(attempt,5)))
+                self.world.feedback=f'{assignment["vehicle"]} recovering unfinished tree; attempt {attempt+1}'
+                self.world.event('worker_recovery_scheduled',assignment['vehicle'],session_id=w.id,attempt=attempt,reason=w.feedback)
+                self.persist()
 
     def launch_reserved(self):
         if self.config.get('care_controller')=='ultra_fast':return self.launch_fast_reserved()
@@ -188,13 +239,7 @@ class FleetCareRuntime(Runtime):
         if self.storage_error:return
         self.sync_workers()
         if self.world.status!='running':return
-        settled=bool(self.world.assignments) and all(a['status'] in TERMINAL for a in self.world.assignments.values())
-        if settled and not self.world.options() and not all(self.world.verify().values()):
-            succeeded=sum(a['status']=='completed' for a in self.world.assignments.values())
-            self.world.status='failed'
-            self.world.feedback=f'Run finished: {succeeded}/{len(self.world.tasks)} trees fully cared for; {len(self.world.assignments)-succeeded} failed attempts; {len(self.world.tasks)-len(self.world.assignments)} unattempted. Results retained for the next improvement.'
-            self.world.event('run_finished',successful=succeeded,attempted=len(self.world.assignments),total=len(self.world.tasks))
-            self.persist();return
+        self.schedule_recoveries()
         self.coordinate_traffic()
         if self.config.get('care_controller')=='ultra_fast':
             # Assign independent workers in one scheduling pass. Exclusive
@@ -205,6 +250,10 @@ class FleetCareRuntime(Runtime):
                 self.world.command(uid(),'orchestrator',option['action'],**option['arguments'])
             if all(self.world.verify().values()):
                 changed=True;self.world.command(uid(),'orchestrator','claim_complete')
+            elif len(self.world.assignments)==len(self.world.tasks) and all(a['status'] in ('completed','requires_review') for a in self.world.assignments.values()):
+                changed=True;self.world.status='failed'
+                self.world.feedback='All reachable care tasks finished; preservation incidents require review'
+                self.world.event('run_finished',status='failed',reason=self.world.feedback)
             if changed:self.persist()
             return
         entry=self.futures.get('orchestrator')
@@ -242,12 +291,15 @@ class FleetCareRuntime(Runtime):
                 assignment=next(a for a in self.world.assignments.values() if a.get('session_id')==w.id)
                 if child.storage_error:
                     self.pause('blocked');self.world.feedback=f'{worker}: storage failure';self.persist();return
-                if w.status in TERMINAL and assignment['status']!=w.status:
-                    assignment['status']=w.status
-                    self.world.results[w.id]=dict(status=w.status,checks=w.verify(),worker=worker,completed_trees=copy.deepcopy(w.completed_trees),inference=copy.deepcopy(child.inference),outcome=w.tree_outcome())
+                if w.status in TERMINAL and assignment['status'] not in (w.status,'recovering','requires_review'):
+                    incident=w.status=='failed' and getattr(w,'task_exception',None) and w.return_verified and w.robot['position']==w.robot['home'] and w.robot['action'] is None
+                    assignment['status']='requires_review' if incident else w.status
+                    self.world.results[w.id]=dict(status=w.status,checks=w.verify(),worker=worker,completed_trees=copy.deepcopy(w.completed_trees),inference=copy.deepcopy(child.inference),outcome=w.tree_outcome(),exception=copy.deepcopy(getattr(w,'task_exception',None)))
                     self.world.event('worker_finished',worker,status=w.status,checks=w.verify(),session_id=w.id)
-                    if w.status!='completed':
-                        self.world.feedback=f'{worker} stopped: {w.feedback}. Healthy workers continue.'
+                    if incident:
+                        self.world.feedback=f'{worker} serviced after a preservation incident; assigning remaining trees'
+                    elif w.status!='completed':
+                        self.world.feedback=f'{worker} needs recovery: {w.feedback}. Other workers continue.'
                     self.persist()
             finally:child.lock.release()
         # Completed workers that have a newer assignment are counted from durable results.
@@ -272,9 +324,9 @@ class FleetCareRuntime(Runtime):
     def coordinate_traffic(self):
         if self.navigation_owner:
             owner=self.children.get(self.navigation_owner)
-            if not owner or (owner.world.robot['action'] or {}).get('kind')!='navigate':self.navigation_owner=None
+            if not owner or (owner.world.robot['action'] or {}).get('kind') not in ('navigate','recover_base'):self.navigation_owner=None
         for worker,child in self.children.items():
-            if not self.navigation_owner and (child.world.robot['action'] or {}).get('kind')=='navigate':self.navigation_owner=worker
+            if not self.navigation_owner and (child.world.robot['action'] or {}).get('kind') in ('navigate','recover_base'):self.navigation_owner=worker
             if worker==self.navigation_owner:child.navigation_gate.set()
             else:child.navigation_gate.clear()
 

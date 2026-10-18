@@ -5,6 +5,24 @@ from simulator.common import uid
 
 
 class FleetCareTests(unittest.TestCase):
+    def test_serviced_preservation_incident_releases_worker_but_not_success_credit(self):
+        with patch('threading.Thread.start'):
+            parent=FleetCareRuntime(config=dict(mode='vision',engine='crusoe'))
+            child=parent.make_child(0,'W1')
+        parent.children={'W1':child};parent.world.status='running';parent.persist=lambda:True
+        try:
+            w=child.world;w.status='failed';w.return_verified=True;w.damage=['clover']
+            w.task_exception={'checks':{'preserved':False},'damage':['clover']}
+            parent.world.assignments={str(i):dict(vehicle='W'+str(i+1),session_id=w.id if i==0 else 'other-'+str(i),status='assigned') for i in range(5)}
+            parent.sync_workers();parent.schedule_recoveries()
+            self.assertEqual(parent.world.assignments['0']['status'],'requires_review')
+            self.assertEqual(parent.world.results[w.id]['exception']['damage'],['clover'])
+            self.assertFalse(parent.world.verify()['trees_complete'])
+            self.assertEqual({o['arguments']['vehicle'] for o in parent.world.options()},{'W1'})
+            self.assertTrue(parent.world.command(uid(),'orchestrator','assign',row=5,vehicle='W1')['accepted'])
+            self.assertEqual(parent.world.assignments['0']['status'],'requires_review')
+        finally:parent.close()
+
     def test_orchestrator_activates_every_worker_with_exclusive_ownership(self):
         w=FleetCareWorld();w.status='running'
         for i in range(5):
@@ -84,6 +102,24 @@ class FleetCareTests(unittest.TestCase):
             self.assertEqual(w.robot['action']['kind'],'navigate')
         finally:child.close();parent.close()
 
+    def test_base_recovery_shares_navigation_reservation(self):
+        with patch('threading.Thread.start'):
+            parent=FleetCareRuntime(config=dict(mode='vision',engine='crusoe'))
+            a=parent.make_child(0,'W1');b=parent.make_child(1,'W2')
+        parent.children={'W1':a,'W2':b}
+        try:
+            for child in (a,b):
+                w=child.world;w.status='running';w.phase='extraction'
+                x,z=w.robot['position']
+                w.robot['action']=dict(kind='recover_base',start=[x,z],end=[x+.65,z],duration=2,elapsed=0)
+            parent.coordinate_traffic()
+            self.assertTrue(a.navigation_gate.is_set());self.assertFalse(b.navigation_gate.is_set())
+            position=b.world.robot['position'][:];b.step(.5)
+            self.assertEqual(b.world.robot['position'],position)
+            a.world.robot['action']=None;parent.coordinate_traffic()
+            self.assertTrue(b.navigation_gate.is_set())
+        finally:parent.close()
+
     def test_failed_worker_does_not_stop_healthy_workers(self):
         with patch('threading.Thread.start'):
             r=FleetCareRuntime(config=dict(mode='vision',engine='crusoe',arena='orchard'))
@@ -99,5 +135,8 @@ class FleetCareTests(unittest.TestCase):
             for i in range(2,5):r.world.assignments[str(i)]=dict(vehicle=f'W{i+1}',status='blocked',session_id=f'failed-{i}')
             b.world.status='blocked'
             with patch.object(r,'persist',return_value=True):r.step(.1)
-            self.assertEqual(r.world.status,'failed');self.assertIn('5 unattempted',r.world.feedback)
+            self.assertEqual(r.world.status,'running')
+            self.assertEqual(r.world.assignments['0']['status'],'recovering')
+            self.assertEqual(r.world.assignments['1']['status'],'recovering')
+            self.assertNotIn('run_finished',[e['type'] for e in r.world.events])
         finally:r.close()

@@ -30,7 +30,7 @@ class Treatment(RecordedWorld):
 
     def request_frame(self):
         if self.frame_request: return self.frame_request
-        if len(self.frames)>=self.frame_limit: raise ValueError('frame budget exhausted')
+        if not getattr(self,'continuous_care',False) and len(self.frames)>=self.frame_limit: raise ValueError('frame budget exhausted')
         self.frame_request=dict(id=uid(),mission_id=self.id,revision=self.revision,phase=self.phase,camera=self.camera())
         return self.frame_request
 
@@ -59,7 +59,7 @@ class Treatment(RecordedWorld):
                     available_actions=self.allowed_actions(),resources={k:self.robot[k] for k in ('battery','water','position')},
                     tool=self.tool,frame=copy.deepcopy(self.frame),camera=self.camera(),feedback=self.feedback,
                     sensors=dict(moisture=self.moisture_reading,flow=self.flow,observed_fault=self.observed_fault),
-                    budgets=dict(frames_remaining=self.frame_limit-len(self.frames),commands_remaining=self.decision_limit-self.decisions,time_remaining=self.time_limit-self.time),history=[e for e in self.events if e['type'] in ('accepted','rejected','completed','slip','contact','extraction','deposit','dropped','verification','inference_error')][-8:])
+                    budgets=dict(frames_remaining=None if getattr(self,'continuous_care',False) else self.frame_limit-len(self.frames),commands_remaining=None if getattr(self,'continuous_care',False) else self.decision_limit-self.decisions,time_remaining=None if getattr(self,'continuous_care',False) else self.time_limit-self.time),history=[e for e in self.events if e['type'] in ('accepted','rejected','completed','slip','contact','extraction','deposit','dropped','verification','inference_error','recovery_requested','recovery_completed')][-8:])
 
     def command(self,command_id,robot,action,**args):
         if command_id in self.receipts: return copy.deepcopy(self.receipts[command_id])
@@ -67,7 +67,7 @@ class Treatment(RecordedWorld):
         try:
             if self.status in ('completed','failed','aborted','blocked'): raise ValueError('mission terminal')
             if self.robot['action']: raise ValueError('physical action in progress')
-            if self.decisions>=self.decision_limit or self.time>=self.time_limit or self.robot['battery']<=25:
+            if (not getattr(self,'continuous_care',False) and (self.decisions>=self.decision_limit or self.time>=self.time_limit)) or self.robot['battery']<=25:
                 self.status='blocked'; raise ValueError('mission budget exhausted')
             self.decisions+=1
             self._action(action,args)
@@ -117,7 +117,7 @@ class Treatment(RecordedWorld):
         while dt>1e-9 and self.status=='running' and self.robot['action']:
             step=min(.05,dt); dt-=step; self.time+=step; a=self.robot['action']; self.revision+=1
             self.robot['battery']-=step*.08; self.robot['minimum_battery']=min(self.robot['minimum_battery'],self.robot['battery'])
-            if self.time>=self.time_limit or self.robot['battery']<=25:
+            if (not getattr(self,'continuous_care',False) and self.time>=self.time_limit) or self.robot['battery']<=25:
                 self.status='blocked'; self.feedback='Operating budget reached'; break
             done=False
             if a['kind']=='move_base':

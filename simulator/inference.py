@@ -9,7 +9,8 @@ import urllib.request
 from .common import budget
 from .common import uid,canonical
 
-MODELS={'nemotron':'nvidia/nemotron-3.5-super-vl','gemma':'google/gemma-4-31b-it','gemini':'google/gemini-3.1-pro-preview'}
+# Gemini inventory verified against Gateway /v1/models on 2026-10-17.
+MODELS={'nemotron':'nvidia/nemotron-3.5-super-vl','gemma':'google/gemma-4-31b-it','gemini':'google/gemini-4-argon'}
 PROMPT='''You control a simulated orchard robot. Use only provided observations and calibrated images. Execute observe, act, measure, verify. Never claim success from an image alone. Keep resources above reserve, inspect again after every attempt, and service observed jams. Never guess that unseen targets are absent. For a wrist view, robot movement changes image coordinates: capture and scan current geometry. Inspect both finger faces and the central stem. Approach with open jaws, assess alignment, close with sufficient force (root extraction needs at least 26 N), capture, and confirm measured contact and positive load before lifting. After a slip, reopen, observe, reposition, reassess, and regrasp. Extract with a vertical lift of at least .18 m, carry above the bin and release. Capture after collection, return, then verify. Hidden target coordinates are unavailable except in the explicitly labeled known diagnostic. Use one choose_action call. Arguments must match the tool requirements provided.'''
 TOOLS=[dict(type='function',function=dict(name='choose_action',description='Choose one permitted simulation action',parameters=dict(type='object',properties=dict(action=dict(type='string'),arguments=dict(type='object'),rationale=dict(type='string')),required=['action','arguments'],additionalProperties=False)))]
 TOOL_HELP={
@@ -246,5 +247,6 @@ def build_request(observation,image=None,prompt=PROMPT,model=None,max_tokens=Non
             schema.append(dict(type='function',function=dict(name=name,description=descriptions[name],parameters=dict(type='object',properties=fields,required=list(fields),additionalProperties=False))))
         body.update(tools=schema,tool_choice='required')
         if provider=='gateway' and model=='google/gemini-2.5-flash':body['reasoning']={'enabled':False}
+        elif provider=='gateway' and model==MODELS['gemini']:body['reasoning']={'effort':'low'}
     if flat or fleet: body['parallel_tool_calls']=False
     return body

@@ -56,6 +56,26 @@ class App:
         threading.Thread(target=self.season_loop,daemon=True).start()
         if recover_season: threading.Thread(target=self.recover_season,daemon=True).start()
 
+    def continue_running(self,session):
+        """Startup-only handover after binding the stopped local server's port.
+
+        Never exposed as an HTTP override. Only locally owned outbox sessions
+        with settled inference may continue automatically across a code update.
+        """
+        from .background_storage import REGISTRY
+        from .fleet_continuation import continue_fleet
+        if session not in REGISTRY:raise ValueError('restart continuation requires a locally owned session')
+        replacement=continue_fleet(self.repository,session,'Automatic continuation after local server update',interrupted=True)
+        self.fleet.close();self.fleet=replacement
+        record=getattr(replacement.world,'season',None)
+        if record:
+            with self.season_lock:
+                self.season=Season.from_record(record);self.clock.reset(self.season)
+                self.clock.clock=self.clock.night;self.clock.mode='night'
+                self.plan['tree_count']=len(replacement.world.tasks)
+        self.fleet.start()
+        if self.fleet.storage_error:raise ValueError('continued mission could not start durably')
+
     def day_plan(self,body):
         plan=dict(self.plan,**{k:body[k] for k in ('mission','mode','speed','care_controller','tree_count') if k in body})
         if plan['mission'] not in ('weeding','watering','full_care'): raise ValueError('unknown orchard mission')
@@ -397,7 +417,7 @@ class Handler(BaseHTTPRequestHandler):
                                 if source_runtime.storage_error or source_runtime.pending:raise ValueError('recover storage before continuing')
                                 if source_runtime.world.status=='running' or source_runtime.futures or source_runtime.requests:raise ValueError('stop and finish inference accounting before continuing')
                         from .fleet_continuation import continue_fleet
-                        replacement=continue_fleet(app.repository,body['session_id'],str(body.get('reason','Controller update'))[:400])
+                        replacement=continue_fleet(app.repository,body['session_id'],str(body.get('reason','Controller update'))[:400],refresh_fallback=body.get('refresh_fallback',False))
                         runtime.close();app.fleet=replacement
                         return self.send(replacement.snapshot())
             if action=='start' and treatment and runtime.world.kind=='arm':raise ValueError('Live arm runs now use the main orchard at /')
@@ -436,8 +456,11 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     load_env(ROOT/'.env')
-    parser=argparse.ArgumentParser(); parser.add_argument('--port',type=int,default=8765); parser.add_argument('--no-recover',action='store_true'); args=parser.parse_args()
-    server=ThreadingHTTPServer(('127.0.0.1',args.port),Handler); server.daemon_threads=True; server.app=App(recover_season=not args.no_recover)
+    parser=argparse.ArgumentParser(); parser.add_argument('--port',type=int,default=8765); parser.add_argument('--no-recover',action='store_true')
+    parser.add_argument('--continue-running',metavar='SESSION',help='continue a settled locally owned mission automatically after a server update')
+    args=parser.parse_args()
+    server=ThreadingHTTPServer(('127.0.0.1',args.port),Handler); server.daemon_threads=True; server.app=App(recover_season=not args.no_recover and not args.continue_running)
+    if args.continue_running:server.app.continue_running(args.continue_running)
     print(f'Wall-ne: http://127.0.0.1:{args.port}',flush=True)
     try: server.serve_forever()
     except KeyboardInterrupt: pass

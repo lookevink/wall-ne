@@ -68,8 +68,8 @@ export class RoverViews {
       const camera=feed.id===null?this.masterCamera:this.view.feedCameras[feed.id];
       if(feed.id===null){camera.copy(this.view.camera);camera.fov=43;}
       camera.aspect=width/height;camera.updateProjectionMatrix();
-      // Decision-camera tiles show what the controller sees: calibrated lighting.
-      r.setRenderTarget(this.target);if(camera.userData.calibrated&&this.view.atmosphere)this.view.atmosphere.calibrated(()=>r.render(this.view.scene,camera),{shadows:false});else r.render(this.view.scene,camera);
+      // Previews share the master view's lighting; AI captures calibrate separately.
+      r.setRenderTarget(this.target);r.render(this.view.scene,camera);
       r.setRenderTarget(this.output);r.render(this.displayScene,this.displayCamera);
       r.readRenderTargetPixels(this.output,0,0,width,height,this.pixels);
       for(let y=0;y<height;y++)feed.image.data.set(this.pixels.subarray((height-1-y)*width*4,(height-y)*width*4),y*width*4);

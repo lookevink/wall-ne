@@ -78,6 +78,11 @@ class OrchardManipulation(Manipulation):
             end=[p[i]+(target[i]-p[i])*travel/length for i in range(2)]
             if any(distance(end,t)<.85 for t in self.trunks):
                 self.status='blocked';self.feedback='Rover route blocked by a tree';return True
+            # Navigation carries the arm too. Never create an overlap that the
+            # normal joint trajectory checker cannot subsequently escape.
+            from .arm import clearances
+            if min(clearances(self.joints,[end[0],.8,end[1]-.5],self.trunks))<0:
+                self.status='blocked';self.feedback='Carried arm route blocked by a tree or ground';return True
             self.robot['position']=end;self.robot['battery']-=travel*.13
         self.update_bin()
         if length<=travel+1e-9:a['route'].pop(0)
